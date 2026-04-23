@@ -14,6 +14,7 @@ class Service extends Model
         'name',
         'slug',
         'primary_data_field',
+        'whatsapp_number_field',
         'description',
         'price',
         'active',

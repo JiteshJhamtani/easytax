@@ -358,4 +358,3 @@ Route::middleware('auth')->group(function () {
 Route::post('/payment/webhook', [ApplicationController::class, 'webhook'])
     ->name('payment.webhook');
 
-
