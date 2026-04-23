@@ -1,0 +1,1 @@
+<?php /**PATH /var/www/uat.easytax.live/resources/views/layouts/adminlte.blade.php ENDPATH**/ ?>

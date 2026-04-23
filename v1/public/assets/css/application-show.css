@@ -1,0 +1,168 @@
+/* =========================================
+   BASE CARD STYLES
+========================================= */
+.modern-card {
+    border-radius: 12px;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.03),
+        0 1px 3px rgba(0, 0, 0, 0.02);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.modern-card .card-header {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* =========================================
+   OVERVIEW INFO GRID
+========================================= */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.info-value {
+    font-size: 1.05rem;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+/* =========================================
+   FORM DATA TABLE
+========================================= */
+.form-data-table {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.form-data-table td {
+    vertical-align: middle;
+    padding: 1rem 1.25rem;
+    border-top: none;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.form-data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.form-data-table .form-label {
+    width: 35%;
+    font-weight: 600;
+    color: #475569;
+    background-color: #f8fafc;
+    border-right: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+}
+
+.form-data-table .form-value {
+    color: #1e293b;
+    font-size: 0.95rem;
+}
+
+/* =========================================
+   DOCUMENT LIST
+========================================= */
+.document-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.document-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.document-item:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    text-decoration: none;
+}
+
+.doc-icon {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.doc-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.doc-name {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.doc-size {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.doc-action {
+    color: #94a3b8;
+    margin-left: 1rem;
+    transition: color 0.2s ease;
+}
+
+.document-item:hover .doc-action {
+    color: #0044b2; /* var(--color-primary) */
+}
+
+/* =========================================
+   CUSTOM BADGES
+========================================= */
+.badge {
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.3px;
+}
+
+/* Add custom colors based on your specific ENUM values here if needed */
+.badge-success {
+    background-color: #00b259;
+}
+.badge-warning {
+    background-color: #ffb700;
+    color: #1e293b;
+}
+.badge-info {
+    background-color: #0044b2;
+}
