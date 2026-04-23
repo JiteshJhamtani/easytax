@@ -113,7 +113,7 @@ class ApplicationController extends Controller
                 View
                 </a>';
             })
-            ->rawColumns(['checkbox', 'status', 'payment', 'actions'])
+            ->rawColumns(['checkbox', 'dynamic_data', 'status', 'payment', 'actions'])
             ->make(true);
     }
 
