@@ -1,0 +1,283 @@
+/* ═══════════════════════════════════════════════════
+   EASYTAX  —  SIDEBAR
+   Reference: Commercehq dashboard
+   ═══════════════════════════════════════════════════ */
+
+/* ── Tokens ── */
+:root {
+    --sb-width:      230px;
+    --sb-bg:         #313d4f;   /* dark slate, matches reference */
+    --sb-logo-bg:    #e8f5ee;   /* pale mint box behind logo     */
+    --sb-item-hover: rgba(255, 255, 255, .06);
+    --sb-item-active:#283343;   /* slightly darker than sidebar  */
+    --sb-text:       #8d9bb0;   /* inactive label colour         */
+    --sb-text-active:#1E9C5D;   /* green — active label          */
+    --sb-dot:        #1E9C5D;   /* active dot                    */
+    --green:         #1E9C5D;
+    --green-dark:    #157a48;
+    --radius:        10px;
+    --font:          'Plus Jakarta Sans', sans-serif;
+}
+
+/* ── Global reset helpers ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+    margin: 0; 
+    padding: 0;
+    font-family: var(--font);
+    font-size: 14px;
+    background: #f0f4f8;
+    height: 100vh; /* Locks layout to exact window height */
+    overflow: hidden; /* Kills all page-level scrollbars */
+}
+
+/* ═══════════════════════════════════════════════════
+   SHELL  (sidebar + main side by side)
+   ═══════════════════════════════════════════════════ */
+.shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════
+   SIDEBAR
+   ═══════════════════════════════════════════════════ */
+.sidebar {
+    width: var(--sb-width);
+    background: var(--sb-bg);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 1000;
+    flex-shrink: 0;
+    transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* ── Logo block ── */
+.sb-logo {
+    padding: 1.1rem 1.1rem 1rem;
+    flex-shrink: 0;
+}
+.sb-logo__wrap {
+    background: var(--sb-logo-bg);
+    border-radius: var(--radius);
+    padding: .6rem .85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+}
+.sb-logo__wrap img {
+    max-height: 34px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+}
+
+/* ── Nav ── */
+.sb-nav {
+    flex: 1;
+    padding: .4rem 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+.sb-nav::-webkit-scrollbar { display: none; }
+
+/* ── Nav item ── */
+.sb-item {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    padding: .72rem 1.1rem;
+    margin: .12rem .75rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--sb-text);
+    font-size: .83rem;
+    font-weight: 600;
+    transition: background .18s, color .18s;
+    position: relative;
+}
+.sb-item:hover {
+    background: var(--sb-item-hover);
+    color: #c8d3df;
+    text-decoration: none;
+}
+
+/* ── Active state ── */
+.sb-item--active {
+    background: var(--sb-item-active);
+    color: var(--sb-text-active);
+}
+.sb-item--active:hover {
+    background: var(--sb-item-active);
+    color: var(--sb-text-active);
+    text-decoration: none;
+}
+
+/* ── Icon ── */
+.sb-item__icon {
+    font-size: 1.15rem;
+    line-height: 1;
+    flex-shrink: 0;
+    opacity: .65;
+    transition: opacity .18s;
+}
+.sb-item--active .sb-item__icon,
+.sb-item:hover   .sb-item__icon {
+    opacity: 1;
+}
+
+/* ── Label ── */
+.sb-item__label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Active dot ── */
+.sb-item__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--sb-dot);
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity .18s;
+}
+.sb-item--active .sb-item__dot {
+    opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════
+   ILLUSTRATION
+   ═══════════════════════════════════════════════════ */
+.sb-illustration {
+    padding: 0;
+    flex-shrink: 0;
+    line-height: 0;
+}
+.sb-illustration img {
+    width: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+/* ═══════════════════════════════════════════════════
+   UPGRADE BUTTON
+   ═══════════════════════════════════════════════════ */
+.sb-upgrade {
+    padding: .85rem 1rem 1.1rem;
+    flex-shrink: 0;
+}
+.sb-upgrade__btn {
+    display: block;
+    width: 100%;
+    background: var(--green);
+    color: #fff;
+    text-align: center;
+    font-size: .75rem;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: .72rem 1rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: background .2s, transform .2s, box-shadow .2s;
+}
+.sb-upgrade__btn:hover {
+    background: var(--green-dark);
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(30, 156, 93, .35);
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN  (everything right of sidebar)
+   ═══════════════════════════════════════════════════ */
+.main {
+    flex: 1;
+    margin-left: var(--sb-width);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100vh;
+}
+
+/* ── Topbar ── */
+.topbar {
+    height: 58px;
+    background: #fff;
+    border-bottom: 1px solid #e8ecf0;
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.topbar__toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: #5a6a7e;
+    cursor: pointer;
+    padding: .3rem .4rem;
+    border-radius: 7px;
+    line-height: 1;
+    transition: background .2s;
+}
+.topbar__toggle:hover { background: #f1f5f9; }
+.topbar__spacer { flex: 1; }
+
+/* ── Content body ── */
+.content-body {
+    flex: 1;
+    overflow-y: auto;    /* Enables internal vertical scrolling */
+    overflow-x: hidden;  /* Prevents horizontal scrolling */
+    padding: 1.5rem;     /* Breathing room for inner pages */
+    
+    /* Optional: Hide scrollbar but keep functionality */
+    scrollbar-width: none; 
+}
+.content-body::-webkit-scrollbar { 
+    display: none; 
+}
+
+/* ═══════════════════════════════════════════════════
+   MOBILE OVERLAY & RESPONSIVE
+   ═══════════════════════════════════════════════════ */
+.sb-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .45);
+    z-index: 999;
+}
+.sb-overlay.is-open { display: block; }
+
+@media (max-width: 991px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .sidebar.is-open {
+        transform: translateX(0);
+        box-shadow: 8px 0 32px rgba(0, 0, 0, .25);
+    }
+    .main {
+        margin-left: 0;
+    }
+    .topbar__toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}

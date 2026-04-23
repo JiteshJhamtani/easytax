@@ -1,0 +1,146 @@
+@extends('layouts.admin')
+
+@section('title', 'Pages Management')
+
+@section('content_header')
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h1 class="m-0 text-dark font-weight-bold">Pages Management</h1>
+        <a href="{{ route('admin.pages.create') }}" class="btn btn-primary font-weight-bold shadow-sm">
+            <i class="fas fa-plus-circle mr-1"></i> Add New Page
+        </a>
+    </div>
+@stop
+
+@section('content')
+    <div class="container-fluid px-0">
+
+        <div class="card modern-card shadow-sm border-0">
+            <div class="card-header bg-white pt-4 pb-2 border-bottom-0">
+                <h3 class="card-title font-weight-bold text-dark">
+                    <i class="fas fa-file-contract text-primary mr-2"></i> All Static Pages
+                </h3>
+            </div>
+
+            <div class="card-body">
+                <table id="pagesTable" class="table table-bordered table-striped modern-table w-100">
+                    <thead>
+                        <tr>
+                            <th class="pl-3">ID</th>
+                            <th>Title</th>
+                            <th>Slug</th>
+                            <th class="text-center">Status</th>
+                            <th>Created</th>
+                            <th class="text-center pr-3">Action</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+
+    </div>
+@endsection
+
+@section('css')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
+    <style>
+        .modern-card {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+        }
+        table.dataTable.modern-table {
+            border-collapse: collapse !important;
+            margin-top: 0.5rem !important;
+            margin-bottom: 1.5rem !important;
+            width: 100% !important;
+        }
+        .modern-table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0 !important;
+            border-top: none !important;
+            padding: 1rem 0.75rem;
+            vertical-align: middle;
+        }
+        .modern-table tbody td {
+            padding: 1rem 0.75rem;
+            vertical-align: middle;
+            color: #475569;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .modern-table tbody tr { transition: background 0.2s; }
+        .modern-table tbody tr:hover { background: #f8fafc; }
+        
+        .custom-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.85rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .badge-success-soft {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        .badge-danger-soft {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        .dataTables_info { color: #64748b; font-size: 0.875rem; }
+        .page-item.active .page-link {
+            background-color: #0044b2;
+            border-color: #0044b2;
+            color: white;
+        }
+        .page-link {
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin: 0 2px;
+        }
+    </style>
+@endsection
+
+@section('js')
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
+
+    <script>
+        $(function() {
+            $.ajaxSetup({
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+            });
+
+            $('#pagesTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: '{{ route('admin.pages.datatable') }}',
+                columns: [
+                    { data: 'id', className: 'pl-3 font-weight-bold text-dark' },
+                    { data: 'title', className: 'font-weight-bold text-dark' },
+                    { data: 'slug', className: 'text-muted', render: function(data) {
+                        return `<code class="text-muted"><a href="/pages/${data}" target="_blank">${data}</a></code>`;
+                    }},
+                    { data: 'is_active', className: 'text-center', render: function(data) {
+                        if (data) {
+                            return '<span class="custom-badge badge-success-soft"><i class="fas fa-check-circle mr-1"></i> Active</span>';
+                        }
+                        return '<span class="custom-badge badge-danger-soft"><i class="fas fa-ban mr-1"></i> Inactive</span>';
+                    }},
+                    { data: 'created_at', className: 'text-muted' },
+                    { data: 'action', className: 'text-center pr-3', orderable: false, searchable: false }
+                ],
+                order: [[0, 'desc']]
+            });
+        });
+    </script>
+@endsection

@@ -1,0 +1,346 @@
+/* =========================================
+   WORKSPACE & HEADER STYLING
+========================================= */
+
+body {
+    background-color: var(--bg-light, #f4f7fb);
+}
+
+.container-sm {
+    max-width: 1000px; /* Keep forms narrower for better reading comprehension */
+}
+
+.section-padding {
+    padding: 3rem 0 6rem;
+}
+
+/* Header Split Design */
+.page-header-minimal {
+    background: #ffffff;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+    padding: 2rem 0;
+}
+
+.header-breadcrumbs {
+    font-size: 0.875rem;
+    color: var(--text-muted, #64748b);
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+.header-breadcrumbs a {
+    color: var(--color-primary, #0044b2);
+    text-decoration: none;
+}
+.header-breadcrumbs .current {
+    color: var(--text-dark, #1e293b);
+}
+
+.header-split {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .header-split {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-dark, #1e293b);
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
+}
+.page-subtitle {
+    font-size: 1rem;
+    color: var(--text-body, #475569);
+    margin: 0;
+}
+
+.meta-card {
+    background: rgba(0, 178, 89, 0.05);
+    border: 1px solid rgba(0, 178, 89, 0.2);
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-md, 8px);
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+.meta-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--color-success, #00b259);
+    letter-spacing: 0.5px;
+}
+.meta-value {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-dark, #1e293b);
+}
+
+/* Workspace Card */
+.workspace-card {
+    background: #ffffff;
+    border-radius: var(--radius-lg, 12px);
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border-color, #e2e8f0);
+    overflow: hidden;
+}
+
+.workspace-card-header {
+    padding: 2rem 2.5rem;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+    background: #fafafa;
+}
+.workspace-card-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-dark, #1e293b);
+    margin-bottom: 0.25rem;
+}
+.workspace-card-header p {
+    font-size: 0.95rem;
+    color: var(--text-muted, #64748b);
+    margin: 0;
+}
+
+.workspace-card-body {
+    padding: 2.5rem;
+}
+
+/* =========================================
+   FORM ENGINE STYLING
+========================================= */
+
+.form-sections-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+/* Form Sections */
+.form-section {
+    position: relative;
+}
+
+.form-section:not(:last-child)::after {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 1px;
+    background: var(--border-color, #e2e8f0);
+    margin-top: 3rem;
+}
+
+.form-section h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-dark, #1e293b);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+/* A nice blue dot next to section headers */
+.form-section h3::before {
+    content: "";
+    display: block;
+    width: 8px;
+    height: 8px;
+    background: var(--color-primary, #0044b2);
+    border-radius: 50%;
+}
+
+/* Form Grid */
+.form-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+    .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem 1.5rem;
+    }
+}
+
+/* Form Groups & Inputs */
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-dark, #1e293b);
+    margin-bottom: 0.5rem;
+}
+
+.required {
+    color: #dc2626;
+    margin-left: 4px;
+    font-weight: bold;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm, 6px);
+    border: 1px solid #cbd5e1;
+    font-size: 0.95rem;
+    color: var(--text-dark, #1e293b);
+    background-color: #ffffff;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) inset;
+}
+
+.form-control::placeholder {
+    color: #94a3b8;
+}
+
+.form-control:hover {
+    border-color: #94a3b8;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-primary, #0044b2);
+    box-shadow: 0 0 0 3px rgba(0, 68, 178, 0.15);
+}
+
+textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+/* File Uploads */
+input[type="file"].form-control {
+    padding: 0.6rem;
+    background: #f8fafc;
+    cursor: pointer;
+    border: 1px dashed #94a3b8;
+}
+input[type="file"].form-control:hover {
+    border-color: var(--color-primary, #0044b2);
+    background: #f0f4f8;
+}
+
+.file-preview {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.file-preview span {
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Errors */
+.error {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #dc2626;
+}
+.form-control.is-invalid {
+    border-color: #dc2626;
+    background-color: #fef2f2;
+}
+
+/* =========================================
+   STICKY ACTION BAR
+========================================= */
+
+.form-actions-sticky {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.actions-inner {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    color: var(--text-body, #475569);
+}
+.btn-outline-secondary:hover {
+    background: #f8fafc;
+    color: var(--text-dark, #1e293b);
+    border-color: #94a3b8;
+}
+
+.btn-submit {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+    background: var(--color-secondary, #ff6b00);
+}
+.btn-submit:hover {
+    background: var(--color-secondary-hover, #e55f00);
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.25);
+}
+
+/* =========================================
+   SELECT2 OVERRIDES (Agent Portal Theme)
+========================================= */
+
+.select2-container .select2-selection--single {
+    height: 44px;
+    border-radius: var(--radius-sm, 6px);
+    border: 1px solid #cbd5e1;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+}
+
+.select2-container--default
+    .select2-selection--single
+    .select2-selection__arrow {
+    height: 42px;
+    right: 10px;
+}
+
+.select2-container--default .select2-selection--single:focus,
+.select2-container--default.select2-container--focus
+    .select2-selection--single {
+    border-color: var(--color-primary, #0044b2);
+    box-shadow: 0 0 0 3px rgba(0, 68, 178, 0.15);
+    outline: none;
+}
+
+.select2-dropdown {
+    border-radius: var(--radius-sm, 6px);
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    margin-top: 4px;
+}
+
+.select2-results__option {
+    padding: 8px 12px;
+    font-size: 0.95rem;
+}
+.select2-results__option--highlighted {
+    background-color: var(--color-primary, #0044b2) !important;
+    color: white !important;
+}
