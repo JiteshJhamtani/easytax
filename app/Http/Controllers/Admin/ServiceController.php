@@ -87,6 +87,7 @@ class ServiceController extends Controller
         // Safely catch the new dynamic field bypassing strict validation
         $data['primary_data_field'] = $request->input('primary_data_field');
         $data['whatsapp_number_field'] = $request->input('whatsapp_number_field'); // <-- ADD THIS LINE
+        $data['sort_order'] = $request->input('sort_order', 0); // <-- ADD THIS LINE
 
         $formSchema = $this->parseFormSchema($data);
         unset($data['form_schema']);
@@ -139,7 +140,9 @@ class ServiceController extends Controller
         
         // Safely catch the new dynamic field
         $data['primary_data_field'] = $request->input('primary_data_field');
-        $data['whatsapp_number_field'] = $request->input('whatsapp_number_field'); // <-- ADD THIS LINE
+        $data['whatsapp_number_field'] = $request->input('whatsapp_number_field'); 
+        $data['applicant_email_field'] = $request->input('applicant_email_field'); 
+        $data['sort_order'] = $request->input('sort_order', 0); 
 
         $formSchema = $this->parseFormSchema($data);
         unset($data['form_schema']);

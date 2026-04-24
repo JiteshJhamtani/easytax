@@ -65,6 +65,35 @@ try {
     echo "<li>❌ <strong style='color:red;'>ERROR:</strong> Failed on Hook 2 - " . $e->getMessage() . "</li>";
 }
 
+/*
+|--------------------------------------------------------------------------
+| HOOK 3: Applicant Email Field
+|--------------------------------------------------------------------------
+*/
+try {
+    if (!Schema::hasColumn('services', 'applicant_email_field')) {
+        Schema::table('services', function (Blueprint $table) {
+            $table->string('applicant_email_field')->nullable()->after('whatsapp_number_field');
+        });
+        echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>applicant_email_field</code> to the <b>services</b> table.</li>";
+    } else {
+        echo "<li>⏭️ <strong style='color:gray;'>SKIPPED:</strong> <code>applicant_email_field</code> already exists.</li>";
+    }
+} catch (\Exception $e) {
+    echo "<li>❌ <strong style='color:red;'>ERROR:</strong> Failed on Hook 3 - " . $e->getMessage() . "</li>";
+}
+
+// HOOK 4: Service Sort Order
+try {
+    if (!Schema::hasColumn('services', 'sort_order')) {
+        Schema::table('services', function (Blueprint $table) {
+            $table->integer('sort_order')->default(0)->after('price');
+        });
+        echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>sort_order</code></li>";
+    } else {
+        echo "<li>⏭️ <strong style='color:gray;'>SKIPPED:</strong> <code>sort_order</code> already exists.</li>";
+    }
+} catch (\Exception $e) { echo "<li>❌ <strong style='color:red;'>ERROR 4:</strong> " . $e->getMessage() . "</li>"; }
 // Add future hooks down here!
 
 echo "</ul>";

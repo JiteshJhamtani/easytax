@@ -96,6 +96,7 @@
             margin-bottom: 1.5rem !important;
             width: 100% !important;
             border-bottom: 1px solid var(--border);
+           
         }
         table.dataTable thead th {
             background: #f8fafc;

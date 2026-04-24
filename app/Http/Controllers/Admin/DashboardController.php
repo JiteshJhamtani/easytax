@@ -12,14 +12,37 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // ── KPI Cards ──
+      // ── KPI Cards ── 
+      // ── KPI Cards ──
         $kpis = [
-            'total_applications' => Application::query()->count(),
+            // 1. Total Active (Excludes Drafts, Cancelled, and Failed)
+            'total_applications' => Application::query()
+                ->whereNotIn('status', ['DRAFT', 'CANCELLED'])
+                ->where('payment_status', '!=', 'FAILED')
+                ->count(),
+                
             'completed_applications' => Application::query()->where('status', 'COMPLETED')->count(), 
+            
+            // 2. Pending Active
+            'pending_applications' => Application::query()
+                ->whereNotIn('status', ['COMPLETED', 'DRAFT', 'CANCELLED'])
+                ->where('payment_status', '!=', 'FAILED')
+                ->count(),
+
+            // 3. NEW: Processed (Drafts, Cancelled, or Failed Payments)
+            'processed_applications' => Application::query()
+                ->where(function ($query) {
+                    $query->whereIn('status', ['DRAFT', 'CANCELLED'])
+                          ->orWhere('payment_status', 'FAILED');
+                })
+                ->count(),
+            
+            // 4. Financials & Agents
             'total_revenue' => Application::query()->where('payment_status', 'SUCCESS')->sum('amount'),
+            
             'total_commission' => Application::query()->where('status', 'COMPLETED')->sum('commission_amount'),
+            
             'total_agents' => User::query()->where('role', 'AGENT')->count(),
-            'pending_applications' => Application::query()->where('status', '!=', 'COMPLETED')->count(),
         ];
 
 

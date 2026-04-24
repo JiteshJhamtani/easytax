@@ -67,7 +67,7 @@
 
     /* ── NEW FUNNEL CARDS (3x2 Layout) ── */
     .funnel-container {
-        background: var(--green-light); /* Soft background to make white cards pop */
+        background: var(--green-light, #f0fdf4); 
         border-radius: 16px;
         padding: 1.5rem;
         margin-bottom: 2rem;
@@ -76,15 +76,15 @@
     .funnel-container-title {
         font-size: 1.15rem;
         font-weight: 800;
-        color: var(--green-dark);
+        color: var(--green-dark, #166534);
         margin-bottom: 1.5rem;
     }
     .funnel-card {
-        background: var(--surface);
+        background: var(--surface, #ffffff);
         border-radius: 12px;
         padding: 1.5rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        border: 1px solid var(--border);
+        border: 1px solid var(--border, #e2e8f0);
         display: flex;
         flex-direction: column;
         align-items: flex-start;
@@ -96,18 +96,22 @@
         box-shadow: 0 6px 16px rgba(0,0,0,0.06);
     }
     .funnel-icon {
-        background: var(--green-light);
-        color: var(--green);
+        background: var(--green-light, #f0fdf4);
+        color: var(--green, #16a34a);
         width: 44px; height: 44px;
         border-radius: 10px;
         display: flex; align-items: center; justify-content: center;
         font-size: 1.2rem;
         margin-bottom: 1.25rem;
     }
+    .funnel-icon.orange {
+        background: #fff7ed;
+        color: #ea580c;
+    }
     .funnel-label {
         font-size: 0.75rem;
         font-weight: 700;
-        color: var(--text-muted);
+        color: var(--text-muted, #64748b);
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin-bottom: 0.3rem;
@@ -115,7 +119,7 @@
     .funnel-value {
         font-size: 1.8rem;
         font-weight: 800;
-        color: var(--slate-dark);
+        color: var(--slate-dark, #0f172a);
         line-height: 1;
     }
 
@@ -162,91 +166,99 @@
         </div>
     </div>
 
-    {{-- ═══════ ROW 1 — NEW FUNNEL CARDS (3x2) ═══════ --}}
+    {{-- ═══════ KPI FUNNEL CARDS (4 Top, 3 Bottom) ═══════ --}}
     <div class="funnel-container">
         <h2 class="funnel-container-title">Application Funnels</h2>
-        <div class="row">
-            
-            <div class="col-lg-4 col-md-6 mb-4">
+        
+        <div class="row mb-4">
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-file-alt"></i></div>
                     <div class="funnel-label">Total Applications</div>
-                    <div class="funnel-value">{{ number_format($kpis['total_applications'] ?? 0) }}</div>
+                    <div class="funnel-value">{{ $kpis['total_applications'] }}</div>
                 </div>
             </div>
 
-            <div class="col-lg-4 col-md-6 mb-4">
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-check-circle"></i></div>
                     <div class="funnel-label">Completed Apps</div>
-                    <div class="funnel-value">{{ number_format($kpis['completed_applications'] ?? 0) }}</div>
+                    <div class="funnel-value">{{ $kpis['completed_applications'] }}</div>
                 </div>
             </div>
 
-            <div class="col-lg-4 col-md-6 mb-4">
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-clock"></i></div>
                     <div class="funnel-label">Pending Apps</div>
-                    <div class="funnel-value">{{ number_format($kpis['pending_applications'] ?? 0) }}</div>
+                    <div class="funnel-value">{{ $kpis['pending_applications'] }}</div>
                 </div>
             </div>
 
-            <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
+                <div class="funnel-card">
+                    <div class="funnel-icon orange"><i class="fas fa-archive"></i></div>
+                    <div class="funnel-label">Processed (Draft/Fail)</div>
+                    <div class="funnel-value">{{ $kpis['processed_applications'] ?? 0 }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xl-4 col-lg-4 col-md-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-rupee-sign"></i></div>
                     <div class="funnel-label">Total Revenue</div>
-                    <div class="funnel-value">₹{{ number_format($kpis['total_revenue'] ?? 0, 2) }}</div>
+                    <div class="funnel-value">₹{{ number_format($kpis['total_revenue'], 2) }}</div>
                 </div>
             </div>
 
-            <div class="col-lg-4 col-md-6 mb-4 mb-md-0">
+            <div class="col-xl-4 col-lg-4 col-md-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-coins"></i></div>
                     <div class="funnel-label">Commission Generated</div>
-                    <div class="funnel-value">₹{{ number_format($kpis['total_commission'] ?? 0, 2) }}</div>
+                    <div class="funnel-value">₹{{ number_format($kpis['total_commission'], 2) }}</div>
                 </div>
             </div>
 
-            <div class="col-lg-4 col-md-6">
+            <div class="col-xl-4 col-lg-4 col-md-12 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-users"></i></div>
                     <div class="funnel-label">Total Agents</div>
-                    <div class="funnel-value">{{ number_format($kpis['total_agents'] ?? 0) }}</div>
+                    <div class="funnel-value">{{ $kpis['total_agents'] }}</div>
                 </div>
             </div>
-
         </div>
     </div>
 
-    {{-- ═══════ ROW 2 — Charts ═══════ --}}
+
+    {{-- ═══════ CHARTS ═══════ --}}
     <div class="row mb-4">
         <div class="col-lg-6 mb-4 mb-lg-0">
             <div class="dash-panel">
                 <div class="dash-panel-header">
-                    <h3 class="dash-panel-title"><i class="fas fa-chart-bar text-primary"></i> Monthly Applications</h3>
+                    <h3 class="dash-panel-title"><i class="fas fa-chart-bar text-primary"></i> Applications Overview</h3>
                 </div>
-                <div class="dash-panel-body">
-                    <div style="position: relative; height: 260px;">
-                        <canvas id="applicationsChart"></canvas>
-                    </div>
+                <div class="dash-panel-body" style="height: 300px;">
+                    <canvas id="applicationsChart"></canvas>
                 </div>
             </div>
         </div>
+        
         <div class="col-lg-6">
             <div class="dash-panel">
                 <div class="dash-panel-header">
-                    <h3 class="dash-panel-title"><i class="fas fa-chart-area text-success"></i> Monthly Revenue</h3>
+                    <h3 class="dash-panel-title"><i class="fas fa-chart-line text-success"></i> Revenue Growth</h3>
                 </div>
-                <div class="dash-panel-body">
-                    <div style="position: relative; height: 260px;">
-                        <canvas id="revenueChart"></canvas>
-                    </div>
+                <div class="dash-panel-body" style="height: 300px;">
+                    <canvas id="revenueChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- ═══════ ROW 3 — Top Agents & Top Services ═══════ --}}
+
+    {{-- ═══════ Top Agents & Top Services ═══════ --}}
     <div class="row mb-4">
         <div class="col-lg-7 mb-4 mb-lg-0">
             <div class="dash-panel">
@@ -326,7 +338,7 @@
         </div>
     </div>
 
-    {{-- ═══════ ROW 4 — Recent Applications ═══════ --}}
+    {{-- ═══════ Recent Applications ═══════ --}}
     <div class="row mb-4">
         <div class="col-12">
             <div class="dash-panel">

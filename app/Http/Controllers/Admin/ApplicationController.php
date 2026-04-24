@@ -11,7 +11,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ApplicationsExport;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Support\Facades\Http;
-
+use Illuminate\Support\Facades\Mail;
 
 class ApplicationController extends Controller
 {
@@ -258,7 +258,7 @@ class ApplicationController extends Controller
         return view('admin.applications.show', compact('application'));
     }
 
-    public function updateStatus(Request $request, Application $application)
+ public function updateStatus(Request $request, Application $application)
     {
         $request->validate([
             'status' => 'required|string|in:IN_PROGRESS,E_FILING,OTP_VERIFICATION,COMPLETED',
@@ -268,6 +268,48 @@ class ApplicationController extends Controller
 
         if ($request->status === 'COMPLETED') {
             $application->update(['completed_at' => now()]);
+
+            // --- DYNAMIC EMAIL AUTOMATION ---
+            $emailKey = $application->service->applicant_email_field; 
+            
+            if (!empty($emailKey) && !empty($application->form_data)) {
+                $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
+                $clientEmail = $formData[$emailKey] ?? null;
+
+                // 1. Smart Name Extractor
+                $clientName = $formData['applicant_name'] ?? $formData['name'] ?? $formData['full_name'] ?? $formData['company_name'] ?? $formData['firm_name'] ?? 'Valued Client';
+
+                // 2. Secure Permanent Tracking Token
+                $trackingUrl = \Illuminate\Support\Facades\URL::signedRoute('tracking.show', ['application' => $application->id]);
+
+                if ($clientEmail && filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
+                    try {
+                        Mail::send('emails.application_completed', [
+                            'application' => $application,
+                            'clientName'  => $clientName,
+                            'trackingUrl' => $trackingUrl
+                        ], function($message) use ($clientEmail, $application) {
+                            $serviceName = $application->service->name ?? 'Service';
+                            $message->to($clientEmail)
+                                    ->subject("Completed: Your {$serviceName} Application");
+                        });
+                        \Log::info("Completion email sent to {$clientEmail} for App #{$application->id}");
+                    } catch (\Exception $e) {
+                        \Log::error("Email failed for App #{$application->id}: " . $e->getMessage());
+                    }
+                }
+            }
+
+            // --- DYNAMIC WHATSAPP AUTOMATION (Paused) ---
+            // $whatsappKey = $application->service->whatsapp_number_field;
+            // if (!empty($whatsappKey) && !empty($application->form_data)) {
+            //     $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
+            //     $clientPhone = $formData[$whatsappKey] ?? null;
+            //     if ($clientPhone) {
+            //         $this->sendSnptWhatsapp($clientPhone, $application);
+            //     }
+            // }
+            // -----------------------------------
         }
 
         activity('application')
@@ -278,6 +320,42 @@ class ApplicationController extends Controller
         return back()->with('success', 'Application status updated successfully.');
     }
 
+    /**
+     * SNPT WhatsApp API Helper
+     */
+    private function sendSnptWhatsapp($phone, Application $application)
+    {
+        // 1. Clean the phone number (remove spaces, ensure country code)
+        $cleanPhone = preg_replace('/[^0-9]/', '', (string)$phone);
+        if (strlen($cleanPhone) == 10) {
+            $cleanPhone = '91' . $cleanPhone; // Default to India if no country code
+        }
+
+        // 2. Prepare the message
+        $serviceName = $application->service->name ?? 'Service';
+        $message = "Hello! Great news: Your application for {$serviceName} (App ID: #{$application->id}) has been successfully COMPLETED. Thank you for choosing EasyTax!";
+
+        // 3. SNPT API Call (Replace placeholders with your actual SNPT Instance ID and Token)
+        try {
+            $instanceId = 'YOUR_SNPT_INSTANCE_ID'; 
+            $accessToken = 'YOUR_SNPT_ACCESS_TOKEN';
+
+            Http::post("https://snpt.in/api/send", [
+                'number' => $cleanPhone,
+                'type' => 'text',
+                'message' => $message,
+                'instance_id' => $instanceId,
+                'access_token' => $accessToken
+            ]);
+            
+            // Optional: Log success
+            \Log::info("WhatsApp sent to {$cleanPhone} for App #{$application->id}");
+            
+        } catch (\Exception $e) {
+            // Log failure quietly so it doesn't crash the admin's page
+            \Log::error("WhatsApp failed for App #{$application->id}: " . $e->getMessage());
+        }
+    }
     public function uploadDocument(Request $request, Application $application)
     {
         $request->validate([
@@ -435,6 +513,7 @@ class ApplicationController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
  
 }
 

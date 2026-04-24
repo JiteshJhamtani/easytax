@@ -93,11 +93,29 @@ endif;
 unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         </div>
 
-                        <div class="form-group">
-                        <label>Primary Data Field (Optional)</label>
-                        <input type="text" name="primary_data_field" class="form-control" value="<?php echo e($service->primary_data_field ?? ''); ?>" placeholder="e.g., gst_number or pan_number">
-                        <small class="text-muted">Type the exact input name from the form builder to display it on the Applications List.</small>
-                        </div>
+                        <div class="col-md-12 form-group">
+        <label>Primary Data Field (Optional)</label>
+        <input type="text" name="primary_data_field" class="form-control" value="<?php echo e(old('primary_data_field', $service->primary_data_field ?? '')); ?>" placeholder="e.g., gst_number">
+        <small class="text-muted">Type the exact input name to display it on the Applications List.</small>
+    </div>
+
+    <div class="col-md-6 form-group mt-3">
+        <label><i class="fab fa-whatsapp text-success"></i> WhatsApp Number Field (Optional)</label>
+        <input type="text" name="whatsapp_number_field" class="form-control" value="<?php echo e(old('whatsapp_number_field', $service->whatsapp_number_field ?? '')); ?>" placeholder="e.g., contact_mobile">
+        <small class="text-muted">Field name for the client's phone number.</small>
+    </div>
+
+    <div class="col-md-6 form-group mt-3">
+        <label><i class="fas fa-envelope text-primary"></i> Applicant Email Field (Optional)</label>
+        <input type="text" name="applicant_email_field" class="form-control" value="<?php echo e(old('applicant_email_field', $service->applicant_email_field ?? '')); ?>" placeholder="e.g., firm_email">
+        <small class="text-muted">Field name for the client's email address.</small>
+    </div>
+
+    <div class="col-md-6 form-group mt-3">
+    <label><i class="fas fa-sort-numeric-down text-info"></i> Sort Order</label>
+    <input type="number" name="sort_order" class="form-control" value="<?php echo e(old('sort_order', $service->sort_order ?? 0)); ?>">
+    <small class="text-muted">Lower numbers appear first (e.g., 1, 2, 3).</small>
+</div>
                     </div>
 
 

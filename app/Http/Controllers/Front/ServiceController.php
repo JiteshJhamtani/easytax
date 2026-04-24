@@ -16,12 +16,12 @@ class ServiceController extends Controller
     public function index()
     {
         $services = Service::where('active', true)
-            ->orderBy('name')
+            ->orderBy('sort_order', 'asc') // Sorts by your custom numbers first (0, 1, 2...)
+            ->orderBy('name', 'asc')       // If numbers are the same, sorts alphabetically
             ->paginate(12);
 
         return view('front.pages.services.index', compact('services'));
     }
-
     // public function show($slug)
     // {
     //     $service = Service::where('slug', $slug)
@@ -34,8 +34,7 @@ class ServiceController extends Controller
 
     //     return view('front.pages.services.show', compact('service', 'form', 'giftMilestones'));
     // }
-
-
+    
     public function show(string $slug)
     {
         $service = Service::where('slug', $slug)

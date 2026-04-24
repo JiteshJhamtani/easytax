@@ -254,7 +254,7 @@ return [
         ],
     ],
     'section-8-company' => [
-        'label' => 'Section 8 Company Registration',
+        'label' => '',
         'sections' => [
             'company_details' => [
                 'label' => 'Proposed Company Details',
@@ -2243,6 +2243,18 @@ return [
                         'label' => 'Testing',
                         'type' => 'text',
                         'required' => false,
+                        'validation' => '',
+                    ],
+                ],
+            ],
+            'section_2' => [
+                'label' => 'New Section',
+                'fields' => [
+                    [
+                        'name' => 'email_id',
+                        'label' => 'email',
+                        'type' => 'email',
+                        'required' => true,
                         'validation' => '',
                     ],
                 ],

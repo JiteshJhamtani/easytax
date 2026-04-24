@@ -28,6 +28,12 @@ Route::get('/', function () {
     return redirect()->route('services.index');
 })->name('home');
 
+// --- NEW PUBLIC TRACKING ROUTE ---
+Route::get('/track/{application}', [\App\Http\Controllers\Front\ApplicationController::class, 'track'])
+    ->name('tracking.show')
+    ->middleware('signed'); // This is the magic lock!
+// ---------------------------------
+
 Route::get('/pages/{slug}', [\App\Http\Controllers\Front\PageController::class, 'show'])
     ->name('pages.show');
 
@@ -124,6 +130,7 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
         
     Route::get('/documents/{media}/download', [AgentApplicationController::class, 'downloadDocument'])
         ->name('documents.download');
+  
 });
 
 /*
