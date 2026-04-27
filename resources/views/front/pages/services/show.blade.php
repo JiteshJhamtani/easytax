@@ -21,7 +21,7 @@
             min-height: 100vh;
         }
 
-        /* ── CUSTOM HERO SECTION (The Mint Area) ── */
+        /* ── CUSTOM HERO SECTION (The Mint Area) ── h */
         .sv-hero {
             background-color: var(--brand-mint);
             padding: 3rem 3rem 6.5rem; 

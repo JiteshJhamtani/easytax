@@ -147,7 +147,6 @@
                     @endif
                 </div>
 
-               
                @php 
               $formData = array_filter($application->form_data ?? [], fn($key) => !in_array($key, ['admin_username', 'admin_password']), ARRAY_FILTER_USE_KEY); 
             @endphp
@@ -192,7 +191,8 @@
                 </div>
             </div>
 
-           {{-- DELIVERABLES & CREDENTIALS CARD (ADMIN INPUT) --}}
+           {{-- CHANGE 2: HIDDEN FOR ITR FILING --}}
+           @if($application->service->slug !== 'itr-filing')
             <div class="card border-0 shadow-sm mb-4 rounded-lg elegant-border">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                     <h3 class="card-title font-weight-bold text-dark mb-0">
@@ -235,7 +235,7 @@
                                     </div>
                                     <div class="d-flex gap-2">
                                         <a href="{{ route('admin.documents.view', $doc->id) }}" target="_blank" class="btn btn-sm btn-light border text-primary"><i class="fas fa-eye"></i></a>
-                                        <form action="{{ route('admin.applications.deleteDocument', $doc->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete GST Certificate?');">
+                                        <form action="{{ route('admin.applications.deleteDocument', $doc->id) }}" method="POST" class="d-inline">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
                                         </form>
@@ -246,6 +246,7 @@
                     @endif
                 </div>
             </div>
+            @endif
 
         </div>
 
@@ -265,12 +266,17 @@
                         @csrf
                         @method('PATCH')
 
+                        {{-- CHANGE 1: REORDERED BUTTONS --}}
                         <button type="submit" name="status" value="IN_PROGRESS"
                             class="btn btn-warning btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
                             <i class="fas fa-spinner mr-2"></i> Mark In Progress
                         </button>
 
-                        {{-- NEW CONDITIONAL BUTTONS ONLY FOR ITR --}}
+                        <button type="submit" name="status" value="COMPLETED"
+                            class="btn btn-success btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
+                            <i class="fas fa-check-circle mr-2"></i> Mark Completed
+                        </button>
+
                         @if($application->service->slug === 'itr-filing')
                             <button type="submit" name="status" value="E_FILING"
                                 class="btn btn-info btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover text-white">
@@ -282,11 +288,6 @@
                                 <i class="fas fa-mobile-alt mr-2"></i> Mark OTP Verification
                             </button>
                         @endif
-
-                        <button type="submit" name="status" value="COMPLETED"
-                            class="btn btn-success btn-block py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
-                            <i class="fas fa-check-circle mr-2"></i> Mark Completed
-                        </button>
                     </form>
 
                     @if ($application->status->value === 'CANCELLED' && strtolower($application->payment_status->value) === 'paid')
@@ -302,7 +303,6 @@
                             @csrf
                             @method('PATCH')
                             <input type="hidden" name="payment_status" value="REFUNDED">
-                            {{-- Changed to type="button" and added onclick to trigger modal --}}
                             <button type="button" onclick="openRefundModal()"
                                 class="btn btn-outline-danger btn-block py-2 d-flex justify-content-center align-items-center font-weight-bold transition-hover">
                                 <i class="fas fa-undo-alt mr-2"></i> Process Refund
@@ -323,110 +323,177 @@
 
                 <div class="card-body p-4 bg-light rounded-bottom">
 
-                {{-- THE SECURE UPLOAD FORM --}}
+              {{-- 1. THE GENERIC UPLOAD FORM (Isolated) --}}
                 <form action="{{ route('admin.applications.uploadDocument', $application->id) }}" method="POST" enctype="multipart/form-data" class="mb-4">
                     @csrf
-                    
-                    {{-- 1. Generic Document Dropzone (Original Style) --}}
-                    <div class="position-relative mb-4" style="border: 2px dashed #d1d5db; border-radius: 12px; padding: 2rem 1rem; text-align: center; background: #ffffff; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#1E9C5D'" onmouseout="this.style.borderColor='#d1d5db'">
+                    <div class="position-relative" style="border: 2px dashed #d1d5db; border-radius: 12px; padding: 2rem 1rem; text-align: center; background: #ffffff; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#1E9C5D'" onmouseout="this.style.borderColor='#d1d5db'">
                         <div class="text-muted mb-2">
                             <i class="fas fa-cloud-upload-alt fa-2x"></i>
                         </div>
                         <h6 class="font-weight-bold text-dark mb-1">Click to upload a generic document</h6>
                         <p class="text-xs text-muted mb-0 text-uppercase">PDF, PNG, JPG (Max 5MB)</p>
                         
-                        {{-- Invisible file input covers the whole box. onchange auto-submits the form! --}}
                         <input type="file" name="document" class="position-absolute" style="top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="this.form.submit()" accept=".pdf,.png,.jpg,.jpeg">
                     </div>
+                    @error('document') <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span> @enderror
+                </form>
 
-                   {{-- 2. Dedicated Buckets (Compact UI) --}}
-                    <div class="row px-2">
-                        <div class="col-md-6 mb-3">
+                {{-- 2. DYNAMIC UPLOAD/DISPLAY FIELDS FOR ITR ACK AND COMPUTATION (Isolated) --}}
+                @if($application->service->slug === 'itr-filing')
+                    <div class="row px-2 mb-4">
+                        
+                        {{-- ITR ACK Field --}}
+                        <div class="col-md-6 mb-3 mb-md-0">
                             <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">
                                 <i class="fas fa-file-invoice text-primary mr-1"></i> ITR Ack
                             </label>
-                            <input type="file" name="ack_file" class="form-control border-light shadow-sm" style="height: auto; padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px;" accept=".pdf" onchange="this.form.submit()">
+                            @php $ackDoc = $application->getFirstMedia('itr_acknowledgement'); @endphp
+                            
+                            @if($ackDoc)
+                                <div class="d-flex align-items-center bg-white border rounded p-2 shadow-sm">
+                                    <div class="text-truncate flex-grow-1 text-xs font-weight-bold mr-2 text-dark" title="{{ $ackDoc->name }}">{{ $ackDoc->name }}</div>
+                                    <div class="d-flex gap-1">
+                                        <a href="{{ route('admin.documents.view', $ackDoc->id) }}" target="_blank" class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
+                                        
+                                        {{-- NATIVE DELETE FORM --}}
+                                        <form action="{{ route('admin.applications.deleteDocument', $ackDoc->id) }}" method="POST" class="d-inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @else
+                                {{-- NATIVE UPLOAD FORM --}}
+                                <form action="{{ route('admin.applications.uploadDocument', $application->id) }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <input type="file" name="ack_file" class="form-control border-light shadow-sm" style="height: auto; padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px;" accept=".pdf" onchange="this.form.submit()">
+                                </form>
+                            @endif
+                            @error('ack_file') <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span> @enderror
                         </div>
                         
-                        <div class="col-md-6 mb-3">
+                        {{-- COMPUTATION Field --}}
+                        <div class="col-md-6">
                             <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">
-                                <i class="fas fa-calculator text-success mr-1"></i> Computation (P&L)
+                                <i class="fas fa-calculator text-success mr-1"></i> Computation
                             </label>
-                            <input type="file" name="computation_file" class="form-control border-light shadow-sm" style="height: auto; padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px;" accept=".pdf" onchange="this.form.submit()">
+                            @php $compDoc = $application->getFirstMedia('computation_sheet'); @endphp
+                            
+                            @if($compDoc)
+                                <div class="d-flex align-items-center bg-white border rounded p-2 shadow-sm">
+                                    <div class="text-truncate flex-grow-1 text-xs font-weight-bold mr-2 text-dark" title="{{ $compDoc->name }}">{{ $compDoc->name }}</div>
+                                    <div class="d-flex gap-1">
+                                        <a href="{{ route('admin.documents.view', $compDoc->id) }}" target="_blank" class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
+                                        
+                                        {{-- NATIVE DELETE FORM --}}
+                                        <form action="{{ route('admin.applications.deleteDocument', $compDoc->id) }}" method="POST" class="d-inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @else
+                                {{-- NATIVE UPLOAD FORM --}}
+                                <form action="{{ route('admin.applications.uploadDocument', $application->id) }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <input type="file" name="computation_file" class="form-control border-light shadow-sm" style="height: auto; padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px;" accept=".pdf" onchange="this.form.submit()">
+                                </form>
+                            @endif
+                            @error('computation_file') <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span> @enderror
                         </div>
+                        
                     </div>
+                @endif
 
-                    {{-- Error Handling --}}
                     @error('document') <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span> @enderror
                     @error('ack_file') <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span> @enderror
                     @error('computation_file') <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span> @enderror
                 </form>
- 
-                   {{-- 
-                        We changed getMedia('documents') to getMedia() 
-                        so it grabs ALL buckets (including partner PANs, deeds, etc.)
-                    --}}
-                   @if ($application->media->count())
-    <div class="document-list">
-        @foreach ($application->media as $doc)
-                                <div
-                                    class="document-item d-flex align-items-center p-3 mb-3 bg-white rounded-lg border shadow-sm transition-hover">
 
-                                    <div class="document-icon bg-light rounded d-flex align-items-center justify-content-center mr-3"
-                                        style="width: 45px; height: 45px; flex-shrink: 0;">
-                                        @php
-                                            $ext = strtolower(pathinfo($doc->file_name ?? '', PATHINFO_EXTENSION));
-                                            $icon = match ($ext) {
-                                                'pdf' => 'fa-file-pdf text-danger',
-                                                'jpg', 'jpeg', 'png' => 'fa-file-image text-primary',
-                                                'doc', 'docx' => 'fa-file-word text-info',
-                                                default => 'fa-file-alt text-secondary',
-                                            };
-                                        @endphp
-                                        <i class="fas {{ $icon }} fa-lg"></i>
-                                    </div>
+                {{-- THE HIDDEN DELETE FORMS (Required for the JS delete buttons to work) --}}
+                @if(isset($ackDoc) && $ackDoc)
+                    <form id="delete-ack-{{ $ackDoc->id }}" action="{{ route('admin.applications.deleteDocument', $ackDoc->id) }}" method="POST" class="d-none">
+                        @csrf @method('DELETE')
+                    </form>
+                @endif
+                @if(isset($compDoc) && $compDoc)
+                    <form id="delete-comp-{{ $compDoc->id }}" action="{{ route('admin.applications.deleteDocument', $compDoc->id) }}" method="POST" class="d-none">
+                        @csrf @method('DELETE')
+                    </form>
+                @endif
+                   {{-- CHANGE 3: SPLIT DOCUMENT VIEW (ADMIN vs CLIENT/AGENT) --}}
+                    @php
+                        // We add 'documents' and 'default' here because that's where the generic Admin upload box saves files!
+                        $adminCollections = ['final_deliverables', 'admin_uploads', 'documents', 'default'];
+                        $specialCollections = ['itr_acknowledgement', 'computation_sheet'];
+                        
+                        $adminDocs = $application->media->whereIn('collection_name', $adminCollections);
+                        
+                        // Agent docs are all the specific form buckets (Form 16, Bank Statement, etc.)
+                        $agentDocs = $application->media->whereNotIn('collection_name', array_merge($adminCollections, $specialCollections));
+                    @endphp
 
-                                    <div class="document-info flex-grow-1 overflow-hidden pr-2">
-                                        <div class="text-dark font-weight-bold text-truncate text-sm mb-1"
-                                            title="{{ $doc->name }}">
-                                            {{-- Show custom label if it exists, otherwise filename --}}
-                                            {{ $doc->custom_properties['label'] ?? $doc->name }}
-                                        </div>
-                                        <div class="text-muted text-xs text-uppercase font-weight-bold">
-                                            {{ strtoupper($ext) ?: 'FILE' }} • {{ number_format($doc->size / 1024, 1) }}
-                                            KB
-                                            
-                                            {{-- Show which bucket it came from for Admin clarity --}}
-                                            @if($doc->collection_name !== 'documents' && $doc->collection_name !== 'default')
-                                                 • <span class="text-primary">{{ str_replace('_', ' ', $doc->collection_name) }}</span>
-                                            @endif
-                                        </div>
-                                    </div>
-
-                                    <div class="d-flex flex-column flex-sm-row gap-2">
-                                        <a href="{{ route('admin.documents.view', $doc->id) }}" target="_blank"
-                                            class="btn btn-sm btn-light border text-primary action-btn shadow-sm"
-                                            title="View Document">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ route('admin.documents.download', $doc->id) }}"
-                                            class="btn btn-sm btn-primary action-btn shadow-sm" title="Download Document">
-                                            <i class="fas fa-download"></i>
-                                        </a>
-                                        
-                                        {{-- NEW DELETE BUTTON --}}
-                                        <form action="{{ route('admin.applications.deleteDocument', $doc->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this document permanently?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger action-btn shadow-sm" title="Delete Document">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-
+                    {{-- Helper function to render document HTML so we don't repeat code --}}
+                    {{-- Helper function to render document HTML so we don't repeat code --}}
+                    @php
+                        $renderDoc = function($doc) {
+                            $ext = strtolower(pathinfo($doc->file_name ?? '', PATHINFO_EXTENSION));
+                            $icon = match ($ext) {
+                                'pdf' => 'fa-file-pdf text-danger',
+                                'jpg', 'jpeg', 'png' => 'fa-file-image text-primary',
+                                'doc', 'docx' => 'fa-file-word text-info',
+                                default => 'fa-file-alt text-secondary',
+                            };
+                            
+                            $bucketText = '';
+                            if($doc->collection_name !== 'documents' && $doc->collection_name !== 'default') {
+                                $bucketText = ' • <span class="text-primary">'.str_replace('_', ' ', $doc->collection_name).'</span>';
+                            }
+                            
+                            return '
+                            <div class="document-item d-flex align-items-center p-3 mb-3 bg-white rounded-lg border shadow-sm transition-hover">
+                                <div class="document-icon bg-light rounded d-flex align-items-center justify-content-center mr-3" style="width: 45px; height: 45px; flex-shrink: 0;">
+                                    <i class="fas '.$icon.' fa-lg"></i>
                                 </div>
-                            @endforeach
-                        </div>
+                                <div class="document-info flex-grow-1 overflow-hidden pr-2">
+                                    <div class="text-dark font-weight-bold text-truncate text-sm mb-1" title="'.$doc->name.'">'.($doc->custom_properties['label'] ?? $doc->name).'</div>
+                                    <div class="text-muted text-xs text-uppercase font-weight-bold">'.(strtoupper($ext) ?: 'FILE').' • '.number_format($doc->size / 1024, 1).' KB '.$bucketText.'</div>
+                                </div>
+                                <div class="d-flex flex-column flex-sm-row gap-2">
+                                    <a href="'.route('admin.documents.view', $doc->id).'" target="_blank" class="btn btn-sm btn-light border text-primary action-btn shadow-sm" title="View Document"><i class="fas fa-eye"></i></a>
+                                    <a href="'.route('admin.documents.download', $doc->id).'" class="btn btn-sm btn-primary action-btn shadow-sm" title="Download Document"><i class="fas fa-download"></i></a>
+                                    
+                                    <button type="button" class="btn btn-sm btn-outline-danger action-btn shadow-sm" title="Delete Document" onclick="document.getElementById(\'delete-doc-'.$doc->id.'\').submit();"><i class="fas fa-trash"></i></button>
+                                </div>
+                                <form id="delete-doc-'.$doc->id.'" action="'.route('admin.applications.deleteDocument', $doc->id).'" method="POST" class="d-none">'.csrf_field().method_field('DELETE').'</form>
+                            </div>';
+                        };
+                    @endphp
+
+                    @if ($application->media->count())
+                        
+                        {{-- ADMIN UPLOADS SECTION --}}
+                        @if($adminDocs->count() > 0)
+                            <hr class="border-light my-4">
+                            <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-user-shield text-primary mr-2"></i> Uploaded by Admin</h6>
+                            <div class="document-list mb-4">
+                                @foreach ($adminDocs as $doc)
+                                    {!! $renderDoc($doc) !!}
+                                @endforeach
+                            </div>
+                        @endif
+
+                        {{-- AGENT / CLIENT UPLOADS SECTION --}}
+                        @if($agentDocs->count() > 0)
+                            <hr class="border-light my-4">
+                            <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-user-tie text-secondary mr-2"></i> Uploaded by Client / Agent</h6>
+                            <div class="document-list">
+                                @foreach ($agentDocs as $doc)
+                                    {!! $renderDoc($doc) !!}
+                                @endforeach
+                            </div>
+                        @endif
+
                     @else
                         <div class="text-center py-4 text-muted">
                             <div class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm border"
@@ -573,4 +640,4 @@
         }
         
     </script>
-@stop 
+@stop

@@ -147,7 +147,6 @@
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
 
-               
                <?php 
               $formData = array_filter($application->form_data ?? [], fn($key) => !in_array($key, ['admin_username', 'admin_password']), ARRAY_FILTER_USE_KEY); 
             ?>
@@ -197,6 +196,7 @@
             </div>
 
            
+           <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($application->service->slug !== 'itr-filing'): ?>
             <div class="card border-0 shadow-sm mb-4 rounded-lg elegant-border">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                     <h3 class="card-title font-weight-bold text-dark mb-0">
@@ -239,7 +239,7 @@
                                     </div>
                                     <div class="d-flex gap-2">
                                         <a href="<?php echo e(route('admin.documents.view', $doc->id)); ?>" target="_blank" class="btn btn-sm btn-light border text-primary"><i class="fas fa-eye"></i></a>
-                                        <form action="<?php echo e(route('admin.applications.deleteDocument', $doc->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Delete GST Certificate?');">
+                                        <form action="<?php echo e(route('admin.applications.deleteDocument', $doc->id)); ?>" method="POST" class="d-inline">
                                             <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
                                             <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
                                         </form>
@@ -250,6 +250,7 @@
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
             </div>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
         </div>
 
@@ -269,12 +270,17 @@
                         <?php echo csrf_field(); ?>
                         <?php echo method_field('PATCH'); ?>
 
+                        
                         <button type="submit" name="status" value="IN_PROGRESS"
                             class="btn btn-warning btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
                             <i class="fas fa-spinner mr-2"></i> Mark In Progress
                         </button>
 
-                        
+                        <button type="submit" name="status" value="COMPLETED"
+                            class="btn btn-success btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
+                            <i class="fas fa-check-circle mr-2"></i> Mark Completed
+                        </button>
+
                         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($application->service->slug === 'itr-filing'): ?>
                             <button type="submit" name="status" value="E_FILING"
                                 class="btn btn-info btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover text-white">
@@ -286,11 +292,6 @@
                                 <i class="fas fa-mobile-alt mr-2"></i> Mark OTP Verification
                             </button>
                         <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-
-                        <button type="submit" name="status" value="COMPLETED"
-                            class="btn btn-success btn-block py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
-                            <i class="fas fa-check-circle mr-2"></i> Mark Completed
-                        </button>
                     </form>
 
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($application->status->value === 'CANCELLED' && strtolower($application->payment_status->value) === 'paid'): ?>
@@ -306,7 +307,6 @@
                             <?php echo csrf_field(); ?>
                             <?php echo method_field('PATCH'); ?>
                             <input type="hidden" name="payment_status" value="REFUNDED">
-                            
                             <button type="button" onclick="openRefundModal()"
                                 class="btn btn-outline-danger btn-block py-2 d-flex justify-content-center align-items-center font-weight-bold transition-hover">
                                 <i class="fas fa-undo-alt mr-2"></i> Process Refund
@@ -327,40 +327,109 @@
 
                 <div class="card-body p-4 bg-light rounded-bottom">
 
-                
+              
                 <form action="<?php echo e(route('admin.applications.uploadDocument', $application->id)); ?>" method="POST" enctype="multipart/form-data" class="mb-4">
                     <?php echo csrf_field(); ?>
-                    
-                    
-                    <div class="position-relative mb-4" style="border: 2px dashed #d1d5db; border-radius: 12px; padding: 2rem 1rem; text-align: center; background: #ffffff; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#1E9C5D'" onmouseout="this.style.borderColor='#d1d5db'">
+                    <div class="position-relative" style="border: 2px dashed #d1d5db; border-radius: 12px; padding: 2rem 1rem; text-align: center; background: #ffffff; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#1E9C5D'" onmouseout="this.style.borderColor='#d1d5db'">
                         <div class="text-muted mb-2">
                             <i class="fas fa-cloud-upload-alt fa-2x"></i>
                         </div>
                         <h6 class="font-weight-bold text-dark mb-1">Click to upload a generic document</h6>
                         <p class="text-xs text-muted mb-0 text-uppercase">PDF, PNG, JPG (Max 5MB)</p>
                         
-                        
                         <input type="file" name="document" class="position-absolute" style="top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="this.form.submit()" accept=".pdf,.png,.jpg,.jpeg">
                     </div>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['document'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <span class="text-danger text-xs font-weight-bold mt-1 d-block"><?php echo e($message); ?></span> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </form>
 
-                   
-                    <div class="row px-2">
-                        <div class="col-md-6 mb-3">
+                
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($application->service->slug === 'itr-filing'): ?>
+                    <div class="row px-2 mb-4">
+                        
+                        
+                        <div class="col-md-6 mb-3 mb-md-0">
                             <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">
                                 <i class="fas fa-file-invoice text-primary mr-1"></i> ITR Ack
                             </label>
-                            <input type="file" name="ack_file" class="form-control border-light shadow-sm" style="height: auto; padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px;" accept=".pdf" onchange="this.form.submit()">
+                            <?php $ackDoc = $application->getFirstMedia('itr_acknowledgement'); ?>
+                            
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($ackDoc): ?>
+                                <div class="d-flex align-items-center bg-white border rounded p-2 shadow-sm">
+                                    <div class="text-truncate flex-grow-1 text-xs font-weight-bold mr-2 text-dark" title="<?php echo e($ackDoc->name); ?>"><?php echo e($ackDoc->name); ?></div>
+                                    <div class="d-flex gap-1">
+                                        <a href="<?php echo e(route('admin.documents.view', $ackDoc->id)); ?>" target="_blank" class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
+                                        
+                                        
+                                        <form action="<?php echo e(route('admin.applications.deleteDocument', $ackDoc->id)); ?>" method="POST" class="d-inline">
+                                            <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                
+                                <form action="<?php echo e(route('admin.applications.uploadDocument', $application->id)); ?>" method="POST" enctype="multipart/form-data">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="file" name="ack_file" class="form-control border-light shadow-sm" style="height: auto; padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px;" accept=".pdf" onchange="this.form.submit()">
+                                </form>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['ack_file'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <span class="text-danger text-xs font-weight-bold mt-1 d-block"><?php echo e($message); ?></span> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         </div>
                         
-                        <div class="col-md-6 mb-3">
+                        
+                        <div class="col-md-6">
                             <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">
-                                <i class="fas fa-calculator text-success mr-1"></i> Computation (P&L)
+                                <i class="fas fa-calculator text-success mr-1"></i> Computation
                             </label>
-                            <input type="file" name="computation_file" class="form-control border-light shadow-sm" style="height: auto; padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px;" accept=".pdf" onchange="this.form.submit()">
+                            <?php $compDoc = $application->getFirstMedia('computation_sheet'); ?>
+                            
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($compDoc): ?>
+                                <div class="d-flex align-items-center bg-white border rounded p-2 shadow-sm">
+                                    <div class="text-truncate flex-grow-1 text-xs font-weight-bold mr-2 text-dark" title="<?php echo e($compDoc->name); ?>"><?php echo e($compDoc->name); ?></div>
+                                    <div class="d-flex gap-1">
+                                        <a href="<?php echo e(route('admin.documents.view', $compDoc->id)); ?>" target="_blank" class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
+                                        
+                                        
+                                        <form action="<?php echo e(route('admin.applications.deleteDocument', $compDoc->id)); ?>" method="POST" class="d-inline">
+                                            <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                
+                                <form action="<?php echo e(route('admin.applications.uploadDocument', $application->id)); ?>" method="POST" enctype="multipart/form-data">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="file" name="computation_file" class="form-control border-light shadow-sm" style="height: auto; padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px;" accept=".pdf" onchange="this.form.submit()">
+                                </form>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['computation_file'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <span class="text-danger text-xs font-weight-bold mt-1 d-block"><?php echo e($message); ?></span> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         </div>
+                        
                     </div>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                    
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['document'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -386,71 +455,93 @@ if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </form>
- 
+
+                
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($ackDoc) && $ackDoc): ?>
+                    <form id="delete-ack-<?php echo e($ackDoc->id); ?>" action="<?php echo e(route('admin.applications.deleteDocument', $ackDoc->id)); ?>" method="POST" class="d-none">
+                        <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
+                    </form>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($compDoc) && $compDoc): ?>
+                    <form id="delete-comp-<?php echo e($compDoc->id); ?>" action="<?php echo e(route('admin.applications.deleteDocument', $compDoc->id)); ?>" method="POST" class="d-none">
+                        <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
+                    </form>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                    
-                   <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($application->media->count()): ?>
-    <div class="document-list">
-        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $application->media; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $doc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
-                                <div
-                                    class="document-item d-flex align-items-center p-3 mb-3 bg-white rounded-lg border shadow-sm transition-hover">
+                    <?php
+                        // We add 'documents' and 'default' here because that's where the generic Admin upload box saves files!
+                        $adminCollections = ['final_deliverables', 'admin_uploads', 'documents', 'default'];
+                        $specialCollections = ['itr_acknowledgement', 'computation_sheet'];
+                        
+                        $adminDocs = $application->media->whereIn('collection_name', $adminCollections);
+                        
+                        // Agent docs are all the specific form buckets (Form 16, Bank Statement, etc.)
+                        $agentDocs = $application->media->whereNotIn('collection_name', array_merge($adminCollections, $specialCollections));
+                    ?>
 
-                                    <div class="document-icon bg-light rounded d-flex align-items-center justify-content-center mr-3"
-                                        style="width: 45px; height: 45px; flex-shrink: 0;">
-                                        <?php
-                                            $ext = strtolower(pathinfo($doc->file_name ?? '', PATHINFO_EXTENSION));
-                                            $icon = match ($ext) {
-                                                'pdf' => 'fa-file-pdf text-danger',
-                                                'jpg', 'jpeg', 'png' => 'fa-file-image text-primary',
-                                                'doc', 'docx' => 'fa-file-word text-info',
-                                                default => 'fa-file-alt text-secondary',
-                                            };
-                                        ?>
-                                        <i class="fas <?php echo e($icon); ?> fa-lg"></i>
-                                    </div>
-
-                                    <div class="document-info flex-grow-1 overflow-hidden pr-2">
-                                        <div class="text-dark font-weight-bold text-truncate text-sm mb-1"
-                                            title="<?php echo e($doc->name); ?>">
-                                            
-                                            <?php echo e($doc->custom_properties['label'] ?? $doc->name); ?>
-
-                                        </div>
-                                        <div class="text-muted text-xs text-uppercase font-weight-bold">
-                                            <?php echo e(strtoupper($ext) ?: 'FILE'); ?> • <?php echo e(number_format($doc->size / 1024, 1)); ?>
-
-                                            KB
-                                            
-                                            
-                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($doc->collection_name !== 'documents' && $doc->collection_name !== 'default'): ?>
-                                                 • <span class="text-primary"><?php echo e(str_replace('_', ' ', $doc->collection_name)); ?></span>
-                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                                        </div>
-                                    </div>
-
-                                    <div class="d-flex flex-column flex-sm-row gap-2">
-                                        <a href="<?php echo e(route('admin.documents.view', $doc->id)); ?>" target="_blank"
-                                            class="btn btn-sm btn-light border text-primary action-btn shadow-sm"
-                                            title="View Document">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="<?php echo e(route('admin.documents.download', $doc->id)); ?>"
-                                            class="btn btn-sm btn-primary action-btn shadow-sm" title="Download Document">
-                                            <i class="fas fa-download"></i>
-                                        </a>
-                                        
-                                        
-                                        <form action="<?php echo e(route('admin.applications.deleteDocument', $doc->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this document permanently?');">
-                                            <?php echo csrf_field(); ?>
-                                            <?php echo method_field('DELETE'); ?>
-                                            <button type="submit" class="btn btn-sm btn-outline-danger action-btn shadow-sm" title="Delete Document">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-
+                    
+                    
+                    <?php
+                        $renderDoc = function($doc) {
+                            $ext = strtolower(pathinfo($doc->file_name ?? '', PATHINFO_EXTENSION));
+                            $icon = match ($ext) {
+                                'pdf' => 'fa-file-pdf text-danger',
+                                'jpg', 'jpeg', 'png' => 'fa-file-image text-primary',
+                                'doc', 'docx' => 'fa-file-word text-info',
+                                default => 'fa-file-alt text-secondary',
+                            };
+                            
+                            $bucketText = '';
+                            if($doc->collection_name !== 'documents' && $doc->collection_name !== 'default') {
+                                $bucketText = ' • <span class="text-primary">'.str_replace('_', ' ', $doc->collection_name).'</span>';
+                            }
+                            
+                            return '
+                            <div class="document-item d-flex align-items-center p-3 mb-3 bg-white rounded-lg border shadow-sm transition-hover">
+                                <div class="document-icon bg-light rounded d-flex align-items-center justify-content-center mr-3" style="width: 45px; height: 45px; flex-shrink: 0;">
+                                    <i class="fas '.$icon.' fa-lg"></i>
                                 </div>
-                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
-                        </div>
+                                <div class="document-info flex-grow-1 overflow-hidden pr-2">
+                                    <div class="text-dark font-weight-bold text-truncate text-sm mb-1" title="'.$doc->name.'">'.($doc->custom_properties['label'] ?? $doc->name).'</div>
+                                    <div class="text-muted text-xs text-uppercase font-weight-bold">'.(strtoupper($ext) ?: 'FILE').' • '.number_format($doc->size / 1024, 1).' KB '.$bucketText.'</div>
+                                </div>
+                                <div class="d-flex flex-column flex-sm-row gap-2">
+                                    <a href="'.route('admin.documents.view', $doc->id).'" target="_blank" class="btn btn-sm btn-light border text-primary action-btn shadow-sm" title="View Document"><i class="fas fa-eye"></i></a>
+                                    <a href="'.route('admin.documents.download', $doc->id).'" class="btn btn-sm btn-primary action-btn shadow-sm" title="Download Document"><i class="fas fa-download"></i></a>
+                                    
+                                    <button type="button" class="btn btn-sm btn-outline-danger action-btn shadow-sm" title="Delete Document" onclick="document.getElementById(\'delete-doc-'.$doc->id.'\').submit();"><i class="fas fa-trash"></i></button>
+                                </div>
+                                <form id="delete-doc-'.$doc->id.'" action="'.route('admin.applications.deleteDocument', $doc->id).'" method="POST" class="d-none">'.csrf_field().method_field('DELETE').'</form>
+                            </div>';
+                        };
+                    ?>
+
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($application->media->count()): ?>
+                        
+                        
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($adminDocs->count() > 0): ?>
+                            <hr class="border-light my-4">
+                            <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-user-shield text-primary mr-2"></i> Uploaded by Admin</h6>
+                            <div class="document-list mb-4">
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $adminDocs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $doc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                    <?php echo $renderDoc($doc); ?>
+
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            </div>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                        
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($agentDocs->count() > 0): ?>
+                            <hr class="border-light my-4">
+                            <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-user-tie text-secondary mr-2"></i> Uploaded by Client / Agent</h6>
+                            <div class="document-list">
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $agentDocs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $doc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                    <?php echo $renderDoc($doc); ?>
+
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            </div>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
                     <?php else: ?>
                         <div class="text-center py-4 text-muted">
                             <div class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm border"
@@ -597,5 +688,5 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
         }
         
     </script>
-<?php $__env->stopSection(); ?> 
+<?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/uat.easytax.live/resources/views/admin/applications/show.blade.php ENDPATH**/ ?>

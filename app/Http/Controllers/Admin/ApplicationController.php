@@ -28,12 +28,28 @@ class ApplicationController extends Controller
 
         $services = Service::where('active', true)->get();
         $agents = User::where('role', 'agent')->get();
-        $stats = Application::selectRaw("
+
+        // --- NEW DYNAMIC KPI LOGIC ---
+        $query = Application::query();
+        $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
+
+        if ($type === 'other') {
+            $query->whereHas('service', function ($q) use ($specialSlugs) {
+                $q->whereNotIn('slug', $specialSlugs);
+            });
+        } elseif (in_array($type, $specialSlugs)) {
+            $query->whereHas('service', function ($q) use ($type) {
+                $q->where('slug', $type);
+            });
+        }
+
+        $stats = $query->selectRaw("
             COUNT(*) as total,
             SUM(CASE WHEN status != 'COMPLETED' THEN 1 ELSE 0 END) as pending,
             SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
             SUM(CASE WHEN payment_status = 'FAILED' THEN 1 ELSE 0 END) as failed
         ")->first();
+        // -----------------------------
 
         return view('admin.applications.index', compact(
             'services', 'agents', 'stats', 'type', 'pageTitle'
@@ -42,7 +58,6 @@ class ApplicationController extends Controller
 
   public function data(Request $request)
     {
-        // ADDED 'media' TO THE EAGER LOADING
         $query = Application::with(['service', 'agent', 'media']);
 
         $type = $request->type ?? 'other'; 
@@ -87,9 +102,7 @@ class ApplicationController extends Controller
                 $displayVal = is_array($value) ? implode(', ', $value) : (string) $value;
                 return '<span class="font-weight-bold text-dark">' . $displayVal . '</span>';
             })  
-           // 1. ACK NUMBER COLUMN (Secure Download) 
-           // 1. ACK NUMBER COLUMN (Number + Secure Download)
-           // 1. ACK NUMBER COLUMN (With Lazy-Loading Fallback)
+            // 1. ACK NUMBER COLUMN
             ->addColumn('ack_no', function($a) {
                 if ($a->service->slug !== 'itr-filing') return '-';
                 
@@ -99,7 +112,6 @@ class ApplicationController extends Controller
                     $downloadUrl = route('admin.documents.download', $ackMedia->id);
                     $ackNumber = $ackMedia->getCustomProperty('ack_number');
                     
-                    // IF THE NUMBER IS MISSING (Old Uploads), FIND IT NOW!
                     if (!$ackNumber) {
                         try {
                             $parser = new \Smalot\PdfParser\Parser();
@@ -109,11 +121,9 @@ class ApplicationController extends Controller
                             if (preg_match('/\b(\d{15})\b/', $text, $matches)) {
                                 $ackNumber = $matches[1];
                                 $ackMedia->setCustomProperty('ack_number', $ackNumber);
-                                $ackMedia->save(); // Save it so we never have to parse it again
+                                $ackMedia->save();
                             }
-                        } catch (\Exception $e) {
-                            // File unreadable, skip silently
-                        }
+                        } catch (\Exception $e) {}
                     }
                     
                     $html = '';
@@ -126,24 +136,36 @@ class ApplicationController extends Controller
                 }
                 return '<span class="text-muted text-xs font-italic">Pending</span>';
             })
-            
-            // 2. COMPUTATION COLUMN (Secure Download) 
+            // 2. COMPUTATION COLUMN
             ->addColumn('computation', function($a) {
                 if ($a->service->slug !== 'itr-filing') return '-';
-                
-                // Get the actual Media object instead of the URL
                 $compMedia = $a->getFirstMedia('computation_sheet');
-                
                 if ($compMedia) {
-                    // Use your system's built-in secure download route
                     $downloadUrl = route('admin.documents.download', $compMedia->id);
                     return '<a href="'.$downloadUrl.'" class="text-primary font-weight-bold"><i class="fas fa-download mr-1"></i> Download</a>';
                 }
                 return '<span class="text-muted text-xs font-italic">Pending</span>';
             })
-            // 3. BALANCE SHEET GENERATOR
+            // 3. NEW SMART BALANCE SHEET GENERATOR
             ->addColumn('balance_sheet', function($a) {
                 if ($a->service->slug !== 'itr-filing') return '-';
+                
+                $bsMedia = $a->getFirstMedia('balance_sheet');
+                
+                if ($bsMedia) {
+                    $viewUrl = route('admin.documents.view', $bsMedia->id);
+                    $downloadUrl = route('admin.documents.download', $bsMedia->id);
+                    $regenUrl = route('admin.applications.balance-sheet', $a->id);
+                    
+                    // Show View, Download, and a tiny Regenerate button
+                    return '
+                    <div class="d-flex align-items-center gap-1">
+                        <a href="'.$viewUrl.'" target="_blank" class="btn btn-sm btn-light border text-primary px-2 py-1" title="View"><i class="fas fa-eye"></i></a>
+                        <a href="'.$downloadUrl.'" class="btn btn-sm btn-outline-success px-2 py-1" title="Download"><i class="fas fa-download"></i></a>
+                        <a href="'.$regenUrl.'" class="btn btn-sm btn-outline-secondary px-2 py-1" title="Regenerate"><i class="fas fa-sync-alt"></i></a>
+                    </div>';
+                }
+
                 $url = route('admin.applications.balance-sheet', $a->id);
                 return '<a href="'.$url.'" class="btn btn-sm btn-outline-success font-weight-bold" style="white-space: nowrap;"><i class="fas fa-file-excel mr-1"></i> Generate</a>';
             })
@@ -176,7 +198,6 @@ class ApplicationController extends Controller
         }
 
         // 2. FORM DATA EXPORTS 
-        // Force the query to ONLY fetch apps where the related Service name matches exactly
         $query = Application::with(['agent', 'service'])
             ->whereHas('service', function ($q) {
                 $q->where('name', 'ITR Filing (Individual / Business)');
@@ -198,7 +219,6 @@ class ApplicationController extends Controller
             return back()->with('error', 'No ITR applications found for this filter.');
         }
 
-        // STEP A: Gather every unique dynamic key from ALL form_data across these apps
         $dynamicKeys = [];
         foreach ($applications as $app) {
             $formData = is_string($app->form_data) ? json_decode($app->form_data, true) : $app->form_data;
@@ -211,7 +231,6 @@ class ApplicationController extends Controller
             }
         }
 
-        // STEP B: Prepare HTTP Headers for CSV Download
         $headers = [
             "Content-type"        => "text/csv",
             "Content-Disposition" => "attachment; filename={$fileName}",
@@ -220,7 +239,6 @@ class ApplicationController extends Controller
             "Expires"             => "0"
         ];
 
-        // STEP C: Define Base Columns + Cleaned Dynamic Columns
         $standardColumns = ['App ID', 'Agent Name', 'Service', 'Status', 'Submitted Date'];
         $displayDynamicKeys = array_map(function($key) {
             return \Illuminate\Support\Str::title(str_replace('_', ' ', $key));
@@ -228,23 +246,18 @@ class ApplicationController extends Controller
         
         $csvHeaders = array_merge($standardColumns, $displayDynamicKeys);
 
-        // STEP D: Stream the CSV Output dynamically
         $callback = function() use($applications, $csvHeaders, $dynamicKeys) {
             $file = fopen('php://output', 'w');
             
-            // Add UTF-8 BOM to ensure Excel reads special characters correctly
             fputs($file, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
-            
             fputcsv($file, $csvHeaders);
 
             foreach ($applications as $app) {
-                // Ensure form_data is an array
                 $formData = is_string($app->form_data) ? json_decode($app->form_data, true) : $app->form_data;
                 if (!is_array($formData)) {
                     $formData = [];
                 }
 
-                // 1. Build standard data
                 $statusValue = is_object($app->status) ? $app->status->value : $app->status;
                 $row = [
                     $app->id,
@@ -254,23 +267,17 @@ class ApplicationController extends Controller
                     $app->created_at->format('d M Y h:i A')
                 ];
 
-                // 2. Build dynamic form data (match exact order of headers)
                 foreach ($dynamicKeys as $key) {
                     $value = $formData[$key] ?? '';
-                    
-                    // Handle arrays and booleans cleanly
                     if (is_array($value)) {
                         $value = implode(', ', $value);
                     } elseif (is_bool($value)) {
                         $value = $value ? 'Yes' : 'No';
                     }
-                    
                     $row[] = (string) $value;
                 }
-
                 fputcsv($file, $row);
             }
-
             fclose($file);
         };
 
@@ -319,10 +326,7 @@ class ApplicationController extends Controller
                 $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
                 $clientEmail = $formData[$emailKey] ?? null;
 
-                // 1. Smart Name Extractor
                 $clientName = $formData['applicant_name'] ?? $formData['name'] ?? $formData['full_name'] ?? $formData['company_name'] ?? $formData['firm_name'] ?? 'Valued Client';
-
-                // 2. Secure Permanent Tracking Token
                 $trackingUrl = \Illuminate\Support\Facades\URL::signedRoute('tracking.show', ['application' => $application->id]);
 
                 if ($clientEmail && filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
@@ -342,17 +346,6 @@ class ApplicationController extends Controller
                     }
                 }
             }
-
-            // --- DYNAMIC WHATSAPP AUTOMATION (Paused) ---
-            // $whatsappKey = $application->service->whatsapp_number_field;
-            // if (!empty($whatsappKey) && !empty($application->form_data)) {
-            //     $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
-            //     $clientPhone = $formData[$whatsappKey] ?? null;
-            //     if ($clientPhone) {
-            //         $this->sendSnptWhatsapp($clientPhone, $application);
-            //     }
-            // }
-            // -----------------------------------
         }
 
         activity('application')
@@ -363,22 +356,16 @@ class ApplicationController extends Controller
         return back()->with('success', 'Application status updated successfully.');
     }
 
-    /**
-     * SNPT WhatsApp API Helper
-     */
     private function sendSnptWhatsapp($phone, Application $application)
     {
-        // 1. Clean the phone number (remove spaces, ensure country code)
         $cleanPhone = preg_replace('/[^0-9]/', '', (string)$phone);
         if (strlen($cleanPhone) == 10) {
-            $cleanPhone = '91' . $cleanPhone; // Default to India if no country code
+            $cleanPhone = '91' . $cleanPhone; 
         }
 
-        // 2. Prepare the message
         $serviceName = $application->service->name ?? 'Service';
         $message = "Hello! Great news: Your application for {$serviceName} (App ID: #{$application->id}) has been successfully COMPLETED. Thank you for choosing EasyTax!";
 
-        // 3. SNPT API Call (Replace placeholders with your actual SNPT Instance ID and Token)
         try {
             $instanceId = 'YOUR_SNPT_INSTANCE_ID'; 
             $accessToken = 'YOUR_SNPT_ACCESS_TOKEN';
@@ -390,85 +377,67 @@ class ApplicationController extends Controller
                 'instance_id' => $instanceId,
                 'access_token' => $accessToken
             ]);
-            
-            // Optional: Log success
             \Log::info("WhatsApp sent to {$cleanPhone} for App #{$application->id}");
-            
         } catch (\Exception $e) {
-            // Log failure quietly so it doesn't crash the admin's page
             \Log::error("WhatsApp failed for App #{$application->id}: " . $e->getMessage());
         }
     }
+
    public function uploadDocument(Request $request, Application $application)
     {
-        // 1. Validate all possible file inputs (make them nullable so it doesn't fail if only one is uploaded)
         $request->validate([
             'document'         => 'nullable|file|mimes:pdf,png,jpg,jpeg|max:5120',
             'ack_file'         => 'nullable|file|mimes:pdf|max:5120',
             'computation_file' => 'nullable|file|mimes:pdf|max:5120',
         ]);
 
-        $uploaded = false; // A tracker to make sure they actually uploaded something
+        $uploaded = false; 
 
-        // 2. Handle standard document uploads
         if ($request->hasFile('document')) {
             $application->addMediaFromRequest('document')->toMediaCollection('documents', 'private');
             $uploaded = true;
         }
 
-        // 3. Handle dedicated Acknowledgement uploads
-        // 3. Handle dedicated Acknowledgement uploads
         if ($request->hasFile('ack_file')) {
             $media = $application->addMediaFromRequest('ack_file')->toMediaCollection('itr_acknowledgement', 'private');
-            
-            // --- NEW: SILENTLY READ THE PDF TO FIND THE ACK NUMBER ---
             try {
                 $parser = new \Smalot\PdfParser\Parser();
                 $pdf = $parser->parseFile($media->getPath());
-                $text = substr($pdf->getText(), 0, 2000); // Read just the first page for speed
-                
-                // Regex: Look for exactly 15 digits together (Standard ITR Ack Format)
+                $text = substr($pdf->getText(), 0, 2000); 
                 if (preg_match('/\b(\d{15})\b/', $text, $matches)) {
                     $media->setCustomProperty('ack_number', $matches[1]);
                     $media->save();
                 }
-            } catch (\Exception $e) {
-                // If PDF is locked, ignore it. It will just show the download button.
-            }
-            // ---------------------------------------------------------
+            } catch (\Exception $e) {}
             
             $uploaded = true;
         }
 
-        // 4. Handle dedicated Computation uploads
         if ($request->hasFile('computation_file')) {
             $application->addMediaFromRequest('computation_file')->toMediaCollection('computation_sheet', 'private');
             $uploaded = true;
         }
 
-        // 5. Safety check
         if (!$uploaded) {
             return back()->with('error', 'Please select a file to upload.');
         }
 
-        // 6. Log the activity
         activity('application')
             ->performedOn($application)
             ->causedBy(auth()->user())
             ->log('Uploaded supporting document(s)');
 
-        // 7. RETURN MUST BE AT THE VERY END
         return back()->with('success', 'Document(s) uploaded successfully.');
     }
+
     public function storeCredentials(Request $request, Application $application)
     {
         $request->validate([
-            'admin_username' => 'nullable|string', // Changed from admin_otp
+            'admin_username' => 'nullable|string', 
             'admin_password' => 'nullable|string',
             'final_document' => 'nullable|file|mimes:pdf,png,jpg,jpeg|max:5120',
         ]);
 
-        // 1. Safely inject Username and Password into the existing form_data array
         $formData = $application->form_data ?? [];
         if ($request->has('admin_username')) {
             $formData['admin_username'] = $request->admin_username;
@@ -478,10 +447,9 @@ class ApplicationController extends Controller
         }
         $application->update(['form_data' => $formData]);
 
-        // 2. Safely store the Final Document
         if ($request->hasFile('final_document')) {
             $application->addMediaFromRequest('final_document')
-                ->withCustomProperties(['label' => 'GST Certificate']) // Changed label
+                ->withCustomProperties(['label' => 'GST Certificate']) 
                 ->toMediaCollection('final_deliverables', 'private');
         }
 
@@ -496,17 +464,11 @@ class ApplicationController extends Controller
    public function deleteDocument($mediaId)
     {
         $media = Media::findOrFail($mediaId);
-
-        // Safely check role regardless of uppercase or lowercase
         if (strtoupper(auth()->user()->role) !== 'ADMIN') {
             abort(403, 'Unauthorized action.');
         }
-
-        // Delete from storage and database
         $media->delete();
-
         return back()->with('success', 'Document deleted successfully.');
-        
     }
 
     public function updatePaymentStatus(Request $request, Application $application)
@@ -528,35 +490,26 @@ class ApplicationController extends Controller
     public function viewDocument($mediaId)
     {
         $media = Media::findOrFail($mediaId);
-
-        // 🔐 Simple security (no policy needed)
         if (auth()->user()->role !== 'ADMIN') {
             abort(403, 'Unauthorized');
         }
-
         $path = storage_path('app/private/' . $media->id . '/' . $media->file_name);
-
         if (!file_exists($path)) {
             abort(404, 'File not found');
         }
-
         return response()->file($path);
     }
 
     public function downloadDocument($mediaId)
     {
         $media = Media::findOrFail($mediaId);
-
         if (auth()->user()->role !== 'ADMIN') {
             abort(403, 'Unauthorized');
         }
-
         $path = storage_path('app/private/' . $media->id . '/' . $media->file_name);
-
         if (!file_exists($path)) {
             abort(404, 'File not found');
         }
-
         return response()->download($path, $media->file_name);
     }
 
@@ -577,23 +530,18 @@ class ApplicationController extends Controller
 
         $callback = function() use($formData, $columns) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, $columns); // Write the header row
+            fputcsv($file, $columns); 
 
             foreach ($formData as $key => $value) {
-                // Clean up the key (e.g., 'pan_number' becomes 'Pan Number')
                 $displayKey = \Illuminate\Support\Str::title(str_replace('_', ' ', $key));
-                
-                // Clean up the value (Handle arrays and booleans)
                 $displayValue = $value;
                 if (is_array($value)) {
                     $displayValue = implode(', ', $value);
                 } elseif (is_bool($value)) {
                     $displayValue = $value ? 'Yes' : 'No';
                 }
-
                 fputcsv($file, [$displayKey, $displayValue]);
             }
-
             fclose($file);
         };
 
@@ -613,8 +561,6 @@ class ApplicationController extends Controller
         $extractedData = [];
         $parser = new \Smalot\PdfParser\Parser();
 
-        // --- NEW LIGHTNING FAST LOGIC ---
-        // Instead of looping through all files, directly grab the Computation bucket!
         $compMedia = $application->getFirstMedia('computation_sheet');
 
         if ($compMedia) {
@@ -642,63 +588,61 @@ class ApplicationController extends Controller
                     if ($foundProfit > 0) { $netProfit = $foundProfit; }
                 }
 
-            } catch (\Exception $e) {
-                // File is corrupted or password protected, fail silently
-            }
+            } catch (\Exception $e) { }
         }
 
         return view('admin.applications.balance_sheet', compact('application', 'sales', 'netProfit', 'otherIncome', 'extractedData'));
     }
+
     public function generateBalanceSheetPdf(Request $request, $id)
     {
         $application = Application::findOrFail($id);
         
-        // 1. Get Applicant Details from the original application
         $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
         $applicantName = strtoupper($formData['applicant_name'] ?? 'APPLICANT NAME');
         $panNumber = strtoupper($formData['pan_number'] ?? 'PAN NOT PROVIDED');
 
-        // 2. Clean the incoming numeric data (Convert nulls/empty strings to 0)
         $data = [];
         foreach ($request->except('_token') as $key => $value) {
             $data[$key] = (float) $value ?: 0;
         }
 
-        // 3. Do the core Accounting Math for the PDF Totals
-        // Trading Math
         $grossProfit = ($data['sales'] + $data['closing_stock']) - ($data['opening_stock'] + $data['purchases'] + $data['direct_expenses']);
         $tradingTotal = $data['sales'] + $data['closing_stock'];
 
-        // P&L Math
         $totalIndirectExp = $data['salaries'] + $data['electricity'] + $data['shop_rent'] + $data['telephone_internet'] + 
                             $data['printing_stationery'] + $data['repairs_maintenance'] + $data['interest_on_loan'] + $data['other_expenses'];
         
         $totalIndirectInc = $data['interest_income'] + $data['other_income'];
         $netProfit = ($grossProfit + $totalIndirectInc) - $totalIndirectExp;
-        $pnlTotal = $totalIndirectExp + $netProfit; // Left side total
+        $pnlTotal = $totalIndirectExp + $netProfit; 
 
-        // Capital Math
         $closingCapital = $data['opening_capital'] + $netProfit - $data['drawings'];
         $capitalTotal = $data['opening_capital'] + $netProfit;
 
-        // Balance Sheet Math
         $bsTotal = $closingCapital + $data['bank_loan'] + $data['other_loans'] + $data['sundry_creditors'] + $data['other_current_liabilities'];
 
-        // 4. Bundle it all up
         $pdfData = compact(
             'applicantName', 'panNumber', 'data', 
             'grossProfit', 'netProfit', 'closingCapital', 
             'tradingTotal', 'pnlTotal', 'bsTotal', 'capitalTotal'
         );
 
-       // Generate the PDF using DomPDF
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.applications.pdfs.balance_sheet', $pdfData);
         
-        // Stream it directly in the browser
-        return $pdf->stream('Balance_Sheet_' . $panNumber . '.pdf');
+        // --- NEW: AUTO-SAVE TO DATABASE ---
+        $fileName = 'Balance_Sheet_' . $panNumber . '.pdf';
+        
+        // Clear any old balance sheets for this app so they don't pile up
+        $application->clearMediaCollection('balance_sheet');
+        
+        // Save the raw PDF string to the private folder
+        $application->addMediaFromString($pdf->output())
+            ->usingFileName($fileName)
+            ->usingName('Balance Sheet')
+            ->toMediaCollection('balance_sheet', 'private');
+        // ----------------------------------
+
+        return $pdf->stream($fileName);
     }
-
- 
 }
-
-
