@@ -3,6 +3,30 @@
 <?php $__env->startSection('css'); ?>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
     <style>
+
+        /* Typeform Balance Sheet Modal Styles */
+.tf-step {
+    display: none;
+    animation: tfSlideUp 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+    padding: 2rem;
+}
+.tf-step.active { display: block; }
+@keyframes tfSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.tf-input {
+    border: none; border-bottom: 2px solid #e2e8f0; border-radius: 0;
+    background: transparent; font-size: 1.5rem; font-weight: 700; color: #1e293b;
+    padding: 8px 0; box-shadow: none !important; transition: border-color 0.2s;
+}
+.tf-input:focus { border-bottom-color: var(--green); outline: none; }
+.tf-input::placeholder { color: #cbd5e1; font-weight: 400; font-size: 1.2rem; }
+.tally-bar {
+    background: #1e293b; color: white; padding: 15px 20px; border-radius: 12px;
+    display: flex; justify-content: space-between; align-items: center; margin-top: 20px;
+}
+.tally-match { background: var(--green); }
         /* ── PAGE HEADER ── */
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .page-title { font-size: 1.5rem; font-weight: 800; color: var(--slate-dark); margin: 0 0 0.25rem 0; letter-spacing: -0.02em; }
@@ -67,6 +91,38 @@
         .dataTables_info { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
         .page-item.active .page-link { background: var(--slate-dark); border-color: var(--slate-dark); color: #fff; border-radius: 6px; }
         .page-link { color: var(--slate); border: 1px solid var(--border); border-radius: 6px; margin: 0 2px; font-size: 0.85rem; font-weight: 600; }
+
+        /* ── ULTRA-COMPACT TABLE (NO SCROLLING) ── */
+        .table-card { overflow: visible !important; }
+        
+        .compact-table {
+            width: 100% !important;
+            table-layout: auto !important;
+        }
+        
+        /* Shrink text and padding to the absolute minimum */
+        .compact-table th, 
+        .compact-table td {
+            padding: 6px 4px !important; 
+            font-size: 0.75rem !important; 
+            white-space: normal !important; /* Allows text to wrap to a new line instead of stretching horizontally */
+            vertical-align: middle !important;
+            word-break: break-word;
+        }
+
+        /* Shrink the Generate, Download, and View buttons */
+        .compact-table .btn {
+            padding: 3px 6px !important;
+            font-size: 0.7rem !important;
+            line-height: 1.2;
+        }
+
+        /* Prevent the action column from getting crushed */
+        .compact-table th:last-child,
+        .compact-table td:last-child {
+            min-width: 60px;
+            text-align: right;
+        }
     </style>
     <link rel="stylesheet" href="<?php echo e(asset('assets/css/applications.css')); ?>">
 <?php $__env->stopSection(); ?>
@@ -74,7 +130,7 @@
 <?php $__env->startSection('content'); ?>
     <div class="page-header">
         <div>
-            <h1 class="page-title">Global Application Manager</h1>
+            <h1><?php echo e($pageTitle); ?></h1>
             <p class="page-subtitle">Monitor, filter, and manage all agent submissions.</p>
         </div>
         <div>
@@ -101,10 +157,10 @@
             </div>
         </div>
     </div>
-
+  
     
     <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">  
             <div class="kpi-card kpi-blue">
                 <div class="kpi-icon"><i class="fas fa-layer-group"></i></div>
                 <div class="kpi-body">
@@ -199,22 +255,28 @@
 
         <div>
             <button id="resetFilters" class="btn-reset" title="Clear Filters">
-                <i class="fas fa-undo-alt"></i>
+                <i class="fas fa-undo-alt"> </i>
             </button>
         </div>
     </div>
 
-    
+
     <div class="table-card">
-        <table id="applicationsTable" class="table w-100">
+        <table id="applicationsTable" class="table w-100 compact-table">
            <thead>
                 <tr>
                     <th>App ID</th>
                     <th>Agent</th>
                     <th>Service Type</th>
-                    <th>Primary Data</th> <th>Status</th>
+                    <th>Primary Data</th> 
+                    <th>Status</th>
                     <th>Payment</th>
                     <th>Amount</th>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($type === 'itr-filing'): ?>
+                        <th>ACK NO</th>
+                        <th>COMPUTATION</th>
+                        <th>BALANCE SHEET</th>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     <th>Date Submitted</th>
                     <th class="text-right">Actions</th>
                 </tr>
@@ -223,9 +285,157 @@
     </div>
 <?php $__env->stopSection(); ?>
 
+<div class="modal fade" id="balanceSheetModal" tabindex="-1" data-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; background: #f8f9fa;">
+            
+            <div class="progress" style="height: 6px; border-radius: 16px 16px 0 0;">
+                <div class="progress-bar bg-success" id="tf-progress" style="width: 16%; transition: width 0.4s ease;"></div>
+            </div>
+
+            <div class="modal-body position-relative p-0" style="min-height: 550px;">
+                <form id="balanceSheetForm">
+                    <input type="hidden" id="tf-app-id">
+                    <input type="hidden" id="tf-val-sales" value="0">
+                    <input type="hidden" id="tf-val-target-np" value="0">
+                    <input type="hidden" id="tf-val-other-inc" value="0">
+
+                    <div class="tf-step active" id="step-1">
+                        <div class="text-center mt-4">
+                            <span class="text-muted font-weight-bold mb-2 d-block">STEP 1 OF 6</span>
+                            <h3 class="mb-4 font-weight-bold">Let's verify the P&L basics.</h3>
+                            
+                            <div class="row mb-4 justify-content-center">
+                                <div class="col-md-4">
+                                    <label class="text-muted small text-uppercase">Business Turnover</label>
+                                    <h4 class="font-weight-bold" id="tf-disp-sales">₹0</h4>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="text-muted small text-uppercase">Target Net Profit</label>
+                                    <h4 class="font-weight-bold text-success" id="tf-disp-target-np">₹0</h4>
+                                </div>
+                            </div>
+                            <p class="text-muted">We pulled these numbers from the ITR form.</p>
+                            
+                            <button type="button" class="btn btn-success btn-lg px-5 mt-4 rounded-pill tf-next">
+                                Let's Start <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tf-step" id="step-2">
+                        <span class="text-muted font-weight-bold mb-2 d-block text-center">STEP 2 OF 6: TRADING A/C</span>
+                        <h4 class="mb-4 font-weight-bold text-center">Enter your Stock & Direct Costs</h4>
+                        
+                        <div class="row">
+                            <div class="col-md-6 form-group"><label>Opening Stock</label><input type="number" class="form-control tf-input calc-trigger" name="opening_stock" placeholder="0"></div>
+                            <div class="col-md-6 form-group"><label>Closing Stock (Required)</label><input type="number" class="form-control tf-input calc-trigger" name="closing_stock" placeholder="0"></div>
+                            <div class="col-md-6 form-group"><label>Purchases</label><input type="number" class="form-control tf-input calc-trigger" name="purchases" placeholder="0"></div>
+                            <div class="col-md-6 form-group"><label>Direct Expenses</label><input type="number" class="form-control tf-input calc-trigger" name="direct_expenses" placeholder="0"></div>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <h5 class="text-primary mb-3">Live Gross Profit: ₹<span id="disp-gp">0</span></h5>
+                            <button type="button" class="btn btn-secondary rounded-pill tf-prev mr-2">Back</button>
+                            <button type="button" class="btn btn-success rounded-pill px-5 tf-next">Next <i class="fas fa-arrow-right ml-2"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="tf-step" id="step-3">
+                        <span class="text-muted font-weight-bold mb-2 d-block text-center">STEP 3 OF 6: EXPENSES</span>
+                        <h4 class="mb-4 font-weight-bold text-center">Major Business Expenses</h4>
+                        <p class="text-center text-muted small mb-4">Goal: Hit Net Profit of ₹<span id="disp-goal-np" class="font-weight-bold text-dark"></span></p>
+
+                        <div class="row" style="max-height: 300px; overflow-y: auto;">
+                            <div class="col-md-6 form-group"><label>Salaries</label><input type="number" class="form-control tf-input calc-trigger" name="salaries" placeholder="0"></div>
+                            <div class="col-md-6 form-group"><label>Shop Rent</label><input type="number" class="form-control tf-input calc-trigger" name="shop_rent" placeholder="0"></div>
+                            <div class="col-md-6 form-group"><label>Electricity</label><input type="number" class="form-control tf-input calc-trigger" name="electricity" placeholder="0"></div>
+                            <div class="col-md-6 form-group"><label>Other Expenses (Adjuster)</label><input type="number" class="form-control tf-input calc-trigger" name="other_expenses" placeholder="0"></div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <h5 id="np-status" class="mb-3">Live Net Profit: ₹<span id="disp-np">0</span></h5>
+                            <button type="button" class="btn btn-secondary rounded-pill tf-prev mr-2">Back</button>
+                            <button type="button" class="btn btn-success rounded-pill px-5 tf-next">Next <i class="fas fa-arrow-right ml-2"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="tf-step" id="step-4">
+                        <span class="text-muted font-weight-bold mb-2 d-block text-center">STEP 4 OF 6: CAPITAL A/C</span>
+                        <h4 class="mb-4 font-weight-bold text-center">Owner's Equity & Withdrawals</h4>
+                        
+                        <div class="row justify-content-center">
+                            <div class="col-md-8 form-group"><label>Opening Capital (Balance b/d)</label><input type="number" class="form-control tf-input calc-trigger" name="opening_capital" placeholder="0"></div>
+                            <div class="col-md-8 form-group"><label>Drawings (Personal use)</label><input type="number" class="form-control tf-input calc-trigger" name="drawings" placeholder="0"></div>
+                            <div class="col-md-8 form-group"><label>Interest Income</label><input type="number" class="form-control tf-input calc-trigger" name="interest_income" placeholder="0"></div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <h5 class="text-primary mb-3">Closing Capital: ₹<span id="disp-cap">0</span></h5>
+                            <button type="button" class="btn btn-secondary rounded-pill tf-prev mr-2">Back</button>
+                            <button type="button" class="btn btn-success rounded-pill px-5 tf-next">Next <i class="fas fa-arrow-right ml-2"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="tf-step" id="step-5">
+                        <span class="text-muted font-weight-bold mb-2 d-block text-center">STEP 5 OF 6: LIABILITIES</span>
+                        <h4 class="mb-4 font-weight-bold text-center">What the business owes</h4>
+                        
+                        <div class="row">
+                            <div class="col-md-6 form-group"><label>Bank Loan</label><input type="number" class="form-control tf-input calc-trigger" name="bank_loan" placeholder="0"></div>
+                            <div class="col-md-6 form-group"><label>Other Loans</label><input type="number" class="form-control tf-input calc-trigger" name="other_loans" placeholder="0"></div>
+                            <div class="col-md-6 form-group"><label>Sundry Creditors</label><input type="number" class="form-control tf-input calc-trigger" name="sundry_creditors" placeholder="0"></div>
+                            <div class="col-md-6 form-group"><label>Other Current Liab.</label><input type="number" class="form-control tf-input calc-trigger" name="other_current_liabilities" placeholder="0"></div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="button" class="btn btn-secondary rounded-pill tf-prev mr-2">Back</button>
+                            <button type="button" class="btn btn-success rounded-pill px-5 tf-next">Final Step <i class="fas fa-arrow-right ml-2"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="tf-step" id="step-6">
+                        <span class="text-muted font-weight-bold mb-2 d-block text-center">STEP 6 OF 6: ASSETS & TALLY</span>
+                        
+                        <div class="row" style="max-height: 250px; overflow-y: auto;">
+                            <div class="col-md-4 form-group"><label>Cash in Hand</label><input type="number" class="form-control tf-input calc-trigger" name="cash_in_hand" placeholder="0"></div>
+                            <div class="col-md-4 form-group"><label>Bank Balance</label><input type="number" class="form-control tf-input calc-trigger" name="bank_balance" placeholder="0"></div>
+                            <div class="col-md-4 form-group"><label>Sundry Debtors</label><input type="number" class="form-control tf-input calc-trigger" name="sundry_debtors" placeholder="0"></div>
+                            <div class="col-md-4 form-group"><label>Fixed Assets</label><input type="number" class="form-control tf-input calc-trigger" name="furniture" placeholder="0"></div>
+                            <div class="col-md-4 form-group"><label>TDS</label><input type="number" class="form-control tf-input calc-trigger" name="tds" placeholder="0"></div>
+                        </div>
+
+                        <div class="tally-bar" id="tally-bar">
+                            <div>
+                                <span class="small text-uppercase d-block" style="opacity: 0.7;">Total Liabilities</span>
+                                <h4 class="m-0 font-weight-bold">₹<span id="disp-tot-liab">0</span></h4>
+                            </div>
+                            <div class="text-center">
+                                <i class="fas fa-equals mb-1" id="tally-icon"></i><br>
+                                <span class="small" id="tally-text">Difference: ₹<span id="disp-diff">0</span></span>
+                            </div>
+                            <div class="text-right">
+                                <span class="small text-uppercase d-block" style="opacity: 0.7;">Total Assets</span>
+                                <h4 class="m-0 font-weight-bold">₹<span id="disp-tot-assets">0</span></h4>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-secondary rounded-pill tf-prev mr-2">Back</button>
+                            <button type="button" class="btn btn-dark rounded-pill px-5" id="btn-generate-pdf" disabled>Generate PDF <i class="fas fa-file-pdf ml-2"></i></button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php $__env->startSection('js'); ?>
+ 
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
-    <script src="<?php echo e(asset('assets/js/admin-applications.js')); ?>"></script>
+    <script src="<?php echo e(asset('assets/js/admin-applications.js')); ?>?v=<?php echo e(time()); ?>"></script>
 <?php $__env->stopSection(); ?>
 <?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/uat.easytax.live/resources/views/admin/applications/index.blade.php ENDPATH**/ ?>

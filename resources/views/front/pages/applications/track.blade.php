@@ -30,12 +30,20 @@
 
                 <div class="flex justify-between items-center bg-slate-50 p-4 rounded-lg border">
                     <span class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Current Status</span>
-                    @if($application->status === 'COMPLETED')
+                    
+                    @php 
+                        // Safely extract the string value from the Enum to prevent the str_replace 500 Error
+                        $statusStr = $application->status instanceof \App\Enums\ApplicationStatus 
+                                        ? $application->status->value 
+                                        : (is_string($application->status) ? $application->status : 'PENDING');
+                    @endphp
+
+                    @if($statusStr === 'COMPLETED')
                         <span class="px-3 py-1 bg-green-100 text-green-800 text-sm font-bold rounded-full">Completed</span>
-                    @elseif($application->status === 'IN_PROGRESS' || $application->status === 'E_FILING')
+                    @elseif($statusStr === 'IN_PROGRESS' || $statusStr === 'E_FILING')
                         <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-bold rounded-full">In Progress</span>
                     @else
-                        <span class="px-3 py-1 bg-slate-200 text-slate-800 text-sm font-bold rounded-full">{{ str_replace('_', ' ', $application->status) }}</span>
+                        <span class="px-3 py-1 bg-slate-200 text-slate-800 text-sm font-bold rounded-full">{{ str_replace('_', ' ', $statusStr) }}</span>
                     @endif
                 </div>
 

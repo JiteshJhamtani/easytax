@@ -328,19 +328,40 @@
                 <div class="card-body p-4 bg-light rounded-bottom">
 
                 
-                    <form action="<?php echo e(route('admin.applications.uploadDocument', $application->id)); ?>" method="POST" enctype="multipart/form-data" class="mb-4">
-                        <?php echo csrf_field(); ?>
-                        <div class="position-relative" style="border: 2px dashed #d1d5db; border-radius: 12px; padding: 2rem 1rem; text-align: center; background: #ffffff; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#1E9C5D'" onmouseout="this.style.borderColor='#d1d5db'">
-                            <div class="text-muted mb-2">
-                                <i class="fas fa-cloud-upload-alt fa-2x"></i>
-                            </div>
-                            <h6 class="font-weight-bold text-dark mb-1">Click to upload a document</h6>
-                            <p class="text-xs text-muted mb-0 text-uppercase">PDF, PNG, JPG (Max 5MB)</p>
-                            
-                            
-                            <input type="file" name="document" class="position-absolute" style="top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="this.form.submit()" accept=".pdf,.png,.jpg,.jpeg">
+                <form action="<?php echo e(route('admin.applications.uploadDocument', $application->id)); ?>" method="POST" enctype="multipart/form-data" class="mb-4">
+                    <?php echo csrf_field(); ?>
+                    
+                    
+                    <div class="position-relative mb-4" style="border: 2px dashed #d1d5db; border-radius: 12px; padding: 2rem 1rem; text-align: center; background: #ffffff; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#1E9C5D'" onmouseout="this.style.borderColor='#d1d5db'">
+                        <div class="text-muted mb-2">
+                            <i class="fas fa-cloud-upload-alt fa-2x"></i>
                         </div>
-                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['document'];
+                        <h6 class="font-weight-bold text-dark mb-1">Click to upload a generic document</h6>
+                        <p class="text-xs text-muted mb-0 text-uppercase">PDF, PNG, JPG (Max 5MB)</p>
+                        
+                        
+                        <input type="file" name="document" class="position-absolute" style="top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="this.form.submit()" accept=".pdf,.png,.jpg,.jpeg">
+                    </div>
+
+                   
+                    <div class="row px-2">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">
+                                <i class="fas fa-file-invoice text-primary mr-1"></i> ITR Ack
+                            </label>
+                            <input type="file" name="ack_file" class="form-control border-light shadow-sm" style="height: auto; padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px;" accept=".pdf" onchange="this.form.submit()">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">
+                                <i class="fas fa-calculator text-success mr-1"></i> Computation (P&L)
+                            </label>
+                            <input type="file" name="computation_file" class="form-control border-light shadow-sm" style="height: auto; padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px;" accept=".pdf" onchange="this.form.submit()">
+                        </div>
+                    </div>
+
+                    
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['document'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -348,7 +369,23 @@ $message = $__bag->first($__errorArgs[0]); ?> <span class="text-danger text-xs f
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                    </form>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['ack_file'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <span class="text-danger text-xs font-weight-bold mt-1 d-block"><?php echo e($message); ?></span> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['computation_file'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <span class="text-danger text-xs font-weight-bold mt-1 d-block"><?php echo e($message); ?></span> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </form>
  
                    
                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($application->media->count()): ?>

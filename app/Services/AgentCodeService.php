@@ -15,7 +15,7 @@ class AgentCodeService
             ->orderBy('agent_code', 'desc')
             ->first();
 
-        // 2. Extract the number and add 1
+        // 2. Extract the number and add 1 
         $nextNumber = $lastAgent
             ? ((int) substr($lastAgent->agent_code, 4)) + 1
             : 1;

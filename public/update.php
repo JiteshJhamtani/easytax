@@ -83,7 +83,11 @@ try {
     echo "<li>❌ <strong style='color:red;'>ERROR:</strong> Failed on Hook 3 - " . $e->getMessage() . "</li>";
 }
 
-// HOOK 4: Service Sort Order
+/*
+|--------------------------------------------------------------------------
+| HOOK 4: Service Sort Order
+|--------------------------------------------------------------------------
+*/
 try {
     if (!Schema::hasColumn('services', 'sort_order')) {
         Schema::table('services', function (Blueprint $table) {
@@ -93,8 +97,82 @@ try {
     } else {
         echo "<li>⏭️ <strong style='color:gray;'>SKIPPED:</strong> <code>sort_order</code> already exists.</li>";
     }
-} catch (\Exception $e) { echo "<li>❌ <strong style='color:red;'>ERROR 4:</strong> " . $e->getMessage() . "</li>"; }
-// Add future hooks down here!
+} catch (\Exception $e) { 
+    echo "<li>❌ <strong style='color:red;'>ERROR 4:</strong> " . $e->getMessage() . "</li>"; 
+}
+
+/*
+|--------------------------------------------------------------------------
+| HOOK 5: Create Leads Table (CRM)
+|--------------------------------------------------------------------------
+*/
+try {
+    if (!Schema::hasTable('leads')) {
+        Schema::create('leads', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->nullable();
+            $table->string('phone');
+            $table->string('service_interested')->nullable();
+            $table->string('source')->nullable(); // Facebook, Direct, Referral, etc.
+            $table->string('status')->default('NEW'); // NEW, CONTACTED, IN_DISCUSSION, CONVERTED, LOST
+            $table->text('notes')->nullable();
+            
+            // Link to the marketer who generated this lead
+            $table->foreignId('marketer_id')->nullable()->constrained('users')->nullOnDelete();
+            
+            $table->timestamps();
+        });
+        echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Created <code>leads</code> table.</li>";
+    } else {
+        echo "<li>⏭️ <strong style='color:gray;'>SKIPPED:</strong> <code>leads</code> table already exists.</li>";
+    }
+} catch (\Exception $e) { 
+    echo "<li>❌ <strong style='color:red;'>ERROR 5:</strong> " . $e->getMessage() . "</li>"; 
+}
+
+
+/* 
+|--------------------------------------------------------------------------
+| HOOK 6: Securely Expand 'role' ENUM for Marketers
+|--------------------------------------------------------------------------
+*/
+try {
+    // We removed the duplicate lowercase words. MySQL will automatically have to update 
+    // accept both 'MARKETER' and 'marketer' with this single clean definition.
+    Illuminate\Support\Facades\DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('ADMIN', 'AGENT', 'MARKETER') DEFAULT 'AGENT'");
+    
+    echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Upgraded the Users 'role' ENUM to securely accept Marketers.</li>";
+} catch (\Exception $e) { 
+    echo "<li>❌ <strong style='color:red;'>ERROR 6:</strong> " . $e->getMessage() . "</li>"; 
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| HOOK 7: Create Service Pricing Rules Table (Dynamic Pricing Matrix)
+|--------------------------------------------------------------------------
+*/
+try {
+    if (!Schema::hasTable('service_pricing_rules')) {
+        Schema::create('service_pricing_rules', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('service_id')->constrained()->onDelete('cascade');
+            $table->string('gst_type')->nullable(); 
+            $table->string('turnover')->nullable(); 
+            $table->string('frequency')->nullable(); 
+            $table->string('plan')->nullable(); 
+            $table->decimal('base_price', 10, 2)->default(0);
+            $table->decimal('commission_amount', 10, 2)->default(0);
+            $table->timestamps();
+        });
+        echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Created <code>service_pricing_rules</code> table.</li>";
+    } else {
+        echo "<li>⏭️ <strong style='color:gray;'>SKIPPED:</strong> <code>service_pricing_rules</code> table already exists.</li>";
+    }
+} catch (\Exception $e) { 
+    echo "<li>❌ <strong style='color:red;'>ERROR 7:</strong> " . $e->getMessage() . "</li>"; 
+}
 
 echo "</ul>";
 echo "<p style='color: #666;'><strong>Done!</strong> Your server is now fully up to date. You can safely close this page.</p>";

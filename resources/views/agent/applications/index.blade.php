@@ -237,6 +237,35 @@
             .advanced-filters-toolbar { flex-direction: column; }
             .filter-group { width: 100%; }
         }
+
+        /* ── ULTRA-COMPACT TABLE (NO SCROLLING) ── */
+        .data-card { overflow: visible !important; }
+        
+        .compact-table {
+            width: 100% !important;
+            table-layout: auto !important;
+        }
+        
+        .compact-table th, 
+        .compact-table td {
+            padding: 6px 4px !important; 
+            font-size: 0.75rem !important; 
+            white-space: normal !important;
+            vertical-align: middle !important;
+            word-break: break-word;
+        }
+
+        .compact-table .btn {
+            padding: 3px 6px !important;
+            font-size: 0.7rem !important;
+            line-height: 1.2;
+        }
+
+        .compact-table th:last-child,
+        .compact-table td:last-child {
+            min-width: 60px;
+            text-align: right;
+        }
     </style>
 @endsection
 
@@ -367,25 +396,29 @@
                 </div>
             </div>
 
-            <div class="data-card-body">
-                <div class="table-responsive">
-                    {{-- Your JS targets this exact ID --}}
-                    <table id="applicationsTable" class="table w-100">
-                        <thead>
-                            <tr>
-                                <th>App ID</th>
-                                <th>Service Type</th>
-                                <th>Status</th>
-                                <th>Payment</th>
-                                <th>Amount</th>
-                                <th>Date Submitted</th>
-                                <th class="text-right">Actions</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
+           <div class="data-card-body">
+                <table id="applicationsTable" class="table w-100 compact-table">
+                    <thead>
+                        <tr>
+                            <th>App ID</th>
+                            <th>Service Type</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Amount</th>
+                            
+                            {{-- Check URL param dynamically for Agent side headers --}}
+                            @if(request()->query('type') === 'itr-filing')
+                                <th>ACK NO</th>
+                                <th>COMPUTATION</th>
+                                <th>BALANCE SHEET</th>
+                            @endif
+                            
+                            <th>Date Submitted</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
             </div>
-            
         </div>
 
     </div>
@@ -393,7 +426,8 @@
 @endsection
 
 @section('js')
+
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
-    <script src="{{ asset('assets/js/applications.js') }}"></script>
+    <script src="{{ asset('assets/js/applications.js') }}?v={{ time() }}"></script>
 @endsection

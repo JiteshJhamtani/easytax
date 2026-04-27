@@ -22,7 +22,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+   public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
@@ -34,11 +34,18 @@ class AuthenticatedSessionController extends Controller
         }
 
         $user = $request->user();
+        $role = strtoupper($user->role);
 
-        if ($user->role === 'ADMIN') {
+        // 1. Admins go to the main dashboard
+        if ($role === 'ADMIN') {
             return redirect()->route('admin.dashboard');
-        }
+        } 
+        // 2. Marketers go strictly to their Leads page
+        elseif ($role === 'MARKETER') {
+        return redirect()->route('marketer.dashboard'); // <--- ADDED THIS    
+    }
 
+        // 3. Agents go to the agent dashboard
         return redirect()->route('agent.dashboard');
     }
 

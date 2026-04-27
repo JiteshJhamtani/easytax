@@ -6,7 +6,38 @@ let table;
 let currentFilter = "all";
 
 $(document).ready(function () {
-    // 1. Initialize DataTable
+    // 1. Check the URL to see what page we are on BEFORE initializing the table
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageType = urlParams.get('type') || 'other';
+
+    // 2. Define the base columns everyone gets
+    let tableColumns = [
+        { data: "id", name: "id" },
+        { data: "service", name: "service.name" },
+        { data: "status", name: "status" },
+        { data: "payment", name: "payment_status" },
+        { data: "amount", name: "amount" }
+        
+    ];
+
+    // 3. Inject ITR specific columns ONLY if we are on the ITR page
+    if (pageType === 'itr-filing') {
+        // ADDED THE TWO NEW COLUMNS HERE
+        tableColumns.push({ data: 'ack_no', name: 'ack_no', orderable: false, searchable: false });
+        tableColumns.push({ data: 'computation', name: 'computation', orderable: false, searchable: false });
+        tableColumns.push({ data: 'balance_sheet', name: 'balance_sheet', orderable: false, searchable: false });
+    }
+
+    // 4. Add the final columns that go at the end
+    tableColumns.push({ data: "date", name: "created_at" });
+    tableColumns.push({
+        data: "actions",
+        name: "actions",
+        orderable: false,
+        searchable: false,
+        className: "text-right",
+    });
+    // 5. Initialize DataTable
     table = $("#applicationsTable").DataTable({
         processing: true,
         serverSide: true,
@@ -17,6 +48,9 @@ $(document).ready(function () {
         ajax: {
             url: "/agent/applications/data",
             data: function (d) {
+                // Pass the type we grabbed at the top of the file
+                d.type = pageType;
+
                 // Quick tab filter
                 d.filter = currentFilter;
 
@@ -35,22 +69,8 @@ $(document).ready(function () {
             "<'row'<'col-sm-12'tr>>" +
             "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
 
-        // Map JSON payload to columns
-        columns: [
-            { data: "id", name: "id" },
-            { data: "service", name: "service.name" },
-            { data: "status", name: "status" },
-            { data: "payment", name: "payment_status" },
-            { data: "amount", name: "amount" },
-            { data: "date", name: "created_at" },
-            {
-                data: "actions",
-                name: "actions",
-                orderable: false,
-                searchable: false,
-                className: "text-right", // Aligns buttons to the right
-            },
-        ],
+        // USE OUR DYNAMIC ARRAY HERE
+        columns: tableColumns,
 
         // SaaS-style language overrides
         language: {
@@ -68,7 +88,7 @@ $(document).ready(function () {
         },
     });
 
-    // 2. Quick Tab Click Logic
+    // 6. Quick Tab Click Logic
     $(".app-filter").click(function () {
         // Toggle active visual state
         $(".app-filter").removeClass("active");
@@ -78,15 +98,16 @@ $(document).ready(function () {
         currentFilter = $(this).data("filter");
         table.ajax.reload();
     });
+    // 
 
-    // 3. Trigger reload when any Advanced Filter dropdown changes
+    // 7. Trigger reload when any Advanced Filter dropdown changes
     $(
         "#filterService, #filterStatus, #filterPayment, #filterDateFrom, #filterDateTo",
     ).on("change", function () {
         table.ajax.reload();
     });
 
-    // 4. Reset Filters Button Logic
+    // 8. Reset Filters Button Logic
     $("#resetFilters").click(function () {
         // Reset dropdowns and dates
         $(

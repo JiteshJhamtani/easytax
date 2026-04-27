@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="icon" type="image/png" href="{{ asset('assets/images/fav.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/fav3.png') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,7 +20,7 @@
             darkMode: 'class',
             corePlugins: {
                 preflight: false, // CRITICAL: Stops Tailwind from breaking Bootstrap
-            }
+            } 
            
         }
     </script>
@@ -197,54 +197,105 @@
             <img src="{{ asset('assets/images/logo11.png') }}" alt="EasyTax Logo">
         </a>
 
-        <nav class="sb-nav">
-            <div class="sb-section">Core</div>
+<nav class="sb-nav">
             
-            <a href="{{ url('admin/dashboard') }}" class="sb-item {{ request()->is('admin/dashboard*') ? 'active' : '' }}" data-label="Dashboard">
-                <span class="sb-item__icon"><i class="fas fa-chart-pie"></i></span>
-                Dashboard
-                @if(request()->is('admin/dashboard*'))<span class="sb-item__dot"></span>@endif
-            </a>
-            
-            <div class="sb-section">Management</div>
+            {{-- ========================================== --}}
+            {{-- ADMIN ONLY SECTION (Hidden from Marketers) --}}
+            {{-- ========================================== --}}
+            @if(strtoupper(auth()->user()->role) === 'ADMIN')
+                <div class="sb-section">Core</div>
+                
+                <a href="{{ url('admin/dashboard') }}" class="sb-item {{ request()->is('admin/dashboard*') ? 'active' : '' }}" data-label="Dashboard">
+                    <span class="sb-item__icon"><i class="fas fa-chart-pie"></i></span>
+                    Dashboard
+                    @if(request()->is('admin/dashboard*'))<span class="sb-item__dot"></span>@endif
+                </a>
+                
+                @if(env('IS_MASTER_SERVER', false))
+                <div class="sb-section">Management</div>
 
-            <a href="{{ url('admin/services') }}" class="sb-item {{ request()->is('admin/services*') ? 'active' : '' }}" data-label="Services">
-                <span class="sb-item__icon"><i class="fas fa-concierge-bell"></i></span>
-                Services
-                @if(request()->is('admin/services*'))<span class="sb-item__dot"></span>@endif
-            </a>
-            
-            <a href="{{ url('admin/applications') }}" class="sb-item {{ request()->is('admin/applications*') ? 'active' : '' }}" data-label="Applications">
-                <span class="sb-item__icon"><i class="fas fa-file-invoice"></i></span>
-                Applications
-                @if(request()->is('admin/applications*'))<span class="sb-item__dot"></span>@endif
-            </a>
-            
-            <a href="{{ url('admin/agents') }}" class="sb-item {{ request()->is('admin/agents*') ? 'active' : '' }}" data-label="Agents">
-                <span class="sb-item__icon"><i class="fas fa-user-tie"></i></span>
-                Agents
-                @if(request()->is('admin/agents*'))<span class="sb-item__dot"></span>@endif
-            </a>
+                <a href="{{ url('admin/services') }}" class="sb-item {{ request()->is('admin/services*') ? 'active' : '' }}" data-label="Services">
+                    <span class="sb-item__icon"><i class="fas fa-concierge-bell"></i></span>
+                    Services
+                    @if(request()->is('admin/services*'))<span class="sb-item__dot"></span>@endif
+                </a>
+                @endif
 
-            <div class="sb-section">System</div>
+                <div class="sb-section">Application Types</div>
 
-            <div class="sb-has-submenu {{ request()->is('admin/gifts*') ? 'open' : '' }}">
-                <div class="sb-submenu-toggle {{ request()->is('admin/gifts*') ? 'active' : '' }}" onclick="this.parentElement.classList.toggle('open')">
-                    <span class="sb-item__icon"><i class="fas fa-gift"></i></span>
-                    Gifts
-                    <i class="fas fa-chevron-down sb-submenu-arrow"></i>
+                <a href="{{ route('admin.applications.index', ['type' => 'gst-return-filing']) }}" class="sb-item {{ request()->query('type') === 'gst-return-filing' ? 'active' : '' }}" data-label="GST Return">
+                    <span class="sb-item__icon"><i class="fas fa-file-invoice" style="color: #38bdf8;"></i></span>
+                    GST Return
+                </a>
+
+                <a href="{{ route('admin.applications.index', ['type' => 'itr-filing']) }}" class="sb-item {{ request()->query('type') === 'itr-filing' ? 'active' : '' }}" data-label="ITR Filing">
+                    <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar" style="color: var(--green);"></i></span>
+                    ITR Filing
+                </a>
+
+                <a href="{{ route('admin.applications.index', ['type' => 'gst-registration']) }}" class="sb-item {{ request()->query('type') === 'gst-registration' ? 'active' : '' }}" data-label="GST Registration">
+                    <span class="sb-item__icon"><i class="fas fa-id-card" style="color: #fbbf24;"></i></span>
+                    GST Registration
+                </a>
+
+                <a href="{{ route('admin.applications.index', ['type' => 'other']) }}" class="sb-item {{ request()->query('type', 'other') === 'other' ? 'active' : '' }}" data-label="Other Apps">
+                    <span class="sb-item__icon"><i class="fas fa-folder" style="color: var(--slate-muted);"></i></span>
+                    Other Apps
+                </a>
+                
+                <a href="{{ url('admin/agents') }}" class="sb-item {{ request()->is('admin/agents*') ? 'active' : '' }}" data-label="Agents">
+                    <span class="sb-item__icon"><i class="fas fa-user-tie"></i></span>
+                    Agents
+                    @if(request()->is('admin/agents*'))<span class="sb-item__dot"></span>@endif
+                </a>
+
+                <div class="sb-section">System</div>
+
+                <div class="sb-has-submenu {{ request()->is('admin/gifts*') ? 'open' : '' }}">
+                    <div class="sb-submenu-toggle {{ request()->is('admin/gifts*') ? 'active' : '' }}" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="sb-item__icon"><i class="fas fa-gift"></i></span>
+                        Gifts
+                        <i class="fas fa-chevron-down sb-submenu-arrow"></i>
+                    </div>
+                    <div class="sb-submenu">
+                        <a href="{{ url('admin/gifts') }}" class="sb-subitem {{ request()->routeIs('admin.gifts.index') ? 'active' : '' }}">All Gifts</a>
+                        <a href="{{ url('admin/gifts/eligibility') }}" class="sb-subitem {{ request()->routeIs('admin.gifts.eligibility*') ? 'active' : '' }}">Eligibility</a>
+                    </div>
                 </div>
-                <div class="sb-submenu">
-                    <a href="{{ url('admin/gifts') }}" class="sb-subitem {{ request()->routeIs('admin.gifts.index') ? 'active' : '' }}">All Gifts</a>
-                    <a href="{{ url('admin/gifts/eligibility') }}" class="sb-subitem {{ request()->routeIs('admin.gifts.eligibility*') ? 'active' : '' }}">Eligibility</a>
-                </div>
-            </div>
 
-            <a href="{{ url('admin/pages') }}" class="sb-item {{ request()->is('admin/pages*') ? 'active' : '' }}" data-label="Pages">
-                <span class="sb-item__icon"><i class="fas fa-file-alt"></i></span>
-                Pages
-                @if(request()->is('admin/pages*'))<span class="sb-item__dot"></span>@endif
+                @if(env('IS_MASTER_SERVER', false))
+
+                <a href="{{ url('admin/pages') }}" class="sb-item {{ request()->is('admin/pages*') ? 'active' : '' }}" data-label="Pages">
+                    <span class="sb-item__icon"><i class="fas fa-file-alt"></i></span>
+                    Pages
+                    @if(request()->is('admin/pages*'))<span class="sb-item__dot"></span>@endif
+                </a>
+                @endif
+
+
+            @endif
+
+            {{-- ========================================== --}}
+            {{-- CRM SECTION (Visible to Admin & Marketers) --}}
+            {{-- ========================================== --}}
+            <div class="sb-section">Marketing CRM</div>
+
+            {{-- Only Admins can manage the actual Marketer accounts --}}
+            @if(strtoupper(auth()->user()->role) === 'ADMIN')
+                <a href="{{ route('crm.marketers.index') }}" class="sb-item {{ request()->is('crm/marketers*') ? 'active' : '' }}" data-label="Marketers">
+                    <span class="sb-item__icon"><i class="fas fa-bullhorn" style="color: #f43f5e;"></i></span>
+                    Marketers
+                    @if(request()->is('crm/marketers*'))<span class="sb-item__dot"></span>@endif
+                </a>
+            @endif
+
+            {{-- Both Admins and Marketers can access Leads --}}
+            <a href="{{ route('crm.leads.index') }}" class="sb-item {{ request()->is('crm/leads*') ? 'active' : '' }}" data-label="Leads">
+                <span class="sb-item__icon"><i class="fas fa-magnet" style="color: #8b5cf6;"></i></span>
+                Leads
+                @if(request()->is('crm/leads*'))<span class="sb-item__dot"></span>@endif
             </a>
+
         </nav>
 
          <div class="sb-bottom">

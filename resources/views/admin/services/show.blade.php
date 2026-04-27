@@ -116,24 +116,38 @@
 
     {{-- ═══════ KPI CARDS ═══════ --}}
     <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+        <div class="row mb-4">
+       <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
             <div class="kpi-card kpi-blue">
                 <div class="kpi-icon"><i class="fas fa-tag"></i></div>
                 <div class="kpi-body">
-                    <div class="kpi-value">₹{{ number_format($service->price, 2) }}</div>
-                    <div class="kpi-label">Service Price</div>
+                    @if($service->slug === 'gst-return-filing')
+                        <div class="kpi-value text-primary" style="font-size: 1.1rem;">Dynamic</div>
+                        <div class="kpi-label">Matrix Pricing</div>
+                    @else
+                        <div class="kpi-value">₹{{ number_format($service->price, 2) }}</div>
+                        <div class="kpi-label">Service Price</div>
+                    @endif
                 </div>
             </div>
         </div>
+        
         <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
             <div class="kpi-card kpi-green">
                 <div class="kpi-icon"><i class="fas fa-coins"></i></div>
                 <div class="kpi-body">
-                    <div class="kpi-value">{{ $service->commission_type === 'percentage' ? $service->commission_value . '%' : '₹' . number_format($service->commission_value, 2) }}</div>
-                    <div class="kpi-label">Commission ({{ ucfirst($service->commission_type) }})</div>
+                    @if($service->slug === 'gst-return-filing')
+                        <div class="kpi-value text-success" style="font-size: 1.1rem;">Dynamic</div>
+                        <div class="kpi-label">Matrix Commission</div>
+                    @else
+                        <div class="kpi-value">{{ $service->commission_type === 'percentage' ? $service->commission_value . '%' : '₹' . number_format($service->commission_value, 2) }}</div>
+                        <div class="kpi-label">Commission ({{ ucfirst($service->commission_type) }})</div>
+                    @endif
                 </div>
             </div>
+
         </div>
+        
         <div class="col-lg-3 col-md-6 mb-3 mb-md-0">
             <div class="kpi-card kpi-purple">
                 <div class="kpi-icon"><i class="fas fa-file-alt"></i></div>

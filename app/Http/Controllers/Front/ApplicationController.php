@@ -32,30 +32,63 @@ class ApplicationController extends Controller
     ) {
         Log::info("Application submission started for slug: {$slug}");
 
+        // ==========================================
+        // THIS IS THE PART THAT ACCIDENTALLY GOT DELETED!
+        // We have to grab the Service and Validate the form first.
         $service = Service::where('slug', $slug)
             ->where('active', true)
             ->firstOrFail();
 
         $validated = $validator->validate($service->slug, $request->all());
+        // ==========================================  
 
         Log::info("Form validation passed.");
 
-        // Calculate commission up-front
-        $commission  = $service->calculateCommission((float) $service->price);
-        $amountToPay = max(0, $service->price - $commission);
+        // ==========================================
+        // DYNAMIC PRICING OVERRIDE ENGINE
+        // ==========================================
+       $finalPrice = $service->price;
+        $commission = 0;
+
+        if ($service->slug === 'gst-return-filing') {
+            $selectedGst = $validated['gst_type'] ?? '';
+            $selectedTurnover = $validated['annual_turnover_range'] ?? '';
+            $selectedFrequency = $validated['frequency_of_return'] ?? '';
+            $selectedPlan = $validated['plan'] ?? ''; 
+
+            // THE FIXED QUERY: Safely handles database NULL wildcards!
+            $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
+                ->where(function($q) use ($selectedGst) { $q->where('gst_type', $selectedGst)->orWhereNull('gst_type'); })
+                ->where(function($q) use ($selectedTurnover) { $q->where('turnover', $selectedTurnover)->orWhereNull('turnover'); })
+                ->where(function($q) use ($selectedFrequency) { $q->where('frequency', $selectedFrequency)->orWhereNull('frequency'); })
+                ->where(function($q) use ($selectedPlan) { $q->where('plan', $selectedPlan)->orWhereNull('plan'); })
+                ->first();
+
+            if ($rule) {
+                $finalPrice = $rule->base_price;
+                $commission = $rule->commission_amount;
+            } else {
+                Log::warning("No pricing rule matched for GST Return", [$validated]);
+                $finalPrice = 499; // Fallback Total
+                $commission = 100; // Fallback Commission
+            }
+        } else {
+            $commission = $service->calculateCommission((float) $service->price);
+        }
+
+        $amountToPay = max(0, $finalPrice - $commission);
 
         $application = Application::create([
             'agent_id'          => auth()->id(),
             'service_id'        => $service->id,
             'form_data'         => $validated,
-            'amount'            => $service->price,
-            'commission_amount' => $commission,
+            'amount'            => $finalPrice, 
+            'commission_amount' => $commission, 
             'status'            => ApplicationStatus::DRAFT,
             'payment_status'    => PaymentStatus::PENDING,
         ]);
 
         Log::info("Draft application created with ID: {$application->id}");
-
 
         $applicationDocumentService->handleUploads($application, $request, $service->slug);
         ApplicationLogger::log($application->id, 'application_created');
@@ -103,7 +136,6 @@ class ApplicationController extends Controller
             'key_id'         => config('razorpay.key_id'),
         ]);
     }
-
     /*
     |--------------------------------------------------------------------------
     | Payment Success Callback (from Razorpay frontend)
@@ -425,6 +457,25 @@ class ApplicationController extends Controller
         // 3. If nothing found → still return PENDING (not FAILED)
         return response()->json([
             'status' => 'PENDING'
+           
         ]);
     }
-}
+
+  
+  /**
+     * --- SECURE CLIENT TRACKING PAGE ---
+     */
+    public function track(\Illuminate\Http\Request $request, \App\Models\Application $application)
+    {
+        // 1. Verify the cryptographic signature so hackers can't guess URLs
+        if (! $request->hasValidSignature()) {
+            abort(403, 'This tracking link has expired or is invalid.');
+        }
+
+        // 2. Load the related data needed for the view
+        $application->load(['service', 'agent']);
+
+        // 3. Send them to the public tracking view
+        return view('front.pages.applications.track', compact('application'));
+    }
+}   

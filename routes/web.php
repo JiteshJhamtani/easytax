@@ -130,6 +130,9 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
         
     Route::get('/documents/{media}/download', [AgentApplicationController::class, 'downloadDocument'])
         ->name('documents.download');
+
+    Route::get('/applications/{id}/balance-sheet', [AgentApplicationController::class, 'balanceSheetForm'])->name('applications.balance-sheet');
+    Route::post('/applications/{id}/balance-sheet/generate', [AgentApplicationController::class, 'generateBalanceSheetPdf'])->name('applications.balance-sheet.generate');
   
 });
 
@@ -172,6 +175,10 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
         ->name('applications.exportSingle');
 
     Route::post('/applications/{application}/credentials', [\App\Http\Controllers\Admin\ApplicationController::class, 'storeCredentials'])->name('applications.storeCredentials');    
+
+    Route::get('/applications/{id}/balance-sheet', [App\Http\Controllers\Admin\ApplicationController::class, 'balanceSheetForm'])->name('applications.balance-sheet');
+
+    Route::post('/applications/{id}/balance-sheet/generate', [App\Http\Controllers\Admin\ApplicationController::class, 'generateBalanceSheetPdf'])->name('applications.balance-sheet.generate');
 
     /*
     |--------------------------------------------------------------------------
@@ -247,9 +254,11 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
 
     Route::get('/services', [AdminServiceController::class, 'index'])
         ->name('services.index');
-
-    Route::get('/services/datatable', [AdminServiceController::class, 'datatable'])
+    
+    if (env('IS_MASTER_SERVER', false) === true) {
+     Route::get('/services/datatable', [AdminServiceController::class, 'datatable'])
         ->name('services.datatable');
+    }    
 
     Route::get('/services/create', [AdminServiceController::class, 'create'])
         ->name('services.create');
@@ -273,8 +282,12 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
     | Static Pages
     |--------------------------------------------------------------------------
     */
+
+    if (env('IS_MASTER_SERVER', false) === true) {
+
     Route::get('/pages/datatable', [\App\Http\Controllers\Admin\PageController::class, 'datatable'])->name('pages.datatable');
     Route::resource('pages', \App\Http\Controllers\Admin\PageController::class)->except(['show']);
+    }
     Route::patch('/pages/{page}/toggle', [\App\Http\Controllers\Admin\PageController::class, 'toggle'])->name('pages.toggle');
 
 
@@ -296,7 +309,48 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
         ->name('documents.download');
 });
 
+/*
+|--------------------------------------------------------------------------
+| CRM & Marketing Routes (Shared by Admin & Marketers)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'sidebar'])->prefix('crm')->name('crm.')->group(function () {
 
+    // --- Marketers UI ---
+    Route::get('/marketers', [\App\Http\Controllers\Admin\MarketerController::class, 'index'])->name('marketers.index');
+    Route::get('/marketers/datatable', [\App\Http\Controllers\Admin\MarketerController::class, 'datatable'])->name('marketers.datatable');
+    
+    // CRITICAL: create route moved ABOVE wildcard routes
+    Route::get('/marketers/create', [\App\Http\Controllers\Admin\MarketerController::class, 'create'])->name('marketers.create'); 
+    
+    Route::post('/marketers', [\App\Http\Controllers\Admin\MarketerController::class, 'store'])->name('marketers.store');
+    Route::patch('/marketers/{user}/toggle-status', [\App\Http\Controllers\Admin\MarketerController::class, 'toggleStatus'])->name('marketers.toggle-status');
+
+
+    // --- Leads UI ---
+    Route::get('/leads/{lead}/edit', [\App\Http\Controllers\Admin\LeadController::class, 'edit'])->name('leads.edit');
+    Route::get('/leads', [\App\Http\Controllers\Admin\LeadController::class, 'index'])->name('leads.index');
+    Route::get('/leads/datatable', [\App\Http\Controllers\Admin\LeadController::class, 'datatable'])->name('leads.datatable');
+    
+    // CRITICAL: create route moved ABOVE wildcard routes
+    Route::get('/leads/create', [\App\Http\Controllers\Admin\LeadController::class, 'create'])->name('leads.create'); 
+    
+    Route::post('/leads', [\App\Http\Controllers\Admin\LeadController::class, 'store'])->name('leads.store');
+    Route::patch('/leads/{lead}', [\App\Http\Controllers\Admin\LeadController::class, 'update'])->name('leads.update');
+
+  
+    // Removed the "show" route entirely because we use a modal, not a show page!
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| Marketer Dashboard Route
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'sidebar'])->group(function () {
+    Route::get('/marketer/dashboard', [\App\Http\Controllers\Admin\LeadController::class, 'dashboard'])->name('marketer.dashboard');
+});
 /*
 |--------------------------------------------------------------------------
 | Profile (Both Roles)
@@ -364,4 +418,34 @@ Route::middleware('auth')->group(function () {
 
 Route::post('/payment/webhook', [ApplicationController::class, 'webhook'])
     ->name('payment.webhook');
+
+
+/*
+|--------------------------------------------------------------------------
+| TEMPORARY DATABASE UPDATER (Delete after running)  have same upadage in email template and also want to make new email for this so what 
+|--------------------------------------------------------------------------
+*/
+Route::get('/run-crm-update', function() {
+    try {
+        if (!\Illuminate\Support\Facades\Schema::hasTable('leads')) {
+            \Illuminate\Support\Facades\Schema::create('leads', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('email')->nullable();
+                $table->string('phone');
+                $table->string('service_interested')->nullable();
+                $table->string('source')->nullable(); 
+                $table->string('status')->default('NEW'); 
+                $table->text('notes')->nullable();
+                $table->foreignId('marketer_id')->nullable()->constrained('users')->nullOnDelete();
+                $table->timestamps();
+            });
+            return "<h2 style='color:green'>SUCCESS: Leads table created!</h2>";
+        }
+        return "<h2 style='color:gray'>SKIPPED: Leads table already exists.</h2>";
+    } catch (\Exception $e) {
+        return "<h2 style='color:red'>ERROR: " . $e->getMessage() . "</h2>";
+    }
+});    
+
 

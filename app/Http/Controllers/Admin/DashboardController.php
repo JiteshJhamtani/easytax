@@ -42,7 +42,16 @@ class DashboardController extends Controller
             
             'total_commission' => Application::query()->where('status', 'COMPLETED')->sum('commission_amount'),
             
-            'total_agents' => User::query()->where('role', 'AGENT')->count(),
+           'total_agents' => User::query()
+                ->where('role', 'AGENT')
+                ->where('is_active', true) 
+                ->count(),
+                
+            // NEW: Count active marketers (checking both cases just to be safe!)
+            'total_marketers' => User::query()
+                ->whereIn('role', ['marketer', 'MARKETER'])
+                ->where('is_active', true)
+                ->count(),
         ];
 
 

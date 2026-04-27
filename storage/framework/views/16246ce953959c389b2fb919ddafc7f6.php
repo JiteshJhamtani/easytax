@@ -204,7 +204,14 @@
         </div>
 
         <div class="row">
-            <div class="col-xl-4 col-lg-4 col-md-6 mb-3 mb-xl-0">
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
+                <div class="funnel-card">
+                    <div class="funnel-icon"><i class="fas fa-users"></i></div>
+                    <div class="funnel-label">Total Agents</div>
+                    <div class="funnel-value"><?php echo e($kpis['total_agents']); ?></div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-rupee-sign"></i></div>
                     <div class="funnel-label">Total Revenue</div>
@@ -212,7 +219,7 @@
                 </div>
             </div>
 
-            <div class="col-xl-4 col-lg-4 col-md-6 mb-3 mb-xl-0">
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-coins"></i></div>
                     <div class="funnel-label">Commission Generated</div>
@@ -220,11 +227,13 @@
                 </div>
             </div>
 
-            <div class="col-xl-4 col-lg-4 col-md-12 mb-3 mb-xl-0">
+            
+
+           <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-users"></i></div>
-                    <div class="funnel-label">Total Agents</div>
-                    <div class="funnel-value"><?php echo e($kpis['total_agents']); ?></div>
+                    <div class="funnel-label">Total Marketers</div>
+                    <div class="funnel-value"><?php echo e($kpis['total_marketers']); ?></div>
                 </div>
             </div>
         </div>

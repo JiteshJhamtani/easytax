@@ -1,4 +1,4 @@
-@extends('layouts.agent')
+@extends('layouts.agent') 
 
 @section('title', 'Service Catalog | EasyTax Agent Portal')
 

@@ -158,6 +158,33 @@ class ServiceController extends Controller
             $this->writeFormConfig($service->slug, $formSchema);
         }
 
+        // ... existing service save logic ...
+
+       // ==========================================
+        // SAVE ENTERPRISE PRICING MATRIX
+        // ==========================================
+        if ($request->has('pricing_rules')) {
+            // Clear out the old rules to prevent duplicates
+            $service->pricingRules()->delete(); 
+            
+            // Loop through the table rows and save each rule
+            foreach ($request->pricing_rules as $rule) {
+                // Only save rows that actually have a base price
+                if (isset($rule['base_price']) && $rule['base_price'] !== null) { 
+                    $service->pricingRules()->create([
+                        // empty() checks if it's blank, and saves null if it is!
+                        'gst_type'          => empty($rule['gst_type']) ? null : $rule['gst_type'],
+                        'turnover'          => empty($rule['turnover']) ? null : $rule['turnover'],
+                        'frequency'         => empty($rule['frequency']) ? null : $rule['frequency'],
+                        'plan'              => empty($rule['plan']) ? null : $rule['plan'],
+                        'base_price'        => $rule['base_price'],
+                        'commission_amount' => empty($rule['commission_amount']) ? 0 : $rule['commission_amount'],
+                    ]);
+                }
+            }
+        }
+        // ==========================================
+
         return redirect()
             ->route('admin.services.show', $service)
             ->with('success', 'Service updated successfully.');

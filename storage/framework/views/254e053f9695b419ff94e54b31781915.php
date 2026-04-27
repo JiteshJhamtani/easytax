@@ -94,33 +94,33 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                         </div>
 
                         <div class="col-md-12 form-group">
-        <label>Primary Data Field (Optional)</label>
-        <input type="text" name="primary_data_field" class="form-control" value="<?php echo e(old('primary_data_field', $service->primary_data_field ?? '')); ?>" placeholder="e.g., gst_number">
-        <small class="text-muted">Type the exact input name to display it on the Applications List.</small>
-    </div>
+                            <label class="form-label-custom">Primary Data Field (Optional)</label>
+                            <input type="text" name="primary_data_field" class="form-control custom-input" value="<?php echo e(old('primary_data_field', $service->primary_data_field ?? '')); ?>" placeholder="e.g., gst_number">
+                            <small class="text-muted">Type the exact input name to display it on the Applications List.</small>
+                        </div>
 
-    <div class="col-md-6 form-group mt-3">
-        <label><i class="fab fa-whatsapp text-success"></i> WhatsApp Number Field (Optional)</label>
-        <input type="text" name="whatsapp_number_field" class="form-control" value="<?php echo e(old('whatsapp_number_field', $service->whatsapp_number_field ?? '')); ?>" placeholder="e.g., contact_mobile">
-        <small class="text-muted">Field name for the client's phone number.</small>
-    </div>
+                        <div class="col-md-6 form-group mt-3">
+                            <label class="form-label-custom"><i class="fab fa-whatsapp text-success"></i> WhatsApp Number Field (Optional)</label>
+                            <input type="text" name="whatsapp_number_field" class="form-control custom-input" value="<?php echo e(old('whatsapp_number_field', $service->whatsapp_number_field ?? '')); ?>" placeholder="e.g., contact_mobile">
+                            <small class="text-muted">Field name for the client's phone number.</small>
+                        </div>
 
-    <div class="col-md-6 form-group mt-3">
-        <label><i class="fas fa-envelope text-primary"></i> Applicant Email Field (Optional)</label>
-        <input type="text" name="applicant_email_field" class="form-control" value="<?php echo e(old('applicant_email_field', $service->applicant_email_field ?? '')); ?>" placeholder="e.g., firm_email">
-        <small class="text-muted">Field name for the client's email address.</small>
-    </div>
+                        <div class="col-md-6 form-group mt-3">
+                            <label class="form-label-custom"><i class="fas fa-envelope text-primary"></i> Applicant Email Field (Optional)</label>
+                            <input type="text" name="applicant_email_field" class="form-control custom-input" value="<?php echo e(old('applicant_email_field', $service->applicant_email_field ?? '')); ?>" placeholder="e.g., firm_email">
+                            <small class="text-muted">Field name for the client's email address.</small>
+                        </div>
 
-    <div class="col-md-6 form-group mt-3">
-    <label><i class="fas fa-sort-numeric-down text-info"></i> Sort Order</label>
-    <input type="number" name="sort_order" class="form-control" value="<?php echo e(old('sort_order', $service->sort_order ?? 0)); ?>">
-    <small class="text-muted">Lower numbers appear first (e.g., 1, 2, 3).</small>
-</div>
+                        <div class="col-md-6 form-group mt-3">
+                            <label class="form-label-custom"><i class="fas fa-sort-numeric-down text-info"></i> Sort Order</label>
+                            <input type="number" name="sort_order" class="form-control custom-input" value="<?php echo e(old('sort_order', $service->sort_order ?? 0)); ?>">
+                            <small class="text-muted">Lower numbers appear first (e.g., 1, 2, 3).</small>
+                        </div>
                     </div>
 
 
                     
-                    <div class="form-group mb-4">
+                    <div class="form-group mb-4 mt-3">
                         <label class="form-label-custom">Description</label>
                         <textarea name="description" rows="3"
                             class="form-control custom-input <?php $__errorArgs = ['description'];
@@ -147,17 +147,19 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
                     <hr class="my-4 border-light">
 
                     
-                    <div class="row">
-                        <div class="col-md-4 form-group mb-4">
-                            <label class="form-label-custom">Price (₹) <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light border-right-0 custom-icon-box">
-                                        <i class="fas fa-rupee-sign text-muted"></i>
-                                    </span>
-                                </div>
-                                <input type="number" name="price" step="0.01" min="0"
-                                    class="form-control custom-input border-left-0 <?php $__errorArgs = ['price'];
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($service->slug !== 'gst-return-filing'): ?>
+                        
+                        <div class="row">
+                            <div class="col-md-4 form-group mb-4">
+                                <label class="form-label-custom">Price (₹) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light border-right-0 custom-icon-box">
+                                            <i class="fas fa-rupee-sign text-muted"></i>
+                                        </span>
+                                    </div>
+                                    <input type="number" name="price" step="0.01" min="0"
+                                        class="form-control custom-input border-left-0 <?php $__errorArgs = ['price'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -165,24 +167,24 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>"
-                                    value="<?php echo e(old('price', $service->price)); ?>" required>
-                            </div>
-                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['price'];
+                                        value="<?php echo e(old('price', $service->price)); ?>" required>
+                                </div>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['price'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                                <span class="text-danger small font-weight-bold mt-1 d-block"><i class="fas fa-exclamation-circle mr-1"></i><?php echo e($message); ?></span>
-                            <?php unset($message);
+                                    <span class="text-danger small font-weight-bold mt-1 d-block"><i class="fas fa-exclamation-circle mr-1"></i><?php echo e($message); ?></span>
+                                <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                        </div>
+                            </div>
 
-                        <div class="col-md-4 form-group mb-4">
-                            <label class="form-label-custom">Commission Type <span class="text-danger">*</span></label>
-                            <select name="commission_type"
-                                class="form-control custom-input <?php $__errorArgs = ['commission_type'];
+                            <div class="col-md-4 form-group mb-4">
+                                <label class="form-label-custom">Commission Type <span class="text-danger">*</span></label>
+                                <select name="commission_type"
+                                    class="form-control custom-input <?php $__errorArgs = ['commission_type'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -190,31 +192,31 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" required>
-                                <option value="flat" <?php echo e(old('commission_type', $service->commission_type) === 'flat' ? 'selected' : ''); ?>>Flat (₹)</option>
-                                <option value="percentage" <?php echo e(old('commission_type', $service->commission_type) === 'percentage' ? 'selected' : ''); ?>>Percentage (%)</option>
-                            </select>
-                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['commission_type'];
+                                    <option value="flat" <?php echo e(old('commission_type', $service->commission_type) === 'flat' ? 'selected' : ''); ?>>Flat (₹)</option>
+                                    <option value="percentage" <?php echo e(old('commission_type', $service->commission_type) === 'percentage' ? 'selected' : ''); ?>>Percentage (%)</option>
+                                </select>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['commission_type'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                                <span class="text-danger small font-weight-bold mt-1 d-block"><i class="fas fa-exclamation-circle mr-1"></i><?php echo e($message); ?></span>
-                            <?php unset($message);
+                                    <span class="text-danger small font-weight-bold mt-1 d-block"><i class="fas fa-exclamation-circle mr-1"></i><?php echo e($message); ?></span>
+                                <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                        </div>
+                            </div>
 
-                        <div class="col-md-4 form-group mb-4">
-                            <label class="form-label-custom">Commission Value <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text bg-light border-right-0 custom-icon-box">
-                                        <i class="fas fa-coins text-muted"></i>
-                                    </span>
-                                </div>
-                                <input type="number" name="commission_value" step="0.01" min="0"
-                                    class="form-control custom-input border-left-0 <?php $__errorArgs = ['commission_value'];
+                            <div class="col-md-4 form-group mb-4">
+                                <label class="form-label-custom">Commission Value <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-light border-right-0 custom-icon-box">
+                                            <i class="fas fa-coins text-muted"></i>
+                                        </span>
+                                    </div>
+                                    <input type="number" name="commission_value" step="0.01" min="0"
+                                        class="form-control custom-input border-left-0 <?php $__errorArgs = ['commission_value'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -222,20 +224,70 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>"
-                                    value="<?php echo e(old('commission_value', $service->commission_value)); ?>" required>
-                            </div>
-                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['commission_value'];
+                                        value="<?php echo e(old('commission_value', $service->commission_value)); ?>" required>
+                                </div>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['commission_value'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                                <span class="text-danger small font-weight-bold mt-1 d-block"><i class="fas fa-exclamation-circle mr-1"></i><?php echo e($message); ?></span>
-                            <?php unset($message);
+                                    <span class="text-danger small font-weight-bold mt-1 d-block"><i class="fas fa-exclamation-circle mr-1"></i><?php echo e($message); ?></span>
+                                <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </div>
                         </div>
-                    </div>
+                    <?php else: ?>
+
+                    <input type="hidden" name="price" value="0">
+                        <input type="hidden" name="commission_type" value="flat">
+                        <input type="hidden" name="commission_value" value="0">
+
+                        
+                        
+                        <div class="card border border-primary rounded-lg mb-4 shadow-sm" style="overflow: hidden;">
+                            <div class="card-header bg-primary text-white font-weight-bold py-3">
+                                <i class="fas fa-table mr-2"></i> Dynamic Pricing Matrix
+                            </div>
+                            <div class="card-body p-0 table-responsive">
+                                <table class="table table-bordered mb-0" id="pricing-matrix-table">
+                                    <thead class="bg-light text-xs text-muted text-uppercase">
+                                        <tr>
+                                            <th>GST Type</th>
+                                            <th>Turnover Range</th>
+                                            <th>Frequency</th>
+                                            <th>Plan</th>
+                                            <th>Base Price (₹)</th>
+                                            <th>VLE Commission (₹)</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($service->pricingRules) && $service->pricingRules->count() > 0): ?>
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $service->pricingRules; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $rule): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                                            <tr>
+                                                <td><input type="text" name="pricing_rules[<?php echo e($index); ?>][gst_type]" class="form-control custom-input" value="<?php echo e($rule->gst_type); ?>"></td>
+                                                <td><input type="text" name="pricing_rules[<?php echo e($index); ?>][turnover]" class="form-control custom-input" value="<?php echo e($rule->turnover); ?>"></td>
+                                                <td><input type="text" name="pricing_rules[<?php echo e($index); ?>][frequency]" class="form-control custom-input" value="<?php echo e($rule->frequency); ?>"></td>
+                                                <td><input type="text" name="pricing_rules[<?php echo e($index); ?>][plan]" class="form-control custom-input" value="<?php echo e($rule->plan); ?>"></td>
+                                                <td><input type="number" step="0.01" name="pricing_rules[<?php echo e($index); ?>][base_price]" class="form-control custom-input" value="<?php echo e($rule->base_price); ?>" required></td>
+                                                <td><input type="number" step="0.01" name="pricing_rules[<?php echo e($index); ?>][commission_amount]" class="form-control custom-input" value="<?php echo e($rule->commission_amount); ?>"></td>
+                                                <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm rounded" onclick="this.closest('tr').remove()"><i class="fas fa-trash"></i></button></td>
+                                            </tr>
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                    </tbody>
+                                </table>
+                                <div class="p-3 bg-light border-top">
+                                    <button type="button" class="btn btn-primary btn-sm font-weight-bold shadow-sm" onclick="addPricingRow()">
+                                        <i class="fas fa-plus mr-1"></i> Add Pricing Rule
+                                    </button>
+                                    <small class="text-muted ml-3">Type exactly what appears in the form builder dropdowns (e.g., "regular", "monthly"). Use empty boxes as wildcards.</small>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
             </div>
 
@@ -319,6 +371,24 @@ unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendB
 
 <?php $__env->startSection('js'); ?>
     <?php echo $__env->yieldPushContent('js'); ?>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($service->slug === 'gst-return-filing'): ?>
+    <script>
+        let rowIndex = <?php echo e(isset($service->pricingRules) ? $service->pricingRules->count() : 0); ?>;
+        function addPricingRow() {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" name="pricing_rules[${rowIndex}][gst_type]" class="form-control custom-input" placeholder="e.g. regular"></td>
+                <td><input type="text" name="pricing_rules[${rowIndex}][turnover]" class="form-control custom-input" placeholder="e.g. upto_1_5"></td>
+                <td><input type="text" name="pricing_rules[${rowIndex}][frequency]" class="form-control custom-input" placeholder="e.g. monthly"></td>
+                <td><input type="text" name="pricing_rules[${rowIndex}][plan]" class="form-control custom-input" placeholder="e.g. yearly"></td>
+                <td><input type="number" step="0.01" name="pricing_rules[${rowIndex}][base_price]" class="form-control custom-input" placeholder="0.00" required></td>
+                <td><input type="number" step="0.01" name="pricing_rules[${rowIndex}][commission_amount]" class="form-control custom-input" placeholder="0.00"></td>
+                <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm rounded" onclick="this.closest('tr').remove()"><i class="fas fa-trash"></i></button></td>
+            `;
+            document.querySelector('#pricing-matrix-table tbody').appendChild(tr);
+            rowIndex++;
+        }
+    </script>
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 <?php $__env->stopSection(); ?>
-
 <?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/uat.easytax.live/resources/views/admin/services/edit.blade.php ENDPATH**/ ?>

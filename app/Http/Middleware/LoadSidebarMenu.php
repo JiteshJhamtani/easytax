@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Symfony\Component\HttpFoundation\Response;
 
-class LoadSidebarMenu
+class LoadSidebarMenu  
 {
     public function handle(Request $request, Closure $next): Response
     {

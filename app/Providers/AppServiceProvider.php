@@ -13,18 +13,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // 
     }
-
     /**
      * Bootstrap any application services.
      */
+
     public function boot(): void
     {
-        if (app()->environment('local')) {
+        // 1. Force HTTPS on Production/UAT
+        if (config('app.env') !== 'local') {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
+        // 2. Your existing notifications logic
         \Illuminate\Support\Facades\View::composer('adminlte::page', function ($view) {
             if (auth()->check() && auth()->user()->isAdmin()) {
                 /** @var \App\Models\User $user */
@@ -34,4 +36,5 @@ class AppServiceProvider extends ServiceProvider
             }
         });
     }
+  
 }

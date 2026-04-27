@@ -324,20 +324,43 @@
                 <div class="card-body p-4 bg-light rounded-bottom">
 
                 {{-- THE SECURE UPLOAD FORM --}}
-                    <form action="{{ route('admin.applications.uploadDocument', $application->id) }}" method="POST" enctype="multipart/form-data" class="mb-4">
-                        @csrf
-                        <div class="position-relative" style="border: 2px dashed #d1d5db; border-radius: 12px; padding: 2rem 1rem; text-align: center; background: #ffffff; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#1E9C5D'" onmouseout="this.style.borderColor='#d1d5db'">
-                            <div class="text-muted mb-2">
-                                <i class="fas fa-cloud-upload-alt fa-2x"></i>
-                            </div>
-                            <h6 class="font-weight-bold text-dark mb-1">Click to upload a document</h6>
-                            <p class="text-xs text-muted mb-0 text-uppercase">PDF, PNG, JPG (Max 5MB)</p>
-                            
-                            {{-- Invisible file input covers the whole box. onchange auto-submits the form! --}}
-                            <input type="file" name="document" class="position-absolute" style="top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="this.form.submit()" accept=".pdf,.png,.jpg,.jpeg">
+                <form action="{{ route('admin.applications.uploadDocument', $application->id) }}" method="POST" enctype="multipart/form-data" class="mb-4">
+                    @csrf
+                    
+                    {{-- 1. Generic Document Dropzone (Original Style) --}}
+                    <div class="position-relative mb-4" style="border: 2px dashed #d1d5db; border-radius: 12px; padding: 2rem 1rem; text-align: center; background: #ffffff; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#1E9C5D'" onmouseout="this.style.borderColor='#d1d5db'">
+                        <div class="text-muted mb-2">
+                            <i class="fas fa-cloud-upload-alt fa-2x"></i>
                         </div>
-                        @error('document') <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span> @enderror
-                    </form>
+                        <h6 class="font-weight-bold text-dark mb-1">Click to upload a generic document</h6>
+                        <p class="text-xs text-muted mb-0 text-uppercase">PDF, PNG, JPG (Max 5MB)</p>
+                        
+                        {{-- Invisible file input covers the whole box. onchange auto-submits the form! --}}
+                        <input type="file" name="document" class="position-absolute" style="top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="this.form.submit()" accept=".pdf,.png,.jpg,.jpeg">
+                    </div>
+
+                   {{-- 2. Dedicated Buckets (Compact UI) --}}
+                    <div class="row px-2">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">
+                                <i class="fas fa-file-invoice text-primary mr-1"></i> ITR Ack
+                            </label>
+                            <input type="file" name="ack_file" class="form-control border-light shadow-sm" style="height: auto; padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px;" accept=".pdf" onchange="this.form.submit()">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">
+                                <i class="fas fa-calculator text-success mr-1"></i> Computation (P&L)
+                            </label>
+                            <input type="file" name="computation_file" class="form-control border-light shadow-sm" style="height: auto; padding: 0.35rem 0.5rem; font-size: 0.8rem; border-radius: 6px;" accept=".pdf" onchange="this.form.submit()">
+                        </div>
+                    </div>
+
+                    {{-- Error Handling --}}
+                    @error('document') <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span> @enderror
+                    @error('ack_file') <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span> @enderror
+                    @error('computation_file') <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span> @enderror
+                </form>
  
                    {{-- 
                         We changed getMedia('documents') to getMedia() 

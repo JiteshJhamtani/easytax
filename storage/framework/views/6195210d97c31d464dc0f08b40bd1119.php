@@ -306,16 +306,42 @@
                     <p>Please enter the client's information. Verify all details carefully before submitting to avoid processing delays.</p>
                 </div>
                 
-                <div class="form-section-body form-body">
+               
+           <div class="form-section-body form-body">
                     <?php echo $form->render(); ?>
 
                 </div>
-            </div>
-        </div>
-
-    </div>
 </div>
+<br>
+        
 
+    
+
+<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($service->slug === 'gst-return-filing'): ?>
+    <div class="card border-success mb-4 shadow-sm">
+        <div class="card-body bg-success-soft">
+            <table class="table table-sm table-borderless mb-0 font-weight-bold">
+                <tr>
+                    <td class="text-success text-uppercase text-xs">Total Fee</td>
+                    <td class="text-right text-dark" style="font-size: 1.2rem;">₹<span id="calc-total">0.00</span></td>
+                </tr>
+                <tr>
+                    <td class="text-success text-uppercase text-xs">Your Commission</td>
+                    <td class="text-right text-success">₹<span id="calc-comm">0.00</span></td>
+                </tr>
+                <tr class="border-top border-success">
+                    <td class="text-dark text-uppercase text-sm pt-2">Wallet Deduct</td>
+                    <td class="text-right text-danger pt-2" style="font-size: 1.3rem;">₹<span id="calc-deduct">0.00</span></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+ 
+</div>
+</div>
+ </div>
 
 <?php if (isset($component)) { $__componentOriginal224571a5377083f2e754900a8b27c9dc = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal224571a5377083f2e754900a8b27c9dc = $attributes; } ?>
@@ -348,57 +374,70 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="<?php echo e(asset('assets/js/form.js')); ?>"></script>
     
+   
+   
     <script>
-        $(document).ready(function() {
-            $('.select2-init').select2({ width: '100%', minimumResultsForSearch: 6 });
-        });
- 
-    
-        // Form Validation UI reset
-        document.addEventListener('input', function(e) {
-            const formGroup = e.target.closest('.form-group');
-            if (!formGroup) return;
-            const error = formGroup.querySelector('.error');
-            if (error && e.target.value.trim() !== '') error.style.display = 'none';
-        });
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Safely load rules from the DB
+            const rawRules = <?php echo json_encode($service->pricingRules ?? [], 15, 512) ?>;
+            const pricingRules = Array.isArray(rawRules) ? rawRules : Object.values(rawRules);
 
-        // ── Razorpay Modal Toggle Logic ──
-        (function() {
-            const backdrop = document.getElementById('pmc-backdrop');
-            if (!backdrop) return;
+            // 2. Helper to remove accidental spaces and capitalization
+            function normalizeValue(val) {
+                return val ? String(val).toLowerCase().trim() : '';
+            }
 
-            function openModal() { backdrop.classList.remove('hidden'); }
-            function closeModal() { backdrop.classList.add('hidden'); }
-
-            document.getElementById('pmc-x').addEventListener('click', closeModal);
-            document.getElementById('pmc-cancel').addEventListener('click', closeModal);
-            backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
-
-            // Intercept Form Submit
-            document.addEventListener('submit', function(e) {
-                const form = e.target;
-                if (!form.action.includes('/apply')) return;
+            function calculateDynamicPrice() {
+                // Grab the exact values the user selected
+                let selectedGst = normalizeValue($('select[name="gst_type"]').val() || $('input[name="gst_type"]:checked').val());
+                let selectedTurnover = normalizeValue($('select[name="annual_turnover_range"]').val() || $('input[name="annual_turnover_range"]:checked').val());
+                let selectedFrequency = normalizeValue($('select[name="frequency_of_return"]').val() || $('input[name="frequency_of_return"]:checked').val());
                 
-                if (form.dataset.pmcConfirmed === '1') return; 
-                
-                e.preventDefault(); 
-                backdrop._form = form; 
-                openModal();
-            }, true);
+                // 🔍 DEBUGGING: Press F12 in Chrome to see exactly what the form is reading!
+                console.log("Form is currently reading:", {selectedGst, selectedTurnover, selectedFrequency});
 
-            // Confirm Button
-            document.getElementById('pmc-confirm').addEventListener('click', function() {
-                const form = backdrop._form;
-                if (!form) return;
-                
-                this.disabled = true;
-                this.textContent = 'Processing...';
-                this.classList.add('opacity-80', 'cursor-not-allowed');
-                
-                form.dataset.pmcConfirmed = '1';
-                form.submit();
+                // Find the match in the matrix (Notice we completely ignore the 'plan' column now)
+                let match = pricingRules.find(rule => {
+                    let ruleGst = normalizeValue(rule.gst_type);
+                    let ruleTurnover = normalizeValue(rule.turnover);
+                    let ruleFreq = normalizeValue(rule.frequency);
+
+                    return (ruleGst === '' || ruleGst === selectedGst) && 
+                           (ruleTurnover === '' || ruleTurnover === selectedTurnover) && 
+                           (ruleFreq === '' || ruleFreq === selectedFrequency);
+                });
+
+                let finalTotal = 0;
+                let finalComm = 0;
+
+                if (match) {
+                    console.log("✅ Match found in Database!", match);
+                    finalTotal = parseFloat(match.base_price); 
+                    finalComm = parseFloat(match.commission_amount); 
+                } else {
+                    console.warn("⚠️ No match found! Falling back to base prices.");
+                    // === FALLBACK BASE PRICE === 
+                    // If they pick a weird combo, NEVER show 0. Show this instead:
+                    finalTotal = 350; 
+                    finalComm = 50;
+                }
+
+                let walletDeduct = finalTotal - finalComm;
+
+                // Update the 3-Row screen instantly
+                $('#calc-total').text(finalTotal.toFixed(2)); 
+                $('#calc-comm').text(finalComm.toFixed(2)); 
+                $('#calc-deduct').text(walletDeduct.toFixed(2));
+            }
+
+            // Listen for any clicks/changes on the form
+            $('form').on('change', 'select, input[type="radio"]', function() {
+                calculateDynamicPrice();
             });
-        })();
+
+            // Wait half a second before running the first time, to ensure the form builder has loaded
+            setTimeout(calculateDynamicPrice, 500);
+        });
     </script>
 
     

@@ -239,13 +239,27 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                 </span>
                 More Applications
+            </a> 
+       <div class="sb-section">Application Types</div>
+
+            <a href="<?php echo e(route('agent.applications.index', ['type' => 'gst-return-filing'])); ?>" class="sb-item <?php echo e(request()->query('type') === 'gst-return-filing' ? 'active' : ''); ?>" data-label="GST Return">
+                <span class="sb-item__icon"><i class="fas fa-file-invoice" style="color: #38bdf8;"></i></span>
+                GST Return
             </a>
-            
-            <a href="<?php echo e(url('agent/applications')); ?>" class="sb-item <?php echo e(request()->is('agent/applications*') ? 'active' : ''); ?>" data-label="My Applications">
-                <span class="sb-item__icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                </span>
-                My Applications
+
+            <a href="<?php echo e(route('agent.applications.index', ['type' => 'itr-filing'])); ?>" class="sb-item <?php echo e(request()->query('type') === 'itr-filing' ? 'active' : ''); ?>" data-label="ITR Filing">
+                <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar" style="color: var(--green);"></i></span>
+                ITR Filing
+            </a>
+
+            <a href="<?php echo e(route('agent.applications.index', ['type' => 'gst-registration'])); ?>" class="sb-item <?php echo e(request()->query('type') === 'gst-registration' ? 'active' : ''); ?>" data-label="GST Registration">
+                <span class="sb-item__icon"><i class="fas fa-id-card" style="color: #fbbf24;"></i></span>
+                GST Registration
+            </a>
+
+            <a href="<?php echo e(route('agent.applications.index', ['type' => 'other'])); ?>" class="sb-item <?php echo e(request()->query('type', 'other') === 'other' ? 'active' : ''); ?>" data-label="Other Apps">
+                <span class="sb-item__icon"><i class="fas fa-folder" style="color: var(--slate-muted);"></i></span>
+                Other Apps
             </a>
         </nav>
 
@@ -302,7 +316,6 @@
         </div>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>

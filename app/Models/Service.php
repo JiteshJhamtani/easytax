@@ -84,4 +84,9 @@ class Service extends Model
     {
         return max(0, (float) $this->price - $this->calculateCommission((float) $this->price));
     }
+
+    public function pricingRules()
+    {
+        return $this->hasMany(ServicePricingRule::class);
+    }
 }
