@@ -126,7 +126,5 @@ return [
 
 
 
-    
-    'is_master_server' => env('IS_MASTER_SERVER', true),
 
 ];

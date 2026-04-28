@@ -255,10 +255,10 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
     Route::get('/services', [AdminServiceController::class, 'index'])
         ->name('services.index');
     
-    if (env('IS_MASTER_SERVER', false) === true) {
+    
      Route::get('/services/datatable', [AdminServiceController::class, 'datatable'])
         ->name('services.datatable');
-    }    
+    
 
     Route::get('/services/create', [AdminServiceController::class, 'create'])
         ->name('services.create');
@@ -283,11 +283,11 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
     |--------------------------------------------------------------------------
     */
 
-    if (env('IS_MASTER_SERVER', false) === true) {
+   
 
     Route::get('/pages/datatable', [\App\Http\Controllers\Admin\PageController::class, 'datatable'])->name('pages.datatable');
     Route::resource('pages', \App\Http\Controllers\Admin\PageController::class)->except(['show']);
-    }
+    
     Route::patch('/pages/{page}/toggle', [\App\Http\Controllers\Admin\PageController::class, 'toggle'])->name('pages.toggle');
 
 

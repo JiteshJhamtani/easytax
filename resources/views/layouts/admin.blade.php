@@ -211,7 +211,7 @@
                     @if(request()->is('admin/dashboard*'))<span class="sb-item__dot"></span>@endif
                 </a>
                 
-                @if(config('app.is_master_server') == true)
+              
                 <div class="sb-section">Management</div>
 
                 <a href="{{ url('admin/services') }}" class="sb-item {{ request()->is('admin/services*') ? 'active' : '' }}" data-label="Services">
@@ -219,7 +219,7 @@
                     Services
                     @if(request()->is('admin/services*'))<span class="sb-item__dot"></span>@endif
                 </a>
-                @endif
+                
 
                 <div class="sb-section">Application Types</div>
 
@@ -249,7 +249,7 @@
                     Agents
                     @if(request()->is('admin/agents*'))<span class="sb-item__dot"></span>@endif
                 </a>
-@if(config('app.is_master_server') == true)
+
                 <div class="sb-section">System</div>
 
                 <div class="sb-has-submenu {{ request()->is('admin/gifts*') ? 'open' : '' }}">
@@ -271,7 +271,7 @@
                     Pages
                     @if(request()->is('admin/pages*'))<span class="sb-item__dot"></span>@endif
                 </a>
-                @endif
+                
 
 
             @endif
