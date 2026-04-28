@@ -279,10 +279,24 @@
                 <h1>Application Manager</h1>
                 <p>Track, filter, and manage client submissions.</p>
             </div>
-            <div>
-                <a href="{{ route('services.index') }}" class="btn-new-app">
-                    <i class="fas fa-plus"></i> New Application
-                </a>
+           <div>
+                @if($type === 'itr-filing')
+                    <a href="{{ route('services.show', 'itr-filing') }}" class="btn-new-app">
+                        <i class="fas fa-plus"></i> New ITR Application
+                    </a>
+                @elseif($type === 'gst-registration')
+                    <a href="{{ route('services.show', 'gst-registration') }}" class="btn-new-app">
+                        <i class="fas fa-plus"></i> New GST Registration
+                    </a>
+                @elseif($type === 'gst-return-filing')
+                    <a href="{{ route('services.show', 'gst-return-filing') }}" class="btn-new-app">
+                        <i class="fas fa-plus"></i> New GST Return
+                    </a>
+                @else
+                    <a href="{{ route('services.index') }}" class="btn-new-app">
+                        <i class="fas fa-plus"></i> New Application
+                    </a>
+                @endif
             </div>
         </div>
     </header>

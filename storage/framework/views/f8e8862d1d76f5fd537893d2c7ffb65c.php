@@ -277,10 +277,24 @@
                 <h1>Application Manager</h1>
                 <p>Track, filter, and manage client submissions.</p>
             </div>
-            <div>
-                <a href="<?php echo e(route('services.index')); ?>" class="btn-new-app">
-                    <i class="fas fa-plus"></i> New Application
-                </a>
+           <div>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($type === 'itr-filing'): ?>
+                    <a href="<?php echo e(route('services.show', 'itr-filing')); ?>" class="btn-new-app">
+                        <i class="fas fa-plus"></i> New ITR Application
+                    </a>
+                <?php elseif($type === 'gst-registration'): ?>
+                    <a href="<?php echo e(route('services.show', 'gst-registration')); ?>" class="btn-new-app">
+                        <i class="fas fa-plus"></i> New GST Registration
+                    </a>
+                <?php elseif($type === 'gst-return-filing'): ?>
+                    <a href="<?php echo e(route('services.show', 'gst-return-filing')); ?>" class="btn-new-app">
+                        <i class="fas fa-plus"></i> New GST Return
+                    </a>
+                <?php else: ?>
+                    <a href="<?php echo e(route('services.index')); ?>" class="btn-new-app">
+                        <i class="fas fa-plus"></i> New Application
+                    </a>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </div>
         </div>
     </header>

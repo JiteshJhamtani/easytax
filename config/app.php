@@ -123,4 +123,10 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+
+
+
+    
+    'is_master_server' => env('IS_MASTER_SERVER', true),
+
 ];

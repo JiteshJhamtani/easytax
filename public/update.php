@@ -132,8 +132,7 @@ try {
 }
 
 
-/* 
-|--------------------------------------------------------------------------
+/* |--------------------------------------------------------------------------
 | HOOK 6: Securely Expand 'role' ENUM for Marketers
 |--------------------------------------------------------------------------
 */
@@ -174,6 +173,60 @@ try {
     echo "<li>❌ <strong style='color:red;'>ERROR 7:</strong> " . $e->getMessage() . "</li>"; 
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| HOOK 8: Add ITR Dynamic Pricing Columns (NEW)
+|--------------------------------------------------------------------------
+*/
+try {
+    Schema::table('service_pricing_rules', function (Blueprint $table) {
+        $added = false;
+
+        if (!Schema::hasColumn('service_pricing_rules', 'itr_type')) {
+            $table->string('itr_type')->nullable()->after('plan');
+            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>itr_type</code> to pricing rules.</li>";
+            $added = true;
+        }
+        if (!Schema::hasColumn('service_pricing_rules', 'itr_salary')) {
+            $table->string('itr_salary')->nullable()->after('itr_type');
+            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>itr_salary</code> to pricing rules.</li>";
+            $added = true;
+        }
+        if (!Schema::hasColumn('service_pricing_rules', 'itr_business')) {
+            $table->string('itr_business')->nullable()->after('itr_salary');
+            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>itr_business</code> to pricing rules.</li>";
+            $added = true;
+        }
+        if (!Schema::hasColumn('service_pricing_rules', 'itr_capital_gains')) {
+            $table->string('itr_capital_gains')->nullable()->after('itr_business');
+            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>itr_capital_gains</code> to pricing rules.</li>";
+            $added = true;
+        }
+        if (!Schema::hasColumn('service_pricing_rules', 'itr_50l')) {
+            $table->string('itr_50l')->nullable()->after('itr_capital_gains');
+            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>itr_50l</code> to pricing rules.</li>";
+            $added = true;
+        }
+        if (!Schema::hasColumn('service_pricing_rules', 'user_type')) {
+            $table->string('user_type')->nullable()->after('itr_50l');
+            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>user_type</code> to pricing rules.</li>";
+            $added = true;
+        }
+
+        if (!$added) {
+            echo "<li>⏭️ <strong style='color:gray;'>SKIPPED:</strong> ITR Pricing columns already exist.</li>";
+        }
+    });
+} catch (\Exception $e) { 
+    echo "<li>❌ <strong style='color:red;'>ERROR 8:</strong> " . $e->getMessage() . "</li>"; 
+}
+
+
 echo "</ul>";
 echo "<p style='color: #666;'><strong>Done!</strong> Your server is now fully up to date. You can safely close this page.</p>";
+echo "<div style='background: #ffebee; border-left: 4px solid #f44336; padding: 15px; margin-top: 20px;'>
+        <strong style='color: #d32f2f;'>⚠️ IMPORTANT SECURITY REMINDER:</strong><br>
+        Please delete this <code>update.php</code> file from your server now to prevent unauthorized access.
+      </div>";
 echo "</div>";

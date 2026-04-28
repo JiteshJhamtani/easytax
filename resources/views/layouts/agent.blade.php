@@ -242,10 +242,6 @@
             </a> 
        <div class="sb-section">Application Types</div>
 
-            <a href="{{ route('agent.applications.index', ['type' => 'gst-return-filing']) }}" class="sb-item {{ request()->query('type') === 'gst-return-filing' ? 'active' : '' }}" data-label="GST Return">
-                <span class="sb-item__icon"><i class="fas fa-file-invoice" style="color: #38bdf8;"></i></span>
-                GST Return
-            </a>
 
             <a href="{{ route('agent.applications.index', ['type' => 'itr-filing']) }}" class="sb-item {{ request()->query('type') === 'itr-filing' ? 'active' : '' }}" data-label="ITR Filing">
                 <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar" style="color: var(--green);"></i></span>
@@ -255,6 +251,11 @@
             <a href="{{ route('agent.applications.index', ['type' => 'gst-registration']) }}" class="sb-item {{ request()->query('type') === 'gst-registration' ? 'active' : '' }}" data-label="GST Registration">
                 <span class="sb-item__icon"><i class="fas fa-id-card" style="color: #fbbf24;"></i></span>
                 GST Registration
+            </a>
+            
+            <a href="{{ route('agent.applications.index', ['type' => 'gst-return-filing']) }}" class="sb-item {{ request()->query('type') === 'gst-return-filing' ? 'active' : '' }}" data-label="GST Return">
+                <span class="sb-item__icon"><i class="fas fa-file-invoice" style="color: #38bdf8;"></i></span>
+                GST Return
             </a>
 
             <a href="{{ route('agent.applications.index', ['type' => 'other']) }}" class="sb-item {{ request()->query('type', 'other') === 'other' ? 'active' : '' }}" data-label="Other Apps">

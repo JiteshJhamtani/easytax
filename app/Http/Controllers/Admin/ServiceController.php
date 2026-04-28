@@ -134,11 +134,14 @@ class ServiceController extends Controller
         return view('admin.services.edit', compact('service', 'formConfig'));
     }
 
-  public function update(UpdateServiceRequest $request, Service $service)
+ public function update(UpdateServiceRequest $request, Service $service)
     {
         $data = $request->validated();
         
-        // Safely catch the new dynamic field
+        // 🚨 THE FIX: Forcefully grab the JSON data directly from the raw request
+        $data['form_schema'] = $request->input('form_schema');
+        
+        // Safely catch the new dynamic fields
         $data['primary_data_field'] = $request->input('primary_data_field');
         $data['whatsapp_number_field'] = $request->input('whatsapp_number_field'); 
         $data['applicant_email_field'] = $request->input('applicant_email_field'); 
@@ -158,25 +161,30 @@ class ServiceController extends Controller
             $this->writeFormConfig($service->slug, $formSchema);
         }
 
-        // ... existing service save logic ...
-
-       // ==========================================
+        // ==========================================
         // SAVE ENTERPRISE PRICING MATRIX
         // ==========================================
         if ($request->has('pricing_rules')) {
-            // Clear out the old rules to prevent duplicates
             $service->pricingRules()->delete(); 
             
-            // Loop through the table rows and save each rule
             foreach ($request->pricing_rules as $rule) {
-                // Only save rows that actually have a base price
                 if (isset($rule['base_price']) && $rule['base_price'] !== null) { 
                     $service->pricingRules()->create([
-                        // empty() checks if it's blank, and saves null if it is!
+                        // GST Fields
                         'gst_type'          => empty($rule['gst_type']) ? null : $rule['gst_type'],
                         'turnover'          => empty($rule['turnover']) ? null : $rule['turnover'],
                         'frequency'         => empty($rule['frequency']) ? null : $rule['frequency'],
                         'plan'              => empty($rule['plan']) ? null : $rule['plan'],
+                        
+                        // ITR Fields (NEW)
+                        'itr_type'          => empty($rule['itr_type']) ? null : $rule['itr_type'],
+                        'user_type'         => empty($rule['user_type']) ? null : $rule['user_type'],
+                        'itr_salary'        => empty($rule['itr_salary']) ? null : $rule['itr_salary'],
+                        'itr_business'      => empty($rule['itr_business']) ? null : $rule['itr_business'],
+                        'itr_capital_gains' => empty($rule['itr_capital_gains']) ? null : $rule['itr_capital_gains'],
+                        'itr_50l'           => empty($rule['itr_50l']) ? null : $rule['itr_50l'],
+
+                        // Pricing Math
                         'base_price'        => $rule['base_price'],
                         'commission_amount' => empty($rule['commission_amount']) ? 0 : $rule['commission_amount'],
                     ]);

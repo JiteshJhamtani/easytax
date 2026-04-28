@@ -44,38 +44,74 @@ class ApplicationController extends Controller
 
         Log::info("Form validation passed.");
 
+// ==========================================
+        // DYNAMIC PRICING OVERRIDE ENGINE (ITR & GST)
         // ==========================================
-        // DYNAMIC PRICING OVERRIDE ENGINE
-        // ==========================================
-       $finalPrice = $service->price;
+        $finalPrice = $service->price;
         $commission = 0;
 
-        if ($service->slug === 'gst-return-filing') {
-            $selectedGst = $validated['gst_type'] ?? '';
-            $selectedTurnover = $validated['annual_turnover_range'] ?? '';
-            $selectedFrequency = $validated['frequency_of_return'] ?? '';
-            $selectedPlan = $validated['plan'] ?? ''; 
+        if (in_array($service->slug, ['gst-return-filing', 'itr-filing'])) {
+            
+            if ($service->slug === 'gst-return-filing') {
+                $col1 = $validated['gst_type'] ?? '';
+                $col2 = $validated['annual_turnover_range'] ?? '';
+                $col3 = $validated['frequency_of_return'] ?? '';
+                $col4 = $validated['plan'] ?? ''; 
 
-            // THE FIXED QUERY: Safely handles database NULL wildcards!
-            $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
-                ->where(function($q) use ($selectedGst) { $q->where('gst_type', $selectedGst)->orWhereNull('gst_type'); })
-                ->where(function($q) use ($selectedTurnover) { $q->where('turnover', $selectedTurnover)->orWhereNull('turnover'); })
-                ->where(function($q) use ($selectedFrequency) { $q->where('frequency', $selectedFrequency)->orWhereNull('frequency'); })
-                ->where(function($q) use ($selectedPlan) { $q->where('plan', $selectedPlan)->orWhereNull('plan'); })
-                ->first();
+               
+                
+                $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
+                    ->where(function($q) use ($col1) { $q->where('gst_type', $col1)->orWhereNull('gst_type')->orWhere('gst_type', 'Any'); })
+                    ->where(function($q) use ($col2) { $q->where('turnover', $col2)->orWhereNull('turnover')->orWhere('turnover', 'Any'); })
+                    ->where(function($q) use ($col3) { $q->where('frequency', $col3)->orWhereNull('frequency')->orWhere('frequency', 'Any'); })
+                    ->where(function($q) use ($col4) { $q->where('plan', $col4)->orWhereNull('plan')->orWhere('plan', 'Any'); })
+                    ->orderByRaw("(plan = 'Any' OR plan IS NULL) ASC")->first();
+
+            } else {
+                // 🛑 ITR TRUE DATABASE MAPPING 🛑
+                // No translators needed! The frontend keys match the database EXACTLY.
+                $itrType     = $request->input('itr_type', 'Any'); 
+                $turnover    = $request->input('turnover', $request->input('business_turnover', 'Any')); 
+                $itrBusiness = $request->input('has_business', 'Any');      
+                $itrCapGains = $request->input('has_capital_gains', 'Any'); 
+
+                // Query the Matrix with our STRICT scoring system to prevent fall-through!
+                $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
+                    ->where(function($q) use ($itrType) { 
+                        $q->where('itr_type', $itrType)->orWhere('itr_type', strtolower($itrType))
+                          ->orWhereNull('itr_type')->orWhereIn('itr_type', ['Any', 'any']); 
+                    })
+                    ->where(function($q) use ($turnover) { 
+                        $q->where('turnover', $turnover)->orWhere('turnover', strtolower($turnover))
+                          ->orWhereNull('turnover')->orWhereIn('turnover', ['Any', 'any']); 
+                    })
+                    ->where(function($q) use ($itrBusiness) { 
+                        $q->where('itr_business', $itrBusiness)->orWhere('itr_business', strtolower($itrBusiness))
+                          ->orWhereNull('itr_business')->orWhereIn('itr_business', ['Any', 'any']); 
+                    })
+                    ->where(function($q) use ($itrCapGains) { 
+                        $q->where('itr_capital_gains', $itrCapGains)->orWhere('itr_capital_gains', strtolower($itrCapGains))
+                          ->orWhereNull('itr_capital_gains')->orWhereIn('itr_capital_gains', ['Any', 'any']); 
+                    })
+                    // Calculate specificity score so the most exact match ALWAYS wins.
+                    ->orderByRaw("
+                        (CASE WHEN itr_capital_gains IS NOT NULL AND LOWER(itr_capital_gains) != 'any' THEN 1 ELSE 0 END) +
+                        (CASE WHEN turnover IS NOT NULL AND LOWER(turnover) != 'any' THEN 1 ELSE 0 END) +
+                        (CASE WHEN itr_business IS NOT NULL AND LOWER(itr_business) != 'any' THEN 1 ELSE 0 END) +
+                        (CASE WHEN itr_type IS NOT NULL AND LOWER(itr_type) != 'any' THEN 1 ELSE 0 END) DESC
+                    ")
+                    ->first();
+            }
 
             if ($rule) {
                 $finalPrice = $rule->base_price;
                 $commission = $rule->commission_amount;
-            } else {
-                Log::warning("No pricing rule matched for GST Return", [$validated]);
-                $finalPrice = 499; // Fallback Total
-                $commission = 100; // Fallback Commission
             }
         } else {
             $commission = $service->calculateCommission((float) $service->price);
         }
 
+        // Amount to charge via Razorpay (Wholesale Agent Price)
         $amountToPay = max(0, $finalPrice - $commission);
 
         $application = Application::create([

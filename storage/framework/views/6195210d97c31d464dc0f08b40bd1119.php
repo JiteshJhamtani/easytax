@@ -270,7 +270,6 @@
             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
         </div>
     </header>
-
     
     <div class="sv-main-container">
         
@@ -317,26 +316,27 @@
 
     
 
-<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($service->slug === 'gst-return-filing'): ?>
-    <div class="card border-success mb-4 shadow-sm">
-        <div class="card-body bg-success-soft">
-            <table class="table table-sm table-borderless mb-0 font-weight-bold">
-                <tr>
-                    <td class="text-success text-uppercase text-xs">Total Fee</td>
-                    <td class="text-right text-dark" style="font-size: 1.2rem;">₹<span id="calc-total">0.00</span></td>
-                </tr>
-                <tr>
-                    <td class="text-success text-uppercase text-xs">Your Commission</td>
-                    <td class="text-right text-success">₹<span id="calc-comm">0.00</span></td>
-                </tr>
-                <tr class="border-top border-success">
-                    <td class="text-dark text-uppercase text-sm pt-2">Wallet Deduct</td>
-                    <td class="text-right text-danger pt-2" style="font-size: 1.3rem;">₹<span id="calc-deduct">0.00</span></td>
-                </tr>
-            </table>
-        </div>
-    </div>
-<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(in_array($service->slug, ['gst-return-filing', 'itr-filing'])): ?>
+                        <div class="card border-success mb-4 shadow-sm mt-4">
+                            <div class="card-body bg-success-soft">
+                                <table class="table table-sm table-borderless mb-0 font-weight-bold">
+                                    <tr>
+                                        <td class="text-success text-uppercase text-xs">Total Fee</td>
+                                        <td class="text-right text-dark" style="font-size: 1.2rem;">₹<span id="calc-total">0.00</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-success text-uppercase text-xs">Your Commission (Approx)</td>
+                                        <td class="text-right text-success">₹<span id="calc-comm">0.00</span></td>
+                                    </tr>
+                                    <tr class="border-top border-success">
+                                        <td class="text-dark text-uppercase text-sm pt-2">Wallet Deduct</td>
+                                        <td class="text-right text-danger pt-2" style="font-size: 1.3rem;">₹<span id="calc-deduct">0.00</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
  
 </div>
@@ -376,55 +376,67 @@
     
    
    
-    <script>
+   <script>
         document.addEventListener('DOMContentLoaded', function() {
             // 1. Safely load rules from the DB
             const rawRules = <?php echo json_encode($service->pricingRules ?? [], 15, 512) ?>;
             const pricingRules = Array.isArray(rawRules) ? rawRules : Object.values(rawRules);
 
-            // 2. Helper to remove accidental spaces and capitalization
             function normalizeValue(val) {
                 return val ? String(val).toLowerCase().trim() : '';
             }
 
-            function calculateDynamicPrice() {
-                // Grab the exact values the user selected
-                let selectedGst = normalizeValue($('select[name="gst_type"]').val() || $('input[name="gst_type"]:checked').val());
-                let selectedTurnover = normalizeValue($('select[name="annual_turnover_range"]').val() || $('input[name="annual_turnover_range"]:checked').val());
-                let selectedFrequency = normalizeValue($('select[name="frequency_of_return"]').val() || $('input[name="frequency_of_return"]:checked').val());
+            // --- NEW: NESTED FIELD VISIBILITY LOGIC ---
+            function handleNestedFields() {
+                // 1. Handle Business -> Turnover
+                let businessVal = $('input[name="has_business"]:checked').val();
+                let turnoverWrapper = $('input[name="turnover"]').closest('.form-group');
                 
-                // 🔍 DEBUGGING: Press F12 in Chrome to see exactly what the form is reading!
-                console.log("Form is currently reading:", {selectedGst, selectedTurnover, selectedFrequency});
-
-                // Find the match in the matrix (Notice we completely ignore the 'plan' column now)
-                let match = pricingRules.find(rule => {
-                    let ruleGst = normalizeValue(rule.gst_type);
-                    let ruleTurnover = normalizeValue(rule.turnover);
-                    let ruleFreq = normalizeValue(rule.frequency);
-
-                    return (ruleGst === '' || ruleGst === selectedGst) && 
-                           (ruleTurnover === '' || ruleTurnover === selectedTurnover) && 
-                           (ruleFreq === '' || ruleFreq === selectedFrequency);
-                });
-
-                let finalTotal = 0;
-                let finalComm = 0;
-
-                if (match) {
-                    console.log("✅ Match found in Database!", match);
-                    finalTotal = parseFloat(match.base_price); 
-                    finalComm = parseFloat(match.commission_amount); 
+                if (businessVal === 'yes') {
+                    turnoverWrapper.slideDown(200);
                 } else {
-                    console.warn("⚠️ No match found! Falling back to base prices.");
-                    // === FALLBACK BASE PRICE === 
-                    // If they pick a weird combo, NEVER show 0. Show this instead:
-                    finalTotal = 350; 
-                    finalComm = 50;
+                    turnoverWrapper.slideUp(200);
+                    $('input[name="turnover"]').prop('checked', false); // Clear hidden selection
                 }
 
+               
+            }
+
+            // --- THE PRICING CALCULATOR ---
+            function calculateDynamicPrice() {
+                let selectedGst = normalizeValue($('select[name="gst_type"]').val() || $('input[name="gst_type"]:checked').val());
+                let selectedFreq = normalizeValue($('select[name="frequency_of_return"]').val() || $('input[name="frequency_of_return"]:checked').val());
+                
+                let s_type = normalizeValue($('select[name="itr_type"]').val() || $('input[name="itr_type"]:checked').val());
+                let s_bus  = normalizeValue($('select[name="has_business"]').val() || $('input[name="has_business"]:checked').val());
+                let s_cg   = normalizeValue($('select[name="has_capital_gains"]').val() || $('input[name="has_capital_gains"]:checked').val());
+                let s_sal  = normalizeValue($('select[name="has_salary"]').val() || $('input[name="has_salary"]:checked').val());
+                
+                let selectedTurnover = normalizeValue($('select[name="turnover"]').val() || $('input[name="turnover"]:checked').val() || $('select[name="annual_turnover_range"]').val());
+
+                let match = pricingRules.find(rule => {
+                    let r_gst  = normalizeValue(rule.gst_type);
+                    let r_freq = normalizeValue(rule.frequency);
+                    let r_turn = normalizeValue(rule.turnover);
+                    let r_type = normalizeValue(rule.itr_type);
+                    let r_bus  = normalizeValue(rule.itr_business);
+                    let r_cg   = normalizeValue(rule.itr_capital_gains);
+                    let r_sal  = normalizeValue(rule.itr_salary);
+
+                    return (r_gst  === '' || r_gst  === selectedGst) && 
+                           (r_freq === '' || r_freq === selectedFreq) &&
+                           (r_turn === '' || r_turn === selectedTurnover) && 
+                           (r_type === '' || r_type === s_type) &&
+                           (r_bus  === '' || r_bus  === s_bus) && 
+                           (r_cg   === '' || r_cg   === s_cg) && 
+                           (r_sal  === '' || r_sal  === s_sal);
+                });
+
+                let finalTotal = match ? parseFloat(match.base_price) : <?php echo e($service->price ?? 0); ?>;
+                let finalComm = match ? parseFloat(match.commission_amount) : <?php echo e($service->commission_value ?? 0); ?>;
                 let walletDeduct = finalTotal - finalComm;
 
-                // Update the 3-Row screen instantly
+                // Update UI
                 $('#calc-total').text(finalTotal.toFixed(2)); 
                 $('#calc-comm').text(finalComm.toFixed(2)); 
                 $('#calc-deduct').text(walletDeduct.toFixed(2));
@@ -432,11 +444,15 @@
 
             // Listen for any clicks/changes on the form
             $('form').on('change', 'select, input[type="radio"]', function() {
-                calculateDynamicPrice();
+                handleNestedFields();     // Check if we need to hide/show fields
+                calculateDynamicPrice();  // Recalculate price
             });
 
-            // Wait half a second before running the first time, to ensure the form builder has loaded
-            setTimeout(calculateDynamicPrice, 500);
+            // Initial setup on page load
+            setTimeout(() => {
+                handleNestedFields();
+                calculateDynamicPrice();
+            }, 500); 
         });
     </script>
 

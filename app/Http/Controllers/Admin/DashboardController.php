@@ -89,7 +89,8 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-        // ── Top 10 Services ──
+       
+// ── Top 10 Services ──
         $topServices = Service::query()
             ->select(
                 'services.id',
@@ -103,6 +104,7 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
+            
         // ── Recent 10 Applications ──
         $recentApplications = Application::query()
             ->with(['agent:id,name', 'service:id,name'])

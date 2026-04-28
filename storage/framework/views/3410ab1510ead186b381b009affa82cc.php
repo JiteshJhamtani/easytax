@@ -211,7 +211,7 @@
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->is('admin/dashboard*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </a>
                 
-                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(env('IS_MASTER_SERVER', false)): ?>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(config('app.is_master_server') == true): ?>
                 <div class="sb-section">Management</div>
 
                 <a href="<?php echo e(url('admin/services')); ?>" class="sb-item <?php echo e(request()->is('admin/services*') ? 'active' : ''); ?>" data-label="Services">
@@ -223,10 +223,7 @@
 
                 <div class="sb-section">Application Types</div>
 
-                <a href="<?php echo e(route('admin.applications.index', ['type' => 'gst-return-filing'])); ?>" class="sb-item <?php echo e(request()->query('type') === 'gst-return-filing' ? 'active' : ''); ?>" data-label="GST Return">
-                    <span class="sb-item__icon"><i class="fas fa-file-invoice" style="color: #38bdf8;"></i></span>
-                    GST Return
-                </a>
+               
 
                 <a href="<?php echo e(route('admin.applications.index', ['type' => 'itr-filing'])); ?>" class="sb-item <?php echo e(request()->query('type') === 'itr-filing' ? 'active' : ''); ?>" data-label="ITR Filing">
                     <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar" style="color: var(--green);"></i></span>
@@ -236,6 +233,10 @@
                 <a href="<?php echo e(route('admin.applications.index', ['type' => 'gst-registration'])); ?>" class="sb-item <?php echo e(request()->query('type') === 'gst-registration' ? 'active' : ''); ?>" data-label="GST Registration">
                     <span class="sb-item__icon"><i class="fas fa-id-card" style="color: #fbbf24;"></i></span>
                     GST Registration
+                </a>
+                 <a href="<?php echo e(route('admin.applications.index', ['type' => 'gst-return-filing'])); ?>" class="sb-item <?php echo e(request()->query('type') === 'gst-return-filing' ? 'active' : ''); ?>" data-label="GST Return">
+                    <span class="sb-item__icon"><i class="fas fa-file-invoice" style="color: #38bdf8;"></i></span>
+                    GST Return
                 </a>
 
                 <a href="<?php echo e(route('admin.applications.index', ['type' => 'other'])); ?>" class="sb-item <?php echo e(request()->query('type', 'other') === 'other' ? 'active' : ''); ?>" data-label="Other Apps">
@@ -248,7 +249,7 @@
                     Agents
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->is('admin/agents*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </a>
-
+<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(config('app.is_master_server') == true): ?>
                 <div class="sb-section">System</div>
 
                 <div class="sb-has-submenu <?php echo e(request()->is('admin/gifts*') ? 'open' : ''); ?>">
@@ -263,7 +264,7 @@
                     </div>
                 </div>
 
-                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(env('IS_MASTER_SERVER', false)): ?>
+              
 
                 <a href="<?php echo e(url('admin/pages')); ?>" class="sb-item <?php echo e(request()->is('admin/pages*') ? 'active' : ''); ?>" data-label="Pages">
                     <span class="sb-item__icon"><i class="fas fa-file-alt"></i></span>
