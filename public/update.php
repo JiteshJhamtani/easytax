@@ -238,16 +238,16 @@ try {
     echo "<li>❌ <strong style='color:red;'>ERROR 9:</strong> " . $e->getMessage() . "</li>"; 
 }
 
-/*
-|--------------------------------------------------------------------------
-| HOOK 10: FETCH UAT DATA (Testing on Bihar) (NEW)
-|--------------------------------------------------------------------------
-*/
+
+
 try {
     $b2bSecretKey = 'EasyTax_Super_Secret_Key_2026!'; // The password on UAT
     $childServers = [
         'uat' => 'https://uat.easytax.live', // Pulling UAT data
     ];
+
+    // 🚨 TURN OFF STRICT MYSQL RULES TEMPORARILY
+    \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
     foreach ($childServers as $name => $url) {
         echo "<li>🔄 Fetching data from <b>{$url}</b>...</li>";
@@ -287,7 +287,13 @@ try {
             echo "<li>❌ <strong style='color:red;'>FAILED:</strong> Connection to {$name} failed with status " . $response->status() . "</li>";
         }
     }
+
+    // 🚨 TURN STRICT MYSQL RULES BACK ON SO THE DATABASE STAYS SAFE
+    \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
 } catch (\Exception $e) { 
+    // Safety catch: Always turn rules back on even if there is an error
+    \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     echo "<li>❌ <strong style='color:red;'>ERROR 10:</strong> Data Sync Failed - " . $e->getMessage() . "</li>"; 
 }
 
