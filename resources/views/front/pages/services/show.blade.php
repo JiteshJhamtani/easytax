@@ -297,7 +297,7 @@
     
 
 {{-- LIVE PRICE PREVIEW BOX --}}
-                    @if(in_array($service->slug, ['gst-return-filing', 'itr-filing']))
+                    @if(in_array($service->slug, ['gst-return-filing', 'itr-filing','gst-annual-package']))
                         <div class="card border-success mb-4 shadow-sm mt-4">
                             <div class="card-body bg-success-soft">
                                 <table class="table table-sm table-borderless mb-0 font-weight-bold">
@@ -349,37 +349,140 @@
                 return val ? String(val).toLowerCase().trim() : '';
             }
 
+           
+
             // --- NEW: NESTED FIELD VISIBILITY LOGIC ---
+          // --- NEW: NESTED FIELD VISIBILITY LOGIC ---
             function handleNestedFields() {
-                // 1. Handle Business -> Turnover
+                
+                // --- 1. ITR Filing Logic (Business -> Turnover) ---
                 let businessVal = $('input[name="has_business"]:checked').val();
-                let turnoverWrapper = $('input[name="turnover"]').closest('.form-group');
+                let itrTurnoverWrapper = $('input[name="turnover"]').closest('.form-group');
                 
                 if (businessVal === 'yes') {
-                    turnoverWrapper.slideDown(200);
-                } else {
-                    turnoverWrapper.slideUp(200);
-                    $('input[name="turnover"]').prop('checked', false); // Clear hidden selection
+                    itrTurnoverWrapper.slideDown(200);
+                } else if (businessVal !== undefined) {
+                    itrTurnoverWrapper.slideUp(200);
+                    $('input[name="turnover"]').prop('checked', false);
                 }
 
-               
+                // --- 2. GST Return Filing Logic ---
+                
+                // A. GST Type Logic (Change Turnover AND Frequency Options)
+                let gstType = $('select[name="gst_type"]').val();
+                let frequencyDropdown = $('select[name="frequency_of_return"]');
+                
+                if (gstType === 'composition') {
+                    // 1. Turnover Options for Composition
+                    $('select[name="annual_turnover_range"] option[value="nil_turnover"]').show();
+                    $('select[name="annual_turnover_range"] option[value="with_turnover"]').show();
+                    
+                    $('select[name="annual_turnover_range"] option[value="nil"]').hide();
+                    $('select[name="annual_turnover_range"] option[value="upto_35"]').hide();
+                    $('select[name="annual_turnover_range"] option[value="above_35"]').hide();
+                    
+                    let currentTurnover = $('select[name="annual_turnover_range"]').val();
+                    if(['nil', 'upto_35', 'above_35'].includes(currentTurnover)) {
+                         $('select[name="annual_turnover_range"]').val('');
+                    }
+
+                    // 2. Frequency Options for Composition
+                    frequencyDropdown.find('option[value="monthly"]').hide();
+                    frequencyDropdown.find('option[value="annual"]').hide(); // Hide GSTR9
+                    frequencyDropdown.find('option[value="quarterly"]').show();
+                    frequencyDropdown.find('option[value="annual_gstr4"]').show(); // Show GSTR4
+
+                    let currentFreq = frequencyDropdown.val();
+                    if(['monthly', 'annual'].includes(currentFreq)) {
+                         frequencyDropdown.val('').trigger('change');
+                    }
+
+                } else if (gstType === 'regular') {
+                    // 1. Turnover Options for Regular
+                    $('select[name="annual_turnover_range"] option[value="nil"]').show();
+                    $('select[name="annual_turnover_range"] option[value="upto_35"]').show();
+                    $('select[name="annual_turnover_range"] option[value="above_35"]').show();
+                    
+                    $('select[name="annual_turnover_range"] option[value="nil_turnover"]').hide();
+                    $('select[name="annual_turnover_range"] option[value="with_turnover"]').hide();
+
+                    let currentTurnover = $('select[name="annual_turnover_range"]').val();
+                    if(['nil_turnover', 'with_turnover'].includes(currentTurnover)) {
+                         $('select[name="annual_turnover_range"]').val('');
+                    }
+
+                    // 2. Frequency Options for Regular
+                    frequencyDropdown.find('option[value="monthly"]').show();
+                    frequencyDropdown.find('option[value="quarterly"]').show();
+                    frequencyDropdown.find('option[value="annual"]').show(); // Show GSTR9
+                    frequencyDropdown.find('option[value="annual_gstr4"]').hide(); // Hide GSTR4
+
+                    let currentFreq = frequencyDropdown.val();
+                    if(['annual_gstr4'].includes(currentFreq)) {
+                         frequencyDropdown.val('').trigger('change');
+                    }
+                }
+
+                // B. Frequency Logic (Hide/Show Month, Quarter, and Plan)
+                let frequency = frequencyDropdown.val();
+                
+                let planWrapper = $('select[name="plan"]').closest('.form-group');
+                let monthWrapper = $('select[name="month"]').closest('.form-group');
+                let quarterWrapper = $('select[name="quarter"]').closest('.form-group');
+
+                if (frequency === 'monthly') {
+                    planWrapper.show();
+                    monthWrapper.show();
+                    quarterWrapper.hide();
+                    
+                    // Show 12-month, hide 4-month
+                    $('select[name="plan"] option[value="yearly_12"]').show();
+                    $('select[name="plan"] option[value="yearly_4"]').hide();
+
+                } else if (frequency === 'quarterly') {
+                    planWrapper.show();
+                    monthWrapper.hide();
+                    quarterWrapper.show();
+                    
+                    // Show 4-month, hide 12-month
+                    $('select[name="plan"] option[value="yearly_4"]').show();
+                    $('select[name="plan"] option[value="yearly_12"]').hide();
+
+                } else if (frequency === 'annual' || frequency === 'annual_gstr4') {
+                    planWrapper.hide();
+                    monthWrapper.hide();
+                    quarterWrapper.hide();
+                    
+                    // Reset values if hidden
+                    $('select[name="plan"]').val('');
+                    $('select[name="month"]').val('');
+                    $('select[name="quarter"]').val('');
+                }
             }
+          
 
             // --- THE PRICING CALCULATOR ---
             function calculateDynamicPrice() {
                 let selectedGst = normalizeValue($('select[name="gst_type"]').val() || $('input[name="gst_type"]:checked').val());
                 let selectedFreq = normalizeValue($('select[name="frequency_of_return"]').val() || $('input[name="frequency_of_return"]:checked').val());
                 
+                // ✅ FIX 1: Grab the selected Plan
+                let selectedPlan = normalizeValue($('select[name="plan"]').val() || $('input[name="plan"]:checked').val()); 
+                
                 let s_type = normalizeValue($('select[name="itr_type"]').val() || $('input[name="itr_type"]:checked').val());
                 let s_bus  = normalizeValue($('select[name="has_business"]').val() || $('input[name="has_business"]:checked').val());
                 let s_cg   = normalizeValue($('select[name="has_capital_gains"]').val() || $('input[name="has_capital_gains"]:checked').val());
                 let s_sal  = normalizeValue($('select[name="has_salary"]').val() || $('input[name="has_salary"]:checked').val());
                 
-                let selectedTurnover = normalizeValue($('select[name="turnover"]').val() || $('input[name="turnover"]:checked').val() || $('select[name="annual_turnover_range"]').val());
+                let selectedTurnover = normalizeValue($('select[name="turnover"]').val() || $('input[name="turnover"]:checked').val() || $('select[name="annual_turnover_range"]').val() || $('select[name="total_bills"]').val());
 
                 let match = pricingRules.find(rule => {
                     let r_gst  = normalizeValue(rule.gst_type);
                     let r_freq = normalizeValue(rule.frequency);
+                    
+                    // ✅ FIX 2: Get the plan from the database rule
+                    let r_plan = normalizeValue(rule.plan); 
+                    
                     let r_turn = normalizeValue(rule.turnover);
                     let r_type = normalizeValue(rule.itr_type);
                     let r_bus  = normalizeValue(rule.itr_business);
@@ -388,6 +491,10 @@
 
                     return (r_gst  === '' || r_gst  === selectedGst) && 
                            (r_freq === '' || r_freq === selectedFreq) &&
+                           
+                           // ✅ FIX 3: Make sure the rule matches the selected plan
+                           (r_plan === '' || r_plan === selectedPlan) && 
+                           
                            (r_turn === '' || r_turn === selectedTurnover) && 
                            (r_type === '' || r_type === s_type) &&
                            (r_bus  === '' || r_bus  === s_bus) && 

@@ -12,7 +12,6 @@ class DashboardController extends Controller
 {
     public function index()
     {
-      // ── KPI Cards ── 
       // ── KPI Cards ──
         $kpis = [
             // 1. Total Active (Excludes Drafts, Cancelled, and Failed)
@@ -54,14 +53,15 @@ class DashboardController extends Controller
                 ->count(),
         ];
 
-
-        // ── Monthly Charts (last 12 months) ──
+// ── Monthly Charts (last 12 months) ──
         $monthlyData = Application::query()
             ->select(
                 DB::raw("DATE_FORMAT(submitted_at, '%Y-%m') as month"),
                 DB::raw('COUNT(*) as applications_count'),
                 DB::raw("SUM(CASE WHEN payment_status = 'SUCCESS' THEN amount ELSE 0 END) as revenue")
             )
+            ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
+            ->where('payment_status', '!=', 'FAILED')
             ->whereNotNull('submitted_at')
             ->where('submitted_at', '>=', now()->subMonths(11)->startOfMonth())
             ->groupBy('month')
@@ -84,13 +84,14 @@ class DashboardController extends Controller
             )
             ->join('applications', 'users.id', '=', 'applications.agent_id')
             ->where('users.role', 'AGENT')
+            ->whereNotIn('applications.status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
+            ->where('applications.payment_status', '!=', 'FAILED')
             ->groupBy('users.id', 'users.agent_code', 'users.name')
             ->orderByDesc('total_revenue')
             ->limit(10)
             ->get();
 
-       
-// ── Top 10 Services ──
+        // ── Top 10 Services ──
         $topServices = Service::query()
             ->select(
                 'services.id',
@@ -99,6 +100,8 @@ class DashboardController extends Controller
                 DB::raw('COALESCE(SUM(applications.amount), 0) as revenue')
             )
             ->join('applications', 'services.id', '=', 'applications.service_id')
+            ->whereNotIn('applications.status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
+            ->where('applications.payment_status', '!=', 'FAILED')
             ->groupBy('services.id', 'services.name')
             ->orderByDesc('applications_count')
             ->limit(10)
@@ -108,18 +111,22 @@ class DashboardController extends Controller
         // ── Recent 10 Applications ──
         $recentApplications = Application::query()
             ->with(['agent:id,name', 'service:id,name'])
+            ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
+            ->where('payment_status', '!=', 'FAILED')
             ->latest('submitted_at')
             ->limit(10)
             ->get();
 
-        return view('admin.dashboard', compact(
+            return view('admin.dashboard', compact(
             'kpis',
             'chartLabels',
             'chartApplications',
             'chartRevenue',
             'topAgents',
             'topServices',
-            'recentApplications',
+            'recentApplications'
         ));
     }
 }
+
+

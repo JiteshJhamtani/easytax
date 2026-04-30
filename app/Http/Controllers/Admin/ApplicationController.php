@@ -29,8 +29,13 @@ class ApplicationController extends Controller
         $services = Service::where('active', true)->get();
         $agents = User::where('role', 'agent')->get();
 
-        // --- NEW DYNAMIC KPI LOGIC ---
-        $query = Application::query();
+         // --- NEW DYNAMIC KPI LOGIC ---
+       
+        // Hide Drafts, Cancelled, and Failed applications from the admin list
+       $query = Application::query()
+            ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+            ->where('payment_status', '!=', 'FAILED');
+
         $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
 
         if ($type === 'other') {
@@ -49,6 +54,7 @@ class ApplicationController extends Controller
             SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
             SUM(CASE WHEN payment_status = 'FAILED' THEN 1 ELSE 0 END) as failed
         ")->first();
+        
         // -----------------------------
 
         return view('admin.applications.index', compact(
@@ -58,9 +64,14 @@ class ApplicationController extends Controller
 
   public function data(Request $request)
     {
-        $query = Application::with(['service', 'agent', 'media']);
+        
+      // 2. FORM DATA EXPORTS 
+       $query = Application::with(['service', 'agent', 'media'])
+            ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+            ->where('payment_status', '!=', 'FAILED');
 
-        $type = $request->type ?? 'other'; 
+        $type = $request->type ?? 'other';
+
         $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
 
         if ($type === 'other') {
@@ -198,10 +209,13 @@ class ApplicationController extends Controller
         }
 
         // 2. FORM DATA EXPORTS 
+       // 2. FORM DATA EXPORTS 
         $query = Application::with(['agent', 'service'])
             ->whereHas('service', function ($q) {
                 $q->where('name', 'ITR Filing (Individual / Business)');
-            });
+            })
+            ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+            ->where('payment_status', '!=', 'FAILED');
 
         if ($filter === 'completed_forms') {
             $query->where('status', 'COMPLETED');

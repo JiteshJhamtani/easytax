@@ -179,7 +179,7 @@
                 { 
                     data: 'applications_count', 
                     className: 'text-center',
-                    searchable: false, // <-- THE FIX: Stop frontend from searching this column
+                    searchable: false, // <-- THE FIX: Stop frontend from searching this column 
                     render: function(data) { 
                         return data ? `<span class="custom-badge badge-info-soft">${data}</span>` : '<span class="text-muted">-</span>'; 
                     }

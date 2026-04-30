@@ -24,8 +24,10 @@ class ServiceController extends Controller
    public function datatable()
     {
         $services = Service::query()
-            ->withCount('applications');
-
+            ->withCount(['applications' => function ($query) {
+                // Hide Draft, Failed, and Canceled from the total count
+                $query->whereNotIn('status', ['draft', 'failed', 'canceled']);
+            }]);
         return DataTables::of($services)
             
             // Map the calculated count so the frontend can read it
@@ -113,9 +115,13 @@ class ServiceController extends Controller
     {
         $formConfig = config("service_forms.{$service->slug}");
 
-        $stats = [
-            'total_applications' => $service->applications()->count(),
-            'total_revenue' => $service->applications()->sum('amount'),
+       $stats = [
+            'total_applications' => $service->applications()
+                ->whereNotIn('status', ['draft', 'failed', 'canceled'])
+                ->count(),
+            'total_revenue' => $service->applications()
+                ->whereNotIn('status', ['draft', 'failed', 'canceled'])
+                ->sum('amount'),
         ];
 
         return view('admin.services.show', compact('service', 'formConfig', 'stats'));

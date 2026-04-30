@@ -20,7 +20,8 @@ class ApplicationController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
-    | Store Application & Initiate Razorpay Order
+    | Store Application & Initiate Razorpay Order new feature for controller 
+    the applicaton whos stutas is draft , failded and canceled should not display on admin dashboard it should stay on agent dashboard but not on admins 
     |--------------------------------------------------------------------------
     */
 
@@ -48,9 +49,8 @@ class ApplicationController extends Controller
         // DYNAMIC PRICING OVERRIDE ENGINE (ITR & GST)
         // ==========================================
         $finalPrice = $service->price;
-        $commission = 0;
-
-        if (in_array($service->slug, ['gst-return-filing', 'itr-filing'])) {
+$commission = $service->calculateCommission((float) $service->price);
+        if (in_array($service->slug, ['gst-return-filing', 'itr-filing', 'gst-annual-package'])) {
             
             if ($service->slug === 'gst-return-filing') {
                 $col1 = $validated['gst_type'] ?? '';
@@ -67,7 +67,18 @@ class ApplicationController extends Controller
                     ->where(function($q) use ($col4) { $q->where('plan', $col4)->orWhereNull('plan')->orWhere('plan', 'Any'); })
                     ->orderByRaw("(plan = 'Any' OR plan IS NULL) ASC")->first();
 
-            } else {
+            } elseif ($service->slug === 'gst-annual-package') {
+                // ✅ FIX 2: Added the specific database query for the new service
+                $turnoverVal = $validated['turnover'] ?? 'Any';
+
+                $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
+                    ->where(function($q) use ($turnoverVal) { 
+                        $q->where('turnover', $turnoverVal)->orWhereNull('turnover')->orWhere('turnover', 'Any'); 
+                    })
+                    ->orderByRaw("(turnover = 'Any' OR turnover IS NULL) ASC")
+                    ->first();
+                    }
+                    else {
                 // 🛑 ITR TRUE DATABASE MAPPING 🛑
                 // No translators needed! The frontend keys match the database EXACTLY.
                 $itrType     = $request->input('itr_type', 'Any'); 

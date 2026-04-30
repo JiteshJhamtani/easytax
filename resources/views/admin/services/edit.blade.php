@@ -83,13 +83,14 @@
                     <hr class="my-4 border-light">
 
                     {{-- HIDDEN INPUTS TO PASS LARAVEL VALIDATION --}}
-                    @if(in_array($service->slug, ['gst-return-filing', 'itr-filing']))
+                    @if(in_array($service->slug, ['gst-return-filing', 'itr-filing', 'gst-annual-package']))
                         <input type="hidden" name="price" value="{{ $service->price ?? 0 }}">
                         <input type="hidden" name="commission_type" value="{{ $service->commission_type ?? 'flat' }}">
                         <input type="hidden" name="commission_value" value="{{ $service->commission_value ?? 0 }}">
                     @endif
 
                     {{-- Pricing Section --}}
+                  {{-- Pricing Section --}}
                     @if($service->slug === 'gst-return-filing')
                         {{-- GST MATRIX --}}
                         <div class="card border border-primary rounded-lg mb-4 shadow-sm">
@@ -98,7 +99,7 @@
                             </div>
                             <div class="card-body p-0 table-responsive">
                                 <table class="table table-bordered mb-0" id="pricing-matrix-table-gst">
-                                    <thead class="bg-light text-xs text-muted text-uppercase">
+                                    <thead class="bg-light text-xs text-muted text-uppercase text-center">
                                         <tr>
                                             <th>GST Type</th><th>Turnover Range</th><th>Frequency</th><th>Plan</th>
                                             <th>Price (₹)</th><th>VLE Comm (₹)</th><th>Action</th>
@@ -108,12 +109,41 @@
                                         @if(isset($service->pricingRules) && $service->pricingRules->count() > 0)
                                             @foreach($service->pricingRules as $index => $rule)
                                                 <tr>
-                                                    <td><input type="text" name="pricing_rules[{{$index}}][gst_type]" class="form-control" value="{{ $rule->gst_type }}"></td>
-                                                    <td><input type="text" name="pricing_rules[{{$index}}][turnover]" class="form-control" value="{{ $rule->turnover }}"></td>
-                                                    <td><input type="text" name="pricing_rules[{{$index}}][frequency]" class="form-control" value="{{ $rule->frequency }}"></td>
-                                                    <td><input type="text" name="pricing_rules[{{$index}}][plan]" class="form-control" value="{{ $rule->plan }}"></td>
-                                                    <td><input type="number" step="0.01" name="pricing_rules[{{$index}}][base_price]" class="form-control" value="{{ $rule->base_price }}" required></td>
-                                                    <td><input type="number" step="0.01" name="pricing_rules[{{$index}}][commission_amount]" class="form-control" value="{{ $rule->commission_amount }}"></td>
+                                                    <td>
+                                                        <select name="pricing_rules[{{$index}}][gst_type]" class="form-control custom-input">
+                                                            <option value="Any" {{ empty($rule->gst_type) || $rule->gst_type === 'Any' ? 'selected' : '' }}>Any</option>
+                                                            <option value="regular" {{ $rule->gst_type === 'regular' ? 'selected' : '' }}>Regular</option>
+                                                            <option value="composition" {{ $rule->gst_type === 'composition' ? 'selected' : '' }}>Composition</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select name="pricing_rules[{{$index}}][turnover]" class="form-control custom-input">
+                                                            <option value="Any" {{ empty($rule->turnover) || $rule->turnover === 'Any' ? 'selected' : '' }}>Any</option>
+                                                            <option value="nil" {{ $rule->turnover === 'nil' ? 'selected' : '' }}>Nil</option>
+                                                            <option value="upto_35" {{ $rule->turnover === 'upto_35' ? 'selected' : '' }}>Upto 35 Bills (Regular1)</option>
+                                                            <option value="above_35" {{ $rule->turnover === 'above_35' ? 'selected' : '' }}>Above 35 Bills (Regular2)</option>
+                                                            <option value="nil_turnover" {{ $rule->turnover === 'nil_turnover' ? 'selected' : '' }}>Nil Turnover</option>
+                                                            <option value="with_turnover" {{ $rule->turnover === 'with_turnover' ? 'selected' : '' }}>With Turnover</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select name="pricing_rules[{{$index}}][frequency]" class="form-control custom-input">
+                                                            <option value="Any" {{ empty($rule->frequency) || $rule->frequency === 'Any' ? 'selected' : '' }}>Any</option>
+                                                            <option value="monthly" {{ $rule->frequency === 'monthly' ? 'selected' : '' }}>Monthly</option>
+                                                            <option value="quarterly" {{ $rule->frequency === 'quarterly' ? 'selected' : '' }}>Quarterly</option>
+                                                            <option value="annual" {{ $rule->frequency === 'annual' ? 'selected' : '' }}>Annual GSTR9</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select name="pricing_rules[{{$index}}][plan]" class="form-control custom-input">
+                                                            <option value="Any" {{ empty($rule->plan) || $rule->plan === 'Any' ? 'selected' : '' }}>Any</option>
+                                                            <option value="one_time" {{ $rule->plan === 'one_time' ? 'selected' : '' }}>One Time</option>
+                                                            <option value="yearly_12" {{ $rule->plan === 'yearly_12' ? 'selected' : '' }}>Yearly (12 Filings/Year)</option>
+                                                            <option value="yearly_4" {{ $rule->plan === 'yearly_4' ? 'selected' : '' }}>Yearly (4 Filings/Year)</option>
+                                                        </select>
+                                                    </td>
+                                                    <td><input type="number" step="0.01" name="pricing_rules[{{$index}}][base_price]" class="form-control custom-input" value="{{ $rule->base_price }}" required></td>
+                                                    <td><input type="number" step="0.01" name="pricing_rules[{{$index}}][commission_amount]" class="form-control custom-input" value="{{ $rule->commission_amount }}"></td>
                                                     <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm rounded" onclick="this.closest('tr').remove()"><i class="fas fa-trash"></i></button></td>
                                                 </tr>
                                             @endforeach
@@ -200,7 +230,52 @@
                                 </div>
                             </div>
                         </div>
+
+
+                        @elseif($service->slug === 'gst-annual-package')
+                        {{-- GST ANNUAL PACKAGE MATRIX --}}
+                        <div class="card border border-info rounded-lg mb-4 shadow-sm">
+                            <div class="card-header bg-info text-white font-weight-bold py-3">
+                                <i class="fas fa-box-open mr-2"></i> Annual Package Pricing Rules
+                            </div>
+                            <div class="card-body p-0 table-responsive">
+                                <table class="table table-bordered mb-0" id="pricing-matrix-table-annual">
+                                    <thead class="bg-light text-xs text-muted text-uppercase text-center">
+                                        <tr>
+                                            <th>Total Bills</th>
+                                            <th>Price (₹)</th>
+                                            <th>VLE Comm (₹)</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if(isset($service->pricingRules) && $service->pricingRules->count() > 0)
+                                            @foreach($service->pricingRules as $index => $rule)
+                                                <tr>
+                                                    <td>
+                                                        {{-- Notice we use 'turnover' here to save DB space! --}}
+                                                        <select name="pricing_rules[{{$index}}][turnover]" class="form-control custom-input">
+                                                            <option value="Any" {{ empty($rule->turnover) || $rule->turnover === 'Any' ? 'selected' : '' }}>Any</option>
+                                                            <option value="less_than_15" {{ $rule->turnover === 'less_than_15' ? 'selected' : '' }}>Less than 15</option>
+                                                            <option value="more_than_15" {{ $rule->turnover === 'more_than_15' ? 'selected' : '' }}>More than 15</option>
+                                                        </select>
+                                                    </td>
+                                                    <td><input type="number" step="0.01" name="pricing_rules[{{$index}}][base_price]" class="form-control custom-input" value="{{ $rule->base_price }}" required></td>
+                                                    <td><input type="number" step="0.01" name="pricing_rules[{{$index}}][commission_amount]" class="form-control custom-input" value="{{ $rule->commission_amount }}"></td>
+                                                    <td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm rounded" onclick="this.closest('tr').remove()"><i class="fas fa-trash"></i></button></td>
+                                                </tr>
+                                            @endforeach
+                                        @endif
+                                    </tbody>
+                                </table>
+                                <div class="p-3 bg-light border-top">
+                                    <button type="button" class="btn btn-info btn-sm font-weight-bold shadow-sm text-white" onclick="addGstAnnualRow()"><i class="fas fa-plus mr-1"></i> Add Rule</button>
+                                </div>
+                            </div>
+                        </div>
                     @else
+
+
                         {{-- STANDARD FLAT PRICING --}}
                         <div class="row">
                             <div class="col-md-4 form-group mb-4">
@@ -255,22 +330,22 @@
     <script>
         var rowIndex = {{ isset($service->pricingRules) ? $service->pricingRules->count() : 0 }};
 
-        function addGstRow() {
+        
+    function addGstRow() {
             var tableBody = document.querySelector('#pricing-matrix-table-gst tbody');
             if(!tableBody) return;
             var tr = document.createElement('tr');
-            var html = '<td><input type="text" name="pricing_rules['+rowIndex+'][gst_type]" class="form-control" placeholder="e.g. regular"></td>' +
-                       '<td><input type="text" name="pricing_rules['+rowIndex+'][turnover]" class="form-control" placeholder="e.g. upto_1_5"></td>' +
-                       '<td><input type="text" name="pricing_rules['+rowIndex+'][frequency]" class="form-control" placeholder="e.g. monthly"></td>' +
-                       '<td><input type="text" name="pricing_rules['+rowIndex+'][plan]" class="form-control" placeholder="e.g. yearly"></td>' +
-                       '<td><input type="number" step="0.01" name="pricing_rules['+rowIndex+'][base_price]" class="form-control" placeholder="0.00" required></td>' +
-                       '<td><input type="number" step="0.01" name="pricing_rules['+rowIndex+'][commission_amount]" class="form-control" placeholder="0.00"></td>' +
+            var html = '<td><select name="pricing_rules['+rowIndex+'][gst_type]" class="form-control custom-input"><option value="Any">Any</option><option value="regular">Regular</option><option value="composition">Composition</option></select></td>' +
+                       '<td><select name="pricing_rules['+rowIndex+'][turnover]" class="form-control custom-input"><option value="Any">Any</option><option value="nil">Nil</option><option value="upto_35">Upto 35 Bills (Regular1)</option><option value="above_35">Above 35 Bills (Regular2)</option><option value="nil_turnover">Nil Turnover</option><option value="with_turnover">With Turnover</option></select></td>' +
+                       '<td><select name="pricing_rules['+rowIndex+'][frequency]" class="form-control custom-input"><option value="Any">Any</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="annual">Annual GSTR9</option><option value="annual_gstr4">Annual GSTR4</option></select></td>' +
+                       '<td><select name="pricing_rules['+rowIndex+'][plan]" class="form-control custom-input"><option value="Any">Any</option><option value="one_time">One Time</option><option value="yearly_12">Yearly (12 Filings/Year)</option><option value="yearly_4">Yearly (4 Filings/Year)</option></select></td>' +
+                       '<td><input type="number" step="0.01" name="pricing_rules['+rowIndex+'][base_price]" class="form-control custom-input" placeholder="0.00" required></td>' +
+                       '<td><input type="number" step="0.01" name="pricing_rules['+rowIndex+'][commission_amount]" class="form-control custom-input" placeholder="0.00"></td>' +
                        '<td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm rounded" onclick="this.closest(\'tr\').remove()"><i class="fas fa-trash"></i></button></td>';
             tr.innerHTML = html;
             tableBody.appendChild(tr);
             rowIndex++;
         }
-
       function addItrRow() {
             var tableBody = document.querySelector('#pricing-matrix-table-itr tbody');
             if(!tableBody) return;
@@ -282,6 +357,21 @@
                        '<td><select name="pricing_rules['+rowIndex+'][itr_business]" class="form-control custom-input"><option value="">Any</option><option value="yes">Yes</option><option value="no">No</option></select></td>' +
                        '<td><select name="pricing_rules['+rowIndex+'][turnover]" class="form-control custom-input"><option value="">Any</option><option value="less_than_20l">< 20 Lakh</option><option value="more_than_20l">> 20 Lakh</option></select></td>' +
                        '<td><select name="pricing_rules['+rowIndex+'][itr_capital_gains]" class="form-control custom-input"><option value="">Any</option><option value="yes">Yes</option><option value="no">No</option></select></td>' +
+                       '<td><input type="number" step="0.01" name="pricing_rules['+rowIndex+'][base_price]" class="form-control custom-input" placeholder="0.00" required></td>' +
+                       '<td><input type="number" step="0.01" name="pricing_rules['+rowIndex+'][commission_amount]" class="form-control custom-input" placeholder="0.00"></td>' +
+                       '<td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm rounded" onclick="this.closest(\'tr\').remove()"><i class="fas fa-trash"></i></button></td>';
+            
+            tr.innerHTML = html;
+            tableBody.appendChild(tr);
+            rowIndex++;
+        }
+
+        function addGstAnnualRow() {
+            var tableBody = document.querySelector('#pricing-matrix-table-annual tbody');
+            if(!tableBody) return;
+            var tr = document.createElement('tr');
+            
+            var html = '<td><select name="pricing_rules['+rowIndex+'][turnover]" class="form-control custom-input"><option value="Any">Any</option><option value="less_than_15">Less than 15</option><option value="more_than_15">More than 15</option></select></td>' +
                        '<td><input type="number" step="0.01" name="pricing_rules['+rowIndex+'][base_price]" class="form-control custom-input" placeholder="0.00" required></td>' +
                        '<td><input type="number" step="0.01" name="pricing_rules['+rowIndex+'][commission_amount]" class="form-control custom-input" placeholder="0.00"></td>' +
                        '<td class="text-center align-middle"><button type="button" class="btn btn-danger btn-sm rounded" onclick="this.closest(\'tr\').remove()"><i class="fas fa-trash"></i></button></td>';

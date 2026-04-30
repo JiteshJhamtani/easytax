@@ -192,8 +192,8 @@
             </div>
 
            {{-- CHANGE 2: HIDDEN FOR ITR FILING --}}
-           @if($application->service->slug !== 'itr-filing')
-            <div class="card border-0 shadow-sm mb-4 rounded-lg elegant-border">
+           @if($application->service->slug == 'gst-registration')
+               <div class="card border-0 shadow-sm mb-4 rounded-lg elegant-border">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                     <h3 class="card-title font-weight-bold text-dark mb-0">
                         <i class="fas fa-key text-primary mr-2"></i> Deliverables & Credentials
@@ -272,10 +272,7 @@
                             <i class="fas fa-spinner mr-2"></i> Mark In Progress
                         </button>
 
-                        <button type="submit" name="status" value="COMPLETED"
-                            class="btn btn-success btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
-                            <i class="fas fa-check-circle mr-2"></i> Mark Completed
-                        </button>
+                     
 
                         @if($application->service->slug === 'itr-filing')
                             <button type="submit" name="status" value="E_FILING"
@@ -287,7 +284,12 @@
                                 class="btn btn-primary btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
                                 <i class="fas fa-mobile-alt mr-2"></i> Mark OTP Verification
                             </button>
-                        @endif
+@endif
+                               <button type="submit" name="status" value="COMPLETED"
+                            class="btn btn-success btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
+                            <i class="fas fa-check-circle mr-2"></i> Mark Completed
+                        </button>
+                        
                     </form>
 
                     @if ($application->status->value === 'CANCELLED' && strtolower($application->payment_status->value) === 'paid')
