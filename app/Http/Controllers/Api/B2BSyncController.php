@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Application;
+use Illuminate\Http\Request;
+
+class B2BSyncController extends Controller
+{
+    public function export(Request $request)
+    {
+        // 1. THE SECURITY GUARD: Check if the caller has the exact secret key
+        $token = $request->bearerToken();
+        $secret = env('B2B_SYNC_SECRET');
+
+        if (!$token || $token !== $secret) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Unauthorized Access. Invalid B2B Token.'
+            ], 401);
+        }
+
+        // 2. FETCH INSTRUCTIONS: Find out the last ID the B2B server already downloaded
+        $lastId = $request->query('last_id', 0);
+
+        // 3. THE DATA PACKER: Fetch applications newer than the last downloaded ID
+        $applications = Application::with(['agent', 'service'])
+            ->where('id', '>', $lastId)
+            ->orderBy('id', 'asc')
+            ->limit(500) // Safety limit: Only send 500 at a time so your server doesn't crash
+            ->get();
+
+        // 4. SEND IT OUT
+        return response()->json([
+            'success' => true,
+            'count'   => $applications->count(),
+            'data'    => $applications
+        ]);
+    }
+}

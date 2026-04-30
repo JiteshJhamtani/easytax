@@ -137,10 +137,7 @@ try {
 |--------------------------------------------------------------------------
 */
 try {
-    // We removed the duplicate lowercase words. MySQL will automatically have to update 
-    // accept both 'MARKETER' and 'marketer' with this single clean definition.
     Illuminate\Support\Facades\DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('ADMIN', 'AGENT', 'MARKETER') DEFAULT 'AGENT'");
-    
     echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Upgraded the Users 'role' ENUM to securely accept Marketers.</li>";
 } catch (\Exception $e) { 
     echo "<li>❌ <strong style='color:red;'>ERROR 6:</strong> " . $e->getMessage() . "</li>"; 
@@ -176,7 +173,7 @@ try {
 
 /*
 |--------------------------------------------------------------------------
-| HOOK 8: Add ITR Dynamic Pricing Columns (NEW)
+| HOOK 8: Add ITR Dynamic Pricing Columns
 |--------------------------------------------------------------------------
 */
 try {
@@ -222,9 +219,80 @@ try {
     echo "<li>❌ <strong style='color:red;'>ERROR 8:</strong> " . $e->getMessage() . "</li>"; 
 }
 
+/*
+|--------------------------------------------------------------------------
+| HOOK 9: Add B2B Tracking Columns to Applications (NEW)
+|--------------------------------------------------------------------------
+*/
+try {
+    if (!Schema::hasColumn('applications', 'source_server')) {
+        Schema::table('applications', function (Blueprint $table) {
+            $table->string('source_server')->nullable()->after('id')->index();
+            $table->unsignedBigInteger('original_id')->nullable()->after('source_server')->index();
+        });
+        echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>source_server</code> and <code>original_id</code> to the <b>applications</b> table.</li>";
+    } else {
+        echo "<li>⏭️ <strong style='color:gray;'>SKIPPED:</strong> Tracking columns already exist in applications.</li>";
+    }
+} catch (\Exception $e) { 
+    echo "<li>❌ <strong style='color:red;'>ERROR 9:</strong> " . $e->getMessage() . "</li>"; 
+}
+
+/*
+|--------------------------------------------------------------------------
+| HOOK 10: FETCH UAT DATA (Testing on Bihar) (NEW)
+|--------------------------------------------------------------------------
+*/
+try {
+    $b2bSecretKey = 'EasyTax_Super_Secret_Key_2026!'; // The password on UAT
+    $childServers = [
+        'uat' => 'https://uat.easytax.live', // Pulling UAT data
+    ];
+
+    foreach ($childServers as $name => $url) {
+        echo "<li>🔄 Fetching data from <b>{$url}</b>...</li>";
+
+        // Find the highest ID we've already downloaded so we don't duplicate
+        $lastId = \App\Models\Application::where('source_server', $name)->max('original_id') ?? 0;
+
+        $response = \Illuminate\Support\Facades\Http::withToken($b2bSecretKey)
+            ->timeout(30)
+            ->get("{$url}/api/b2b/export-applications", ['last_id' => $lastId]);
+
+        if ($response->successful()) {
+            $applications = $response->json('data');
+            $count = 0;
+
+            foreach ($applications as $appData) {
+                // Save them into the local Database
+                \App\Models\Application::updateOrCreate(
+                    ['source_server' => $name, 'original_id' => $appData['id']],
+                    [
+                        'agent_id'          => $appData['agent_id'],
+                        'service_id'        => $appData['service_id'],
+                        'form_data'         => is_array($appData['form_data']) ? json_encode($appData['form_data']) : $appData['form_data'],
+                        'amount'            => $appData['amount'],
+                        'commission_amount' => $appData['commission_amount'],
+                        'status'            => $appData['status'],
+                        'payment_status'    => $appData['payment_status'],
+                        'submitted_at'      => $appData['submitted_at'],
+                        'created_at'        => $appData['created_at'],
+                        'updated_at'        => now(),
+                    ]
+                );
+                $count++;
+            }
+            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Pulled {$count} applications from {$name}.</li>";
+        } else {
+            echo "<li>❌ <strong style='color:red;'>FAILED:</strong> Connection to {$name} failed with status " . $response->status() . "</li>";
+        }
+    }
+} catch (\Exception $e) { 
+    echo "<li>❌ <strong style='color:red;'>ERROR 10:</strong> Data Sync Failed - " . $e->getMessage() . "</li>"; 
+}
 
 echo "</ul>";
-echo "<p style='color: #666;'><strong>Done!</strong> Your server is now fully up to date. You can safely close this page.</p>";
+echo "<p style='color: #666;'><strong>Done!</strong> Your server is now fully up to date and synced. You can safely close this page.</p>";
 echo "<div style='background: #ffebee; border-left: 4px solid #f44336; padding: 15px; margin-top: 20px;'>
         <strong style='color: #d32f2f;'>⚠️ IMPORTANT SECURITY REMINDER:</strong><br>
         Please delete this <code>update.php</code> file from your server now to prevent unauthorized access.

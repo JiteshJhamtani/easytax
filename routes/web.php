@@ -449,3 +449,7 @@ Route::get('/run-crm-update', function() {
 });    
 
 
+use App\Http\Controllers\Api\B2BSyncController;
+
+// The B2B server will call: GET https://bihar.easytax.live/api/b2b/export-applications
+Route::get('/b2b/export-applications', [B2BSyncController::class, 'export']);
