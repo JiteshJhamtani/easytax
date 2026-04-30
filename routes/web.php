@@ -452,3 +452,7 @@ Route::get('/run-crm-update', function() {
 
 
 Route::get('/b2b/export-applications', [B2BSyncController::class, 'export']);
+
+
+
+Route::get('/b2b/export-agents', [\App\Http\Controllers\Api\B2BSyncController::class, 'exportAgents']);

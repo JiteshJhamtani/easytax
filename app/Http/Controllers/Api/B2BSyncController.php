@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class B2BSyncController extends Controller
 {
@@ -36,6 +37,30 @@ class B2BSyncController extends Controller
             'success' => true,
             'count'   => $applications->count(),
             'data'    => $applications
+        ]);
+    }
+
+ public function exportAgents(Request $request)
+    {
+        $token = $request->bearerToken();
+        $secret = env('B2B_SYNC_SECRET', 'EasyTax_Super_Secret_Key_2026!');
+
+        if (!$token || $token !== $secret) {
+            return response()->json(['success' => false, 'error' => 'Unauthorized'], 401);
+        }
+
+        $lastId = $request->query('last_id', 0);
+
+        $agents = User::whereIn('role', ['AGENT', 'MARKETER'])
+            ->where('id', '>', $lastId)
+            ->orderBy('id', 'asc')
+            ->limit(500)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'count'   => $agents->count(),
+            'data'    => $agents
         ]);
     }
 }

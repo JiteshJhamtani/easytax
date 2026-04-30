@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 
 echo "<div style='font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto;'>";
-echo "<h1>🚀 EasyTax Database Updater</h1>";
+echo "<h1>🚀 EasyTax Database Updater (Apps + Agents)</h1>";
 echo "<ul style='line-height: 1.8; font-size: 16px; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #ddd;'>";
 
 /*
@@ -131,7 +131,6 @@ try {
     echo "<li>❌ <strong style='color:red;'>ERROR 5:</strong> " . $e->getMessage() . "</li>"; 
 }
 
-
 /* |--------------------------------------------------------------------------
 | HOOK 6: Securely Expand 'role' ENUM for Marketers
 |--------------------------------------------------------------------------
@@ -142,7 +141,6 @@ try {
 } catch (\Exception $e) { 
     echo "<li>❌ <strong style='color:red;'>ERROR 6:</strong> " . $e->getMessage() . "</li>"; 
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -169,7 +167,6 @@ try {
 } catch (\Exception $e) { 
     echo "<li>❌ <strong style='color:red;'>ERROR 7:</strong> " . $e->getMessage() . "</li>"; 
 }
-
 
 /*
 |--------------------------------------------------------------------------
@@ -221,7 +218,7 @@ try {
 
 /*
 |--------------------------------------------------------------------------
-| HOOK 9: Add B2B Tracking Columns to Applications (NEW)
+| HOOK 9: Add B2B Tracking Columns to Applications
 |--------------------------------------------------------------------------
 */
 try {
@@ -238,8 +235,30 @@ try {
     echo "<li>❌ <strong style='color:red;'>ERROR 9:</strong> " . $e->getMessage() . "</li>"; 
 }
 
+/*
+|--------------------------------------------------------------------------
+| HOOK 10: Add B2B Tracking Columns to Users (Agents) (NEW)
+|--------------------------------------------------------------------------
+*/
+try {
+    if (!Schema::hasColumn('users', 'source_server')) {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('source_server')->nullable()->after('id')->index();
+            $table->unsignedBigInteger('original_id')->nullable()->after('source_server')->index();
+        });
+        echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>source_server</code> and <code>original_id</code> to the <b>users</b> table.</li>";
+    } else {
+        echo "<li>⏭️ <strong style='color:gray;'>SKIPPED:</strong> Tracking columns already exist in users.</li>";
+    }
+} catch (\Exception $e) { 
+    echo "<li>❌ <strong style='color:red;'>ERROR 10:</strong> " . $e->getMessage() . "</li>"; 
+}
 
-
+/*
+|--------------------------------------------------------------------------
+| HOOK 11: FETCH UAT DATA (AGENTS AND APPLICATIONS) (NEW)
+|--------------------------------------------------------------------------
+*/
 try {
     $b2bSecretKey = 'EasyTax_Super_Secret_Key_2026!'; // The password on UAT
     $childServers = [
@@ -250,21 +269,58 @@ try {
     \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
     foreach ($childServers as $name => $url) {
-        echo "<li>🔄 Fetching data from <b>{$url}</b>...</li>";
-
-        // Find the highest ID we've already downloaded so we don't duplicate
-        $lastId = \App\Models\Application::where('source_server', $name)->max('original_id') ?? 0;
-
-        $response = \Illuminate\Support\Facades\Http::withToken($b2bSecretKey)
+        
+        // ==========================================
+        // 1. FETCH AGENTS
+        // ==========================================
+        echo "<li>🔄 Fetching AGENTS from <b>{$url}</b>...</li>";
+        $lastAgentId = \App\Models\User::where('source_server', $name)->max('original_id') ?? 0;
+        $agentResponse = \Illuminate\Support\Facades\Http::withToken($b2bSecretKey)
             ->timeout(30)
-            ->get("{$url}/b2b/export-applications", ['last_id' => $lastId]);
+            ->get("{$url}/b2b/export-agents", ['last_id' => $lastAgentId]);
 
-        if ($response->successful()) {
-            $applications = $response->json('data');
-            $count = 0;
+        if ($agentResponse->successful()) {
+            $agents = $agentResponse->json('data');
+            $agentCount = 0;
+            foreach ($agents as $agentData) {
+                try {
+                    \App\Models\User::updateOrCreate(
+                        ['source_server' => $name, 'original_id' => $agentData['id']],
+                        [
+                            'name'       => $agentData['name'],
+                            'email'      => $agentData['email'],
+                            'password'   => $agentData['password'],
+                            'phone'      => $agentData['phone'] ?? null,
+                            'role'       => $agentData['role'],
+                            'is_active'  => $agentData['is_active'] ?? 1,
+                            'agent_code' => $agentData['agent_code'] ?? null,
+                            'created_at' => $agentData['created_at'],
+                            'updated_at' => now(),
+                        ]
+                    );
+                    $agentCount++;
+                } catch (\Exception $e) {
+                    // Silently skip duplicate emails to avoid crashing
+                }
+            }
+            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Pulled {$agentCount} Agents from {$name}.</li>";
+        } else {
+            echo "<li>❌ <strong style='color:red;'>FAILED:</strong> Agent Connection to {$name} failed with status " . $agentResponse->status() . "</li>";
+        }
 
+        // ==========================================
+        // 2. FETCH APPLICATIONS
+        // ==========================================
+        echo "<li>🔄 Fetching APPLICATIONS from <b>{$url}</b>...</li>";
+        $lastAppId = \App\Models\Application::where('source_server', $name)->max('original_id') ?? 0;
+        $appResponse = \Illuminate\Support\Facades\Http::withToken($b2bSecretKey)
+            ->timeout(30)
+            ->get("{$url}/b2b/export-applications", ['last_id' => $lastAppId]);
+
+        if ($appResponse->successful()) {
+            $applications = $appResponse->json('data');
+            $appCount = 0;
             foreach ($applications as $appData) {
-                // Save them into the local Database
                 \App\Models\Application::updateOrCreate(
                     ['source_server' => $name, 'original_id' => $appData['id']],
                     [
@@ -280,21 +336,20 @@ try {
                         'updated_at'        => now(),
                     ]
                 );
-                $count++;
+                $appCount++;
             }
-            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Pulled {$count} applications from {$name}.</li>";
+            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Pulled {$appCount} applications from {$name}.</li>";
         } else {
-            echo "<li>❌ <strong style='color:red;'>FAILED:</strong> Connection to {$name} failed with status " . $response->status() . "</li>";
+            echo "<li>❌ <strong style='color:red;'>FAILED:</strong> App Connection to {$name} failed with status " . $appResponse->status() . "</li>";
         }
     }
 
-    // 🚨 TURN STRICT MYSQL RULES BACK ON SO THE DATABASE STAYS SAFE
+    // 🚨 TURN STRICT MYSQL RULES BACK ON
     \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
 } catch (\Exception $e) { 
-    // Safety catch: Always turn rules back on even if there is an error
     \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-    echo "<li>❌ <strong style='color:red;'>ERROR 10:</strong> Data Sync Failed - " . $e->getMessage() . "</li>"; 
+    echo "<li>❌ <strong style='color:red;'>ERROR 11:</strong> Data Sync Failed - " . $e->getMessage() . "</li>"; 
 }
 
 echo "</ul>";
