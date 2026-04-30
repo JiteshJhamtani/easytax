@@ -257,7 +257,7 @@ try {
 
         $response = \Illuminate\Support\Facades\Http::withToken($b2bSecretKey)
             ->timeout(30)
-            ->get("{$url}/api/b2b/export-applications", ['last_id' => $lastId]);
+            ->get("{$url}/b2b/export-applications", ['last_id' => $lastId]);
 
         if ($response->successful()) {
             $applications = $response->json('data');
