@@ -51,7 +51,8 @@ class B2BSyncController extends Controller
 
         $lastId = $request->query('last_id', 0);
 
-        $agents = User::whereIn('role', ['AGENT', 'MARKETER'])
+      // We added lowercase and Capitalized versions to be 100% safe!
+        $agents = User::whereIn('role', ['AGENT', 'MARKETER', 'agent', 'marketer', 'Agent'])
             ->where('id', '>', $lastId)
             ->orderBy('id', 'asc')
             ->limit(500)

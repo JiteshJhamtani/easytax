@@ -91,5 +91,6 @@ class Service extends Model
     }
 
 
-   
+   // Forces this model to ALWAYS fetch data from the Master Connection
+    protected $connection = 'master_connection';
 }
