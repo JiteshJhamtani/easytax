@@ -30,6 +30,7 @@ Route::get('/', function () {
     return redirect()->route('services.index');
 })->name('home');
 
+
 // --- NEW PUBLIC TRACKING ROUTE ---
 Route::get('/track/{application}', [\App\Http\Controllers\Front\ApplicationController::class, 'track'])
     ->name('tracking.show')
@@ -450,9 +451,5 @@ Route::get('/run-crm-update', function() {
     }
 });    
 
-
-Route::get('/b2b/export-applications', [B2BSyncController::class, 'export']);
-
-
-
+Route::get('/b2b/export-applications', [\App\Http\Controllers\Api\B2BSyncController::class, 'export']);
 Route::get('/b2b/export-agents', [\App\Http\Controllers\Api\B2BSyncController::class, 'exportAgents']);

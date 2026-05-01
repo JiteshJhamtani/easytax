@@ -24,7 +24,7 @@
                 @forelse($recentApplications as $app)
                     <tr>
                         <td class="pl-4 align-middle"><span class="text-muted font-weight-bold">#{{ $app->id }}</span></td>
-                        <td class="align-middle"><span class="font-weight-bold text-dark">{{ $app->service->name }}</span></td>
+                        <td class="align-middle"><span class="font-weight-bold text-dark">{{ $app->service->name ?? 'Unknown Service' }}</span></td>
                         <td class="align-middle">
                             <span class="d-block font-weight-bold text-dark">{{ $app->created_at->format('d M, Y') }}</span>
                             <span class="text-muted small">{{ $app->created_at->format('h:i A') }}</span>

@@ -53,7 +53,7 @@ class DashboardController extends Controller
                 ->count(),
         ];
 
-// ── Monthly Charts (last 12 months) ──
+        // ── Monthly Charts (last 12 months) ──
         $monthlyData = Application::query()
             ->select(
                 DB::raw("DATE_FORMAT(submitted_at, '%Y-%m') as month"),
@@ -91,23 +91,31 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-        // ── Top 10 Services ──
-        $topServices = Service::query()
-            ->select(
-                'services.id',
-                'services.name',
-                DB::raw('COUNT(applications.id) as applications_count'),
-                DB::raw('COALESCE(SUM(applications.amount), 0) as revenue')
-            )
-            ->join('applications', 'services.id', '=', 'applications.service_id')
-            ->whereNotIn('applications.status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
-            ->where('applications.payment_status', '!=', 'FAILED')
-            ->groupBy('services.id', 'services.name')
+        // ── Top 10 Services (Fixed for Cross-Server databases) ──
+        
+        // 1. We query the LOCAL applications table first (keeping your filters intact)
+        $topServicesStats = Application::query()
+            ->selectRaw('service_id, COUNT(id) as applications_count, COALESCE(SUM(amount), 0) as revenue')
+            ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
+            ->where('payment_status', '!=', 'FAILED')
+            ->groupBy('service_id')
             ->orderByDesc('applications_count')
             ->limit(10)
             ->get();
 
-            
+        // 2. We ask Laravel to silently fetch the matching Service names from the Master Server
+        $topServicesStats->load('service:id,name');
+
+        // 3. Now we format it exactly how your blade file expects it:
+        $topServices = $topServicesStats->map(function ($stat) {
+            return (object) [
+                'id' => $stat->service_id,
+                'name' => $stat->service ? $stat->service->name : 'Unknown Service',
+                'applications_count' => $stat->applications_count,
+                'revenue' => $stat->revenue,
+            ];
+        });
+
         // ── Recent 10 Applications ──
         $recentApplications = Application::query()
             ->with(['agent:id,name', 'service:id,name'])
@@ -117,7 +125,7 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-            return view('admin.dashboard', compact(
+        return view('admin.dashboard', compact(
             'kpis',
             'chartLabels',
             'chartApplications',
@@ -128,5 +136,3 @@ class DashboardController extends Controller
         ));
     }
 }
-
-

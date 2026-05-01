@@ -3,65 +3,63 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Application;
+use App\Models\Application; 
+use App\Models\User;        
 use Illuminate\Http\Request;
-use App\Models\User;
 
-class B2BSyncController extends Controller
+class B2BSyncController extends Controller 
 {
-    public function export(Request $request)
-    {
-        // 1. THE SECURITY GUARD: Check if the caller has the exact secret key
-        $token = $request->bearerToken();
-        $secret = env('B2B_SYNC_SECRET');
-
-        if (!$token || $token !== $secret) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Unauthorized Access. Invalid B2B Token.'
-            ], 401);
-        }
-
-        // 2. FETCH INSTRUCTIONS: Find out the last ID the B2B server already downloaded
-        $lastId = $request->query('last_id', 0);
-
-        // 3. THE DATA PACKER: Fetch applications newer than the last downloaded ID
-        $applications = Application::with(['agent', 'service'])
-            ->where('id', '>', $lastId)
-            ->orderBy('id', 'asc')
-            ->limit(500) // Safety limit: Only send 500 at a time so your server doesn't crash
-            ->get();
-
-        // 4. SEND IT OUT
-        return response()->json([
-            'success' => true,
-            'count'   => $applications->count(),
-            'data'    => $applications
-        ]);
-    }
-
- public function exportAgents(Request $request)
-    {
+    // 1. Export Agents
+    public function exportAgents(Request $request) {
         $token = $request->bearerToken();
         $secret = env('B2B_SYNC_SECRET', 'EasyTax_Super_Secret_Key_2026!');
-
+        
         if (!$token || $token !== $secret) {
-            return response()->json(['success' => false, 'error' => 'Unauthorized'], 401);
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $lastId = $request->query('last_id', 0);
+        
+        // Case-insensitive role check
+        $agents = User::whereIn('role', ['AGENT', 'agent', 'MARKETER', 'marketer'])
+                      ->where('id', '>', $lastId)
+                      ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $agents
+        ]);
+    }
+    
+    // 2. Export Applications
+    public function export(Request $request) {
+        $token = $request->bearerToken();
+        $secret = env('B2B_SYNC_SECRET', 'EasyTax_Super_Secret_Key_2026!');
+        
+        if (!$token || $token !== $secret) {
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         $lastId = $request->query('last_id', 0);
 
-      // We added lowercase and Capitalized versions to be 100% safe!
-        $agents = User::whereIn('role', ['AGENT', 'MARKETER', 'agent', 'marketer', 'Agent'])
-            ->where('id', '>', $lastId)
-            ->orderBy('id', 'asc')
-            ->limit(500)
-            ->get();
+        try {
+            $applications = Application::where('id', '>', $lastId)
+                ->orderBy('id', 'asc')
+                ->limit(100)
+                ->get()
+                ->map(function($app) {
+                    $data = $app->toArray();
+                    // Fixes the 500 error!
+                    $data['form_data'] = is_string($app->form_data) ? json_decode($app->form_data, true) : $app->form_data;
+                    return $data;
+                });
 
-        return response()->json([
-            'success' => true,
-            'count'   => $agents->count(),
-            'data'    => $agents
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $applications
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
     }
 }

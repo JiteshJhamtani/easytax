@@ -63,6 +63,20 @@ return [
             ]) : [],
         ],
 
+        'master_connection' => [
+            'driver' => env('DB_MASTER_CONNECTION', 'mysql'),
+            'host' => env('DB_MASTER_HOST', '127.0.0.1'),
+            'port' => env('DB_MASTER_PORT', '3306'),
+            'database' => env('DB_MASTER_DATABASE', 'easytax_b2b'),
+            'username' => env('DB_MASTER_USERNAME', 'root'),
+            'password' => env('DB_MASTER_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ],
+
 
         'mariadb' => [
             'driver' => 'mariadb',

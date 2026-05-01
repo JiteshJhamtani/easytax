@@ -127,7 +127,7 @@ return [
                         'required' => true,
                         'validation' => 'required|string',
                         'options' => [
-                            '2027-28' => 'F.Y. 2027-28 (ITR-U)',
+                            '2027-28' => 'F.Y. 2027-28',
                             '2026-27' => 'F.Y. 2026-27 (Current)',
                             '2025-26' => 'F.Y. 2025-26 (ITR-U)',
                             '2024-25' => 'F.Y. 2024-25 (ITR-U)',
@@ -224,7 +224,7 @@ return [
                         'name' => 'it_password',
                         'label' => 'Income Tax Password (if available)',
                         'type' => 'password',
-                        'required' => false,
+                        'required' => true,
                         'validation' => 'nullable|string',
                     ],
                 ],

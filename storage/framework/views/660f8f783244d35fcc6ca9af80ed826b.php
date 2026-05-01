@@ -24,7 +24,7 @@
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $recentApplications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $app): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                     <tr>
                         <td class="pl-4 align-middle"><span class="text-muted font-weight-bold">#<?php echo e($app->id); ?></span></td>
-                        <td class="align-middle"><span class="font-weight-bold text-dark"><?php echo e($app->service->name); ?></span></td>
+                        <td class="align-middle"><span class="font-weight-bold text-dark"><?php echo e($app->service->name ?? 'Unknown Service'); ?></span></td>
                         <td class="align-middle">
                             <span class="d-block font-weight-bold text-dark"><?php echo e($app->created_at->format('d M, Y')); ?></span>
                             <span class="text-muted small"><?php echo e($app->created_at->format('h:i A')); ?></span>

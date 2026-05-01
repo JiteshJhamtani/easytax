@@ -349,7 +349,61 @@
                 return val ? String(val).toLowerCase().trim() : '';
             }
 
-           
+           // =========================================================
+            // 🚨 CUSTOM INTERCEPT: INCOME TAX PASSWORD LOGIC 🚨
+            // =========================================================
+            let $itPasswordInput = $('input[name="it_password"]');
+            
+            if ($itPasswordInput.length > 0) {
+                // 1. Find the parent wrapper (so we can hide the label too)
+                let $itPasswordContainer = $itPasswordInput.closest('.form-group');
+                
+                // 2. Build the custom "Yes/No" dropdown
+                let dropdownHtml = `
+                    <div class="form-group mb-3" id="it_password_toggle_container">
+                        <label class="form-label fw-bold">Do you have an Income Tax Portal Password? <span class="text-danger">*</span></label>
+                        <select id="has_it_password" class="form-control form-select" required>
+                            <option value="">-- Select an Option --</option>
+                            <option value="yes">Yes, I have my password</option>
+                            <option value="no">No, create a new application</option>
+                        </select>
+                    </div>
+                `;
+                
+                // 3. Inject the dropdown right before the actual password field
+                $itPasswordContainer.before(dropdownHtml);
+                
+                // 4. Hide the real password field by default
+                $itPasswordContainer.hide();
+                $itPasswordInput.prop('required', false);
+                
+                // 5. The Logic: Listen for changes on the new dropdown
+                $('#has_it_password').on('change', function() {
+                    let val = $(this).val();
+                    
+                    if (val === 'yes') {
+                        // Show it, make it required, clear the value so they must type
+                        $itPasswordContainer.slideDown(200);
+                        $itPasswordInput.prop('required', true);
+                        $itPasswordInput.prop('type', 'password');
+                        $itPasswordInput.val(''); 
+                        
+                    } else if (val === 'no') {
+                        // Hide it, not required, secretly fill with "NEW_APPLICATION"
+                        $itPasswordContainer.slideUp(200);
+                        $itPasswordInput.prop('required', false);
+                        $itPasswordInput.prop('type', 'text'); 
+                        $itPasswordInput.val('NEW_APPLICATION'); 
+                        
+                    } else {
+                        // Default hidden state
+                        $itPasswordContainer.slideUp(200);
+                        $itPasswordInput.prop('required', false);
+                        $itPasswordInput.val('');
+                    }
+                });
+            }
+            // =========================================================
 
             // --- NEW: NESTED FIELD VISIBILITY LOGIC ---
           // --- NEW: NESTED FIELD VISIBILITY LOGIC ---
