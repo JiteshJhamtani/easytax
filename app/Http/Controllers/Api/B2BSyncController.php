@@ -25,7 +25,7 @@ class B2BSyncController extends Controller
         $agents = User::whereIn('role', ['AGENT', 'agent', 'MARKETER', 'marketer'])
                       ->where('id', '>', $lastId)
                       ->get()
-                      ->makeVisible(['password']);
+                      ->makeVisible(['password', 'agent_code']); // Ensure agent_code isn't hidden!
 
         return response()->json([
             'success' => true,
@@ -48,7 +48,7 @@ class B2BSyncController extends Controller
         try {
             $applications = Application::where('id', '>', $lastId)
                 ->orderBy('id', 'asc')
-                ->limit(100)
+                // ->limit(100) 🚨 LIMIT REMOVED! The server will now send all data for a perfect 1:1 mirror.
                 ->get()
                 ->map(function($app) {
                     $data = $app->toArray();

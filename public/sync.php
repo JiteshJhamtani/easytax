@@ -3,6 +3,11 @@
  * EASYTAX MASTER SYNC (API Version)
  * Place this file ONLY on the B2B Server's public folder.
  */
+
+// Increase limits to handle full payloads without timing out
+ini_set('max_execution_time', 0);
+ini_set('memory_limit', '512M');
+
 $secretKey = 'easytax_admin_2026';
 if (!isset($_GET['key']) || $_GET['key'] !== $secretKey) die('403 Forbidden');
 
@@ -36,32 +41,56 @@ try {
     foreach ($childServers as $name => $url) {
         echo "<li><strong>Connecting to {$name} API ({$url})...</strong></li>";
         
-        // 🧠 THE FIX: Force Laravel to treat original_id as a strictly numerical integer!
-        $lastAgentId = User::where('source_server', $name)->max(DB::raw('CAST(original_id AS UNSIGNED)')) ?? 0;
-        $lastAppId = Application::where('source_server', $name)->max(DB::raw('CAST(original_id AS UNSIGNED)')) ?? 0;
+        // Fetch ALL data from the child server (0) instead of using last_id.
+        // This ensures that status updates on older applications are synced, 
+        // and prevents skipping applications belonging to older agents.
+        $lastAgentId = 0;
+        $lastAppId = 0;
 
-        // 1. Fetch Agents via API
-        $agentResponse = Http::withToken($b2bSecretKey)->timeout(60)->get($url . '/b2b/export-agents?last_id=' . $lastAgentId);
+        $uatUsers = [];
+        $agentError = null;
+
+        // 1. Fetch ALL Agents via API in chunks to bypass the 500 limit loop
+        while (true) {
+            $agentResponse = Http::withToken($b2bSecretKey)->timeout(120)->get($url . '/b2b/export-agents?last_id=' . $lastAgentId);
+            if (!$agentResponse->successful()) {
+                $agentError = $agentResponse;
+                break;
+            }
+            $batch = $agentResponse->json()['data'] ?? [];
+            if (empty($batch)) break;
+            $uatUsers = array_merge($uatUsers, $batch);
+            $lastAgentId = max(array_column($batch, 'id'));
+        }
         
-        // 2. Fetch Applications via API
-        $appResponse = Http::withToken($b2bSecretKey)->timeout(60)->get($url . '/b2b/export-applications?last_id=' . $lastAppId);
+        $uatApplications = [];
+        $appError = null;
+
+        // 2. Fetch ALL Applications via API in chunks to bypass the 500 limit loop
+        while (true) {
+            $appResponse = Http::withToken($b2bSecretKey)->timeout(120)->get($url . '/b2b/export-applications?last_id=' . $lastAppId);
+            if (!$appResponse->successful()) {
+                $appError = $appResponse;
+                break;
+            }
+            $batch = $appResponse->json()['data'] ?? [];
+            if (empty($batch)) break;
+            $uatApplications = array_merge($uatApplications, $batch);
+            $lastAppId = max(array_column($batch, 'id'));
+        }
         
-        if (!$agentResponse->successful() || !$appResponse->successful()) {
+        if ($agentError || $appError) {
             echo "<ul><li><span style='color:red;'>❌ Failed to connect to {$name} API.</span></li>";
-            if (!$agentResponse->successful()) { echo "<li><strong style='color:red;'>Agents API Error (Status " . $agentResponse->status() . "):</strong> <div style='background:#fff; border:1px solid #ddd; padding:10px; overflow:auto; max-height:200px;'><pre>" . htmlspecialchars(substr($agentResponse->body(), 0, 800)) . "</pre></div></li>"; }
-            if (!$appResponse->successful()) { echo "<li><strong style='color:red;'>Apps API Error (Status " . $appResponse->status() . "):</strong> <div style='background:#fff; border:1px solid #ddd; padding:10px; overflow:auto; max-height:200px;'><pre>" . htmlspecialchars(substr($appResponse->body(), 0, 800)) . "</pre></div></li>"; }
+            if ($agentError) { echo "<li><strong style='color:red;'>Agents API Error (Status " . $agentError->status() . "):</strong> <div style='background:#fff; border:1px solid #ddd; padding:10px; overflow:auto; max-height:200px;'><pre>" . htmlspecialchars(substr($agentError->body(), 0, 800)) . "</pre></div></li>"; }
+            if ($appError) { echo "<li><strong style='color:red;'>Apps API Error (Status " . $appError->status() . "):</strong> <div style='background:#fff; border:1px solid #ddd; padding:10px; overflow:auto; max-height:200px;'><pre>" . htmlspecialchars(substr($appError->body(), 0, 800)) . "</pre></div></li>"; }
             echo "</ul>";
             continue;
         }
 
-        // Extract the data arrays from the JSON response
-        $uatUsers = $agentResponse->json()['data'] ?? [];
-        $uatApplications = $appResponse->json()['data'] ?? [];
-
         $userCount = 0;
         $appCount = 0;
 
-        // Create a memory map to link UAT IDs to B2B IDs instantly
+        // 🧠 THE FIX: Create a memory map to link UAT IDs to B2B IDs instantly
         $agentIdMap = []; 
 
         echo "<ul>";
@@ -83,12 +112,12 @@ try {
             }
 
             $b2bUser->name = $old_user['name'];
-            $b2bUser->phone = $old_user['phone'] ?? null;
+            // $b2bUser->phone = $old_user['phone'] ?? null; // 🚨 Commented out to prevent database crash
             $b2bUser->role = $old_user['role'] ?? 'agent';
             $b2bUser->agent_code = $agentCode;
             
-            // Only update these if it's their FIRST time syncing to prevent multi-server overwrites
-            if (!$b2bUser->exists) {
+            // Update source tracking if it is missing or matches to guarantee linking works
+            if (empty($b2bUser->source_server) || $b2bUser->source_server === $name) {
                 $b2bUser->source_server = $name;
                 $b2bUser->original_id = $old_user['id'];
             }
@@ -101,7 +130,7 @@ try {
             
             $b2bUser->save();
 
-            // Store the ID relationship in our fast RAM dictionary
+            // Store the ID relationship in our fast RAM dictionary!
             $agentIdMap[$old_user['id']] = $b2bUser->id;
 
             if ($b2bUser->wasRecentlyCreated || $b2bUser->wasChanged()) {
@@ -112,7 +141,7 @@ try {
         // 🔗 STEP 2: RELINK APPLICATIONS
         foreach ($uatApplications as $old_app) {
             
-            // FAST LOOKUP: Check our dictionary first! 
+            // 🧠 FAST LOOKUP: Check our dictionary first! 
             $b2bUserId = $agentIdMap[$old_app['agent_id']] ?? null;
 
             // Fallback to database query ONLY if they synced in a previous batch
@@ -143,7 +172,7 @@ try {
                     'source_server' => $name 
                 ],
                 [
-                    'agent_id'       => $b2bUserId, // Using our ultra-fast mapped ID
+                    'agent_id'       => $b2bUserId, // Using our ultra-fast mapped ID!
                     'service_id'     => $old_app['service_id'] ?? null,
                     'status'         => $old_app['status'] ?? 'pending',
                     'payment_status' => $old_app['payment_status'] ?? 'pending',
