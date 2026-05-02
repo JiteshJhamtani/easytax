@@ -27,7 +27,7 @@ try {
     // List all your active satellite servers here
     $childServers = [
         'uat' => 'https://uat.easytax.live', 
-       
+        // 'upwest' => 'https://upwest.easytax.live',
     ];
 
     // Turn off foreign key alarms during massive imports
@@ -36,9 +36,9 @@ try {
     foreach ($childServers as $name => $url) {
         echo "<li><strong>Connecting to {$name} API ({$url})...</strong></li>";
         
-        // Find the highest ID we've already synced so we don't fetch duplicates
-        $lastAgentId = User::where('source_server', $name)->max('original_id') ?? 0;
-        $lastAppId = Application::where('source_server', $name)->max('original_id') ?? 0;
+        // 🧠 THE FIX: Force Laravel to treat original_id as a strictly numerical integer!
+        $lastAgentId = User::where('source_server', $name)->max(DB::raw('CAST(original_id AS UNSIGNED)')) ?? 0;
+        $lastAppId = Application::where('source_server', $name)->max(DB::raw('CAST(original_id AS UNSIGNED)')) ?? 0;
 
         // 1. Fetch Agents via API
         $agentResponse = Http::withToken($b2bSecretKey)->timeout(60)->get($url . '/b2b/export-agents?last_id=' . $lastAgentId);
@@ -61,40 +61,38 @@ try {
         $userCount = 0;
         $appCount = 0;
 
+        // Create a memory map to link UAT IDs to B2B IDs instantly
+        $agentIdMap = []; 
+
         echo "<ul>";
         
-        // 🚦 STEP 1: SYNC AGENTS (The Traffic Cop) we have to build a another tab below other application 
+        // 🚦 STEP 1: SYNC AGENTS
         foreach ($uatUsers as $old_user) {
             
-            // Skip if email is missing to prevent database errors 
             if (empty($old_user['email'])) continue;
 
-            // Resolve agent code safely, generate a new one if missing
-            $existingUser = User::where('email', $old_user['email'])->first();
+            $b2bUser = User::firstOrNew(['email' => $old_user['email']]);
             $agentCode = $old_user['agent_code'] ?? null;
             
             if (empty($agentCode)) {
-                if ($existingUser && !empty($existingUser->agent_code)) {
-                    $agentCode = $existingUser->agent_code;
+                if ($b2bUser->exists && !empty($b2bUser->agent_code)) {
+                    $agentCode = $b2bUser->agent_code;
                 } else {
                     $agentCode = 'AGT-' . strtoupper(substr(uniqid(), -6));
                 }
             }
 
-            // Prepare user data safely. Check if the API hid the password!
-            $userData = [
-                'name'          => $old_user['name'],
-                'phone'         => $old_user['phone'] ?? null,
-                'role'          => $old_user['role'] ?? 'agent',
-                'agent_code'    => $agentCode,
-                'source_server' => $name,
-                'original_id'   => $old_user['id'],
-            ];
+            $b2bUser->name = $old_user['name'];
+            $b2bUser->phone = $old_user['phone'] ?? null;
+            $b2bUser->role = $old_user['role'] ?? 'agent';
+            $b2bUser->agent_code = $agentCode;
             
-            $b2bUser = User::firstOrNew(['email' => $old_user['email']]);
-            $b2bUser->fill($userData);
+            // Only update these if it's their FIRST time syncing to prevent multi-server overwrites
+            if (!$b2bUser->exists) {
+                $b2bUser->source_server = $name;
+                $b2bUser->original_id = $old_user['id'];
+            }
 
-            // Avoid regenerating bcrypt every time which causes endless updates
             if (!empty($old_user['password'])) {
                 $b2bUser->password = $old_user['password'];
             } elseif (!$b2bUser->exists && empty($b2bUser->password)) {
@@ -102,6 +100,9 @@ try {
             }
             
             $b2bUser->save();
+
+            // Store the ID relationship in our fast RAM dictionary
+            $agentIdMap[$old_user['id']] = $b2bUser->id;
 
             if ($b2bUser->wasRecentlyCreated || $b2bUser->wasChanged()) {
                 $userCount++;
@@ -111,51 +112,53 @@ try {
         // 🔗 STEP 2: RELINK APPLICATIONS
         foreach ($uatApplications as $old_app) {
             
-            // Find the agent by original ID
-            $b2bUser = User::where('original_id', $old_app['agent_id'])
-                           ->where('source_server', $name)
-                           ->first();
-            
-            if (!$b2bUser) continue;
-                
-                $formData = $old_app['form_data'] ?? [];
-                // Decode potentially double-encoded JSON strings to ensure it's a pure array
-                while (is_string($formData)) {
-                    $decoded = json_decode($formData, true);
-                    if (json_last_error() === JSON_ERROR_NONE) {
-                        $formData = $decoded;
-                    } else {
-                        break;
-                    }
-                }
-                
-                // Ensure it's always an array for Laravel's $casts to work and blade views
-                if (!is_array($formData)) {
-                    $formData = [];
-                }
+            // FAST LOOKUP: Check our dictionary first! 
+            $b2bUserId = $agentIdMap[$old_app['agent_id']] ?? null;
 
-                $appModel = Application::updateOrCreate(
-                    [
-                        'original_id'   => $old_app['id'], 
-                        'source_server' => $name 
-                    ],
-                    [
-                        'agent_id'    => $b2bUser->id, // MAGIC: Attach to the verified B2B User ID!
-                        'service_id' => $old_app['service_id'] ?? null,
-                        'status'     => $old_app['status'] ?? 'pending',
-                        'payment_status' => $old_app['payment_status'] ?? 'pending',
-                        'form_data'  => $formData,
-                        'amount'     => $old_app['amount'] ?? 0,
-                        'commission_amount' => $old_app['commission_amount'] ?? 0,
-                        'created_at' => $old_app['created_at'] ?? null,
-                        'submitted_at' => $old_app['submitted_at'] ?? null,
-                        'completed_at' => $old_app['completed_at'] ?? null,
-                    ]
-                );
+            // Fallback to database query ONLY if they synced in a previous batch
+            if (!$b2bUserId) {
+                $fallbackUser = User::where('original_id', $old_app['agent_id'])->where('source_server', $name)->first();
+                if (!$fallbackUser) continue; // Skip if agent absolutely cannot be found
+                $b2bUserId = $fallbackUser->id;
+            }
                 
-                if ($appModel->wasRecentlyCreated || $appModel->wasChanged()) {
-                    $appCount++;
+            $formData = $old_app['form_data'] ?? [];
+            // Decode potentially double-encoded JSON strings to ensure it's a pure array
+            while (is_string($formData)) {
+                $decoded = json_decode($formData, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $formData = $decoded;
+                } else {
+                    break;
                 }
+            }
+            
+            if (!is_array($formData)) {
+                $formData = [];
+            }
+
+            $appModel = Application::updateOrCreate(
+                [
+                    'original_id'   => $old_app['id'], 
+                    'source_server' => $name 
+                ],
+                [
+                    'agent_id'       => $b2bUserId, // Using our ultra-fast mapped ID
+                    'service_id'     => $old_app['service_id'] ?? null,
+                    'status'         => $old_app['status'] ?? 'pending',
+                    'payment_status' => $old_app['payment_status'] ?? 'pending',
+                    'form_data'      => $formData,
+                    'amount'         => $old_app['amount'] ?? 0,
+                    'commission_amount' => $old_app['commission_amount'] ?? 0,
+                    'created_at'     => $old_app['created_at'] ?? null,
+                    'submitted_at'   => $old_app['submitted_at'] ?? null,
+                    'completed_at'   => $old_app['completed_at'] ?? null,
+                ]
+            );
+            
+            if ($appModel->wasRecentlyCreated || $appModel->wasChanged()) {
+                $appCount++;
+            }
         }
         
         echo "<li>✅ Successfully merged <strong>{$userCount}</strong> New/Updated Agents and <strong>{$appCount}</strong> New/Updated Applications from {$name}.</li>";
