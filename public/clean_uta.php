@@ -5,7 +5,7 @@
 // ==========================================
 
 $host = 'localhost';
-$db   = 'easytax_uat'; // Strictly targeting the local database!
+$db   = 'easytax_bihar'; // Strictly targeting the local database!
 $user = 'root';
 $pass = 'Admin@123456';
 

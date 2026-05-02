@@ -24,13 +24,15 @@ class B2BSyncController extends Controller
         // Case-insensitive role check
         $agents = User::whereIn('role', ['AGENT', 'agent', 'MARKETER', 'marketer'])
                       ->where('id', '>', $lastId)
-                      ->get();
+                      ->get()
+                      ->makeVisible(['password']);
 
         return response()->json([
             'success' => true,
             'data' => $agents
         ]);
     }
+    
     
     // 2. Export Applications
     public function export(Request $request) {

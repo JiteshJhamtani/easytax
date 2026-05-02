@@ -27,7 +27,6 @@ try {
     // List all your active satellite servers here
     $childServers = [
         'uat' => 'https://uat.easytax.live', 
-         'upwest' => 'https://upwest.easytax.live',
     ];
 
     // Turn off foreign key alarms during massive imports
@@ -43,7 +42,10 @@ try {
         $appResponse = Http::withToken($b2bSecretKey)->timeout(60)->get($url . '/b2b/export-applications');
         
         if (!$agentResponse->successful() || !$appResponse->successful()) {
-            echo "<ul><li><span style='color:red;'>❌ Failed to connect to {$name} API. Check your API routes and Bearer Token!</span></li></ul>";
+            echo "<ul><li><span style='color:red;'>❌ Failed to connect to {$name} API.</span></li>";
+            if (!$agentResponse->successful()) { echo "<li><strong style='color:red;'>Agents API Error (Status " . $agentResponse->status() . "):</strong> <div style='background:#fff; border:1px solid #ddd; padding:10px; overflow:auto; max-height:200px;'><pre>" . htmlspecialchars(substr($agentResponse->body(), 0, 800)) . "</pre></div></li>"; }
+            if (!$appResponse->successful()) { echo "<li><strong style='color:red;'>Apps API Error (Status " . $appResponse->status() . "):</strong> <div style='background:#fff; border:1px solid #ddd; padding:10px; overflow:auto; max-height:200px;'><pre>" . htmlspecialchars(substr($appResponse->body(), 0, 800)) . "</pre></div></li>"; }
+            echo "</ul>";
             continue;
         }
 
@@ -62,17 +64,26 @@ try {
             // Skip if email is missing to prevent database errors 
             if (empty($old_user['email'])) continue;
 
+            // Prepare user data safely. Check if the API hid the password!
+            $userData = [
+                'name'          => $old_user['name'],
+                'phone'         => $old_user['phone'] ?? null,
+                'role'          => $old_user['role'] ?? 'agent',
+                'source_server' => $name,
+                'original_id'   => $old_user['id'],
+            ];
+            
+            // Only update password if provided. If missing and user is new, give a secure random fallback to avoid crashes.
+            if (!empty($old_user['password'])) {
+                $userData['password'] = $old_user['password'];
+            } elseif (!User::where('email', $old_user['email'])->exists()) {
+                $userData['password'] = bcrypt(uniqid()); 
+            }
+
             // Update existing or create new. No duplicates!
             $b2bUser = User::updateOrCreate(
                 ['email' => $old_user['email']], 
-                [
-                    'name'          => $old_user['name'],
-                    'phone'         => $old_user['phone'] ?? null,
-                    'role'          => $old_user['role'] ?? 'agent',
-                    'password'      => $old_user['password'], // Keeps their old login working
-                    'source_server' => $name,
-                    'original_id'   => $old_user['id'],
-                ]
+                $userData
             );
             $userCount++;
 
