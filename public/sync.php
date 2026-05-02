@@ -37,10 +37,10 @@ try {
         echo "<li><strong>Connecting to {$name} API ({$url})...</strong></li>";
         
         // 1. Fetch Agents via API
-        $agentResponse = Http::withToken($b2bSecretKey)->timeout(60)->get($url . '/api/export-agents');
+        $agentResponse = Http::withToken($b2bSecretKey)->timeout(60)->get($url . '/b2b/export-agents');
         
         // 2. Fetch Applications via API
-        $appResponse = Http::withToken($b2bSecretKey)->timeout(60)->get($url . '/api/export');
+        $appResponse = Http::withToken($b2bSecretKey)->timeout(60)->get($url . '/b2b/export-applications');
         
         if (!$agentResponse->successful() || !$appResponse->successful()) {
             echo "<ul><li><span style='color:red;'>❌ Failed to connect to {$name} API. Check your API routes and Bearer Token!</span></li></ul>";
