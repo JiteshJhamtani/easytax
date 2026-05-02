@@ -7,6 +7,7 @@ use App\Models\Application;
 use App\Models\User;        
 use Illuminate\Http\Request;
 
+
 class B2BSyncController extends Controller 
 {
     // 1. Export Agents

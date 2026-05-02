@@ -211,7 +211,7 @@
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->is('admin/dashboard*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </a>
                 
-              
+              <!-- <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->getHost() == 'b2b.easytax.live'): ?> -->
                 <div class="sb-section">Management</div>
 
                 <a href="<?php echo e(url('admin/services')); ?>" class="sb-item <?php echo e(request()->is('admin/services*') ? 'active' : ''); ?>" data-label="Services">
@@ -219,6 +219,7 @@
                     Services
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->is('admin/services*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </a>
+                <!-- <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?> -->
                 
 
                 <div class="sb-section">Application Types</div>
@@ -244,12 +245,17 @@
                     Other Apps
                 </a>
                 
+                <a href="<?php echo e(route('admin.applications.index', ['type' => 'incomplete'])); ?>" class="sb-item <?php echo e(request()->query('type') === 'incomplete' ? 'active' : ''); ?>" data-label="Incomplete Apps">
+                    <span class="sb-item__icon"><i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i></span>
+                    Incomplete Apps
+                </a>
+                
                 <a href="<?php echo e(url('admin/agents')); ?>" class="sb-item <?php echo e(request()->is('admin/agents*') ? 'active' : ''); ?>" data-label="Agents">
                     <span class="sb-item__icon"><i class="fas fa-user-tie"></i></span>
                     Agents
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->is('admin/agents*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </a>
-
+ <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->getHost() == 'b2b.easytax.live'): ?>
                 <div class="sb-section">System</div>
 
                 <div class="sb-has-submenu <?php echo e(request()->is('admin/gifts*') ? 'open' : ''); ?>">
@@ -264,6 +270,7 @@
                     </div>
                 </div>
 
+                
               
 
                 <a href="<?php echo e(url('admin/pages')); ?>" class="sb-item <?php echo e(request()->is('admin/pages*') ? 'active' : ''); ?>" data-label="Pages">
@@ -272,7 +279,7 @@
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->is('admin/pages*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </a>
                 
-
+<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 

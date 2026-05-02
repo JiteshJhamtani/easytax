@@ -23,6 +23,7 @@ class ApplicationController extends Controller
             'gst-return-filing' => 'GST Return Filing Applications',
             'itr-filing' => 'ITR Filing Applications',
             'gst-registration' => 'GST Registration Applications',
+            'incomplete' => 'Incomplete & Abandoned Apps',
             default => 'Other Applications',
         };
 
@@ -31,21 +32,30 @@ class ApplicationController extends Controller
 
          // --- NEW DYNAMIC KPI LOGIC ---
        
-        // Hide Drafts, Cancelled, and Failed applications from the admin list
-       $query = Application::query()
-            ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
-            ->where('payment_status', '!=', 'FAILED');
+       $query = Application::query();
+
+       if ($type === 'incomplete') {
+           $query->where(function ($q) {
+               $q->whereIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+                 ->orWhereIn('payment_status', ['FAILED', 'PENDING']);
+           })->whereNotIn('status', ['SUBMITTED', 'IN_PROGRESS', 'E_FILING', 'OTP_VERIFICATION', 'COMPLETED']);
+       } else {
+           $query->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+                 ->where('payment_status', '!=', 'FAILED');
+       }
 
         $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
 
-        if ($type === 'other') {
-            $query->whereHas('service', function ($q) use ($specialSlugs) {
-                $q->whereNotIn('slug', $specialSlugs);
-            });
-        } elseif (in_array($type, $specialSlugs)) {
-            $query->whereHas('service', function ($q) use ($type) {
-                $q->where('slug', $type);
-            });
+        if ($type !== 'incomplete') {
+            if ($type === 'other') {
+                $query->whereHas('service', function ($q) use ($specialSlugs) {
+                    $q->whereNotIn('slug', $specialSlugs);
+                });
+            } elseif (in_array($type, $specialSlugs)) {
+                $query->whereHas('service', function ($q) use ($type) {
+                    $q->where('slug', $type);
+                });
+            }
         }
 
         $stats = $query->selectRaw("
@@ -66,22 +76,32 @@ class ApplicationController extends Controller
     {
         
       // 2. FORM DATA EXPORTS 
-       $query = Application::with(['service', 'agent', 'media'])
-            ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
-            ->where('payment_status', '!=', 'FAILED');
+       $query = Application::with(['service', 'agent', 'media']);
 
         $type = $request->type ?? 'other';
 
+       if ($type === 'incomplete') {
+           $query->where(function ($q) {
+               $q->whereIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+                 ->orWhereIn('payment_status', ['FAILED', 'PENDING']);
+           })->whereNotIn('status', ['SUBMITTED', 'IN_PROGRESS', 'E_FILING', 'OTP_VERIFICATION', 'COMPLETED']);
+       } else {
+           $query->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+                 ->where('payment_status', '!=', 'FAILED');
+       }
+
         $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
 
-        if ($type === 'other') {
-            $query->whereHas('service', function ($q) use ($specialSlugs) {
-                $q->whereNotIn('slug', $specialSlugs);
-            });
-        } elseif (in_array($type, $specialSlugs)) {
-            $query->whereHas('service', function ($q) use ($type) {
-                $q->where('slug', $type);
-            });
+        if ($type !== 'incomplete') {
+            if ($type === 'other') {
+                $query->whereHas('service', function ($q) use ($specialSlugs) {
+                    $q->whereNotIn('slug', $specialSlugs);
+                });
+            } elseif (in_array($type, $specialSlugs)) {
+                $query->whereHas('service', function ($q) use ($type) {
+                    $q->where('slug', $type);
+                });
+            }
         }
 
         if ($request->agent) { $query->where('agent_id', $request->agent); }

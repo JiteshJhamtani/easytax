@@ -64,12 +64,12 @@ return [
         ],
 
         'master_connection' => [
-            'driver' => env('DB_MASTER_CONNECTION', 'mysql'),
-            'host' => env('DB_MASTER_HOST', '127.0.0.1'),
-            'port' => env('DB_MASTER_PORT', '3306'),
-            'database' => env('DB_MASTER_DATABASE', 'easytax_b2b'),
-            'username' => env('DB_MASTER_USERNAME', 'root'),
-            'password' => env('DB_MASTER_PASSWORD', ''),
+            'driver' => env('DB_MASTER_CONNECTION', env('DB_CONNECTION', 'mysql')),
+            'host' => env('DB_MASTER_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('DB_MASTER_PORT', env('DB_PORT', '3306')),
+            'database' => env('DB_MASTER_DATABASE', env('DB_DATABASE', 'easytax_b2b')),
+            'username' => env('DB_MASTER_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('DB_MASTER_PASSWORD', env('DB_PASSWORD', '')),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',

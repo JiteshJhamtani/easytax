@@ -160,7 +160,7 @@ class ApplicationController extends Controller
     {
         abort_if($application->agent_id !== auth()->id(), 403);
 
-        if ($application->payment_status === PaymentStatus::SUCCESS) {
+        if ($application->payment_status === PaymentStatus::PAID) {
             return back()->with('error', 'Payment already completed.');
         }
 

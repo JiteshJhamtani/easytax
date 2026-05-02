@@ -89,7 +89,5 @@ class Service extends Model
     {
         return $this->hasMany(ServicePricingRule::class);
     }
-
-
    protected $connection = 'master_connection';
 }

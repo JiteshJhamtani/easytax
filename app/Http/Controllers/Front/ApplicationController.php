@@ -21,7 +21,7 @@ class ApplicationController extends Controller
     /*
     |--------------------------------------------------------------------------
     | Store Application & Initiate Razorpay Order new feature for controller 
-    the applicaton whos stutas is draft , failded and canceled should not display on admin dashboard it should stay on agent dashboard but not on admins 
+
     |--------------------------------------------------------------------------
     */
 

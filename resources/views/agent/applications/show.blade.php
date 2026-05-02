@@ -104,8 +104,10 @@
                     </h3>
 
                     {{-- THE BUTTONS --}}
-                    <div class="d-flex gap-2">
-                        @php
+<div class="d-flex gap-2">
+                        
+                       @php 
+                      
                             $currentStatus = $application->status instanceof \App\Enums\ApplicationStatus 
                                 ? $application->status->value 
                                 : (is_string($application->status) ? $application->status : '');
@@ -120,6 +122,15 @@
                                 : 'Are you sure you want to cancel this application?';
                         @endphp
 
+                       {{-- 💳 RAZORPAY RETRY BUTTON --}}
+                       @if(in_array(strtoupper($paymentStr), ['FAILED', 'PENDING']) && strtoupper($currentStatus) !== 'CANCELLED')
+                            <form action="{{ route('applications.retryPayment', $application) }}" method="POST" class="mr-2">
+                                @csrf
+                                <button type="submit" class="btn btn-sm shadow-sm font-weight-bold text-white pulse-green" style="background-color: #1E9C5D; border-color: #1E9C5D;">
+                                    <i class="fas fa-credit-card mr-1"></i> Pay Now to Complete
+                                </button>
+                            </form>
+                        @endif
                         @if (strtoupper($currentStatus) !== 'CANCELLED')
                             <form id="cancelApplicationForm" action="{{ route('agent.applications.cancel', $application) }}" method="POST" class="mr-2">
                                 @csrf
@@ -505,6 +516,13 @@
             body { background-color: #fff !important; }
             .data-box { border: 1px solid #eee !important; page-break-inside: avoid; }
         }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .pulse-green { animation: pulse-green 2s infinite; }
     </style>
 @stop
 
@@ -532,5 +550,71 @@
                 closeCancelModal();
             }
         }
+
+       
     </script>
+  {{-- --- RAZORPAY POPUP LOGIC --- --}}
+        @if(session('razorpay_order'))
+            <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+            <script>
+                var options = {
+                    "key": "{{ session('razorpay_order.key_id') }}",
+                    "amount": "{{ session('razorpay_order.amount') }}",
+                    "currency": "{{ session('razorpay_order.currency') }}",
+                    "name": "EasyTax",
+                    "description": "Application Payment Retry",
+                    "order_id": "{{ session('razorpay_order.order_id') }}",
+                    "handler": function (response) {
+                        // 1. Create a hidden form when payment succeeds
+                        var form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '{{ route('payment.success') }}';
+
+                        // 2. Add CSRF Token
+                        var csrfToken = document.createElement('input');
+                        csrfToken.type = 'hidden';
+                        csrfToken.name = '_token';
+                        csrfToken.value = '{{ csrf_token() }}';
+                        form.appendChild(csrfToken);
+
+                        // 3. Add Razorpay Verification Data
+                        var inputs = ['razorpay_payment_id', 'razorpay_order_id', 'razorpay_signature'];
+                        inputs.forEach(function(name) {
+                            var input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = name;
+                            input.value = response[name];
+                            form.appendChild(input);
+                        });
+
+                        // 4. Add Application ID
+                        var appId = document.createElement('input');
+                        appId.type = 'hidden';
+                        appId.name = 'application_id';
+                        appId.value = '{{ session('razorpay_order.application_id') }}';
+                        form.appendChild(appId);
+
+                        // 5. Submit the form to your backend
+                        document.body.appendChild(form);
+                        form.submit();
+                    },
+                    "prefill": {
+                        "name": "{{ auth()->user()->name ?? 'Agent' }}",
+                        "email": "{{ auth()->user()->email ?? '' }}",
+                        "contact": "{{ auth()->user()->phone ?? '' }}"
+                    },
+                    "theme": {
+                        "color": "#1E9C5D"
+                    }
+                };
+                
+                // Launch the Razorpay Window
+                var rzp1 = new Razorpay(options);
+                rzp1.on('payment.failed', function (response){
+                    alert("Payment Failed: " + response.error.description);
+                });
+                rzp1.open();
+            </script>
+        @endif
+   
 @stop
