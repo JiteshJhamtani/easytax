@@ -91,27 +91,32 @@ try {
                 'original_id'   => $old_user['id'],
             ];
             
-            // Only update password if provided. If missing and user is new, give a secure random fallback to avoid crashes.
+            $b2bUser = User::firstOrNew(['email' => $old_user['email']]);
+            $b2bUser->fill($userData);
+
+            // Avoid regenerating bcrypt every time which causes endless updates
             if (!empty($old_user['password'])) {
-                $userData['password'] = $old_user['password'];
-            } elseif (!$existingUser) {
-                $userData['password'] = bcrypt(uniqid()); 
+                $b2bUser->password = $old_user['password'];
+            } elseif (!$b2bUser->exists && empty($b2bUser->password)) {
+                $b2bUser->password = bcrypt(uniqid()); 
             }
+            
+            $b2bUser->save();
 
-            // Update existing or create new. No duplicates!
-            $b2bUser = User::updateOrCreate(
-                ['email' => $old_user['email']], 
-                $userData
-            );
-            $userCount++;
+            if ($b2bUser->wasRecentlyCreated || $b2bUser->wasChanged()) {
+                $userCount++;
+            }
+        }
 
-            // 🔗 STEP 2: RELINK APPLICATIONS FOR THIS AGENT
-            // Find all applications belonging to this agent's old ID
-            $agentApps = array_filter($uatApplications, function($app) use ($old_user) {
-                return $app['agent_id'] == $old_user['id'];
-            });
-
-            foreach ($agentApps as $old_app) {
+        // 🔗 STEP 2: RELINK APPLICATIONS
+        foreach ($uatApplications as $old_app) {
+            
+            // Find the agent by original ID
+            $b2bUser = User::where('original_id', $old_app['agent_id'])
+                           ->where('source_server', $name)
+                           ->first();
+            
+            if (!$b2bUser) continue;
                 
                 $formData = $old_app['form_data'] ?? [];
                 // Decode potentially double-encoded JSON strings to ensure it's a pure array
@@ -129,7 +134,7 @@ try {
                     $formData = [];
                 }
 
-                Application::updateOrCreate(
+                $appModel = Application::updateOrCreate(
                     [
                         'original_id'   => $old_app['id'], 
                         'source_server' => $name 
@@ -147,11 +152,13 @@ try {
                         'completed_at' => $old_app['completed_at'] ?? null,
                     ]
                 );
-                $appCount++;
-            }
+                
+                if ($appModel->wasRecentlyCreated || $appModel->wasChanged()) {
+                    $appCount++;
+                }
         }
         
-        echo "<li>✅ Successfully merged <strong>{$userCount}</strong> Agents and <strong>{$appCount}</strong> Applications from {$name}.</li>";
+        echo "<li>✅ Successfully merged <strong>{$userCount}</strong> New/Updated Agents and <strong>{$appCount}</strong> New/Updated Applications from {$name}.</li>";
         echo "</ul>";
     }
 
