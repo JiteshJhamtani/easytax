@@ -27,6 +27,7 @@ try {
     // List all your active satellite servers here
     $childServers = [
         'uat' => 'https://uat.easytax.live', 
+       
     ];
 
     // Turn off foreign key alarms during massive imports
@@ -35,11 +36,15 @@ try {
     foreach ($childServers as $name => $url) {
         echo "<li><strong>Connecting to {$name} API ({$url})...</strong></li>";
         
+        // Find the highest ID we've already synced so we don't fetch duplicates
+        $lastAgentId = User::where('source_server', $name)->max('original_id') ?? 0;
+        $lastAppId = Application::where('source_server', $name)->max('original_id') ?? 0;
+
         // 1. Fetch Agents via API
-        $agentResponse = Http::withToken($b2bSecretKey)->timeout(60)->get($url . '/b2b/export-agents');
+        $agentResponse = Http::withToken($b2bSecretKey)->timeout(60)->get($url . '/b2b/export-agents?last_id=' . $lastAgentId);
         
         // 2. Fetch Applications via API
-        $appResponse = Http::withToken($b2bSecretKey)->timeout(60)->get($url . '/b2b/export-applications');
+        $appResponse = Http::withToken($b2bSecretKey)->timeout(60)->get($url . '/b2b/export-applications?last_id=' . $lastAppId);
         
         if (!$agentResponse->successful() || !$appResponse->successful()) {
             echo "<ul><li><span style='color:red;'>❌ Failed to connect to {$name} API.</span></li>";
@@ -64,11 +69,24 @@ try {
             // Skip if email is missing to prevent database errors 
             if (empty($old_user['email'])) continue;
 
+            // Resolve agent code safely, generate a new one if missing
+            $existingUser = User::where('email', $old_user['email'])->first();
+            $agentCode = $old_user['agent_code'] ?? null;
+            
+            if (empty($agentCode)) {
+                if ($existingUser && !empty($existingUser->agent_code)) {
+                    $agentCode = $existingUser->agent_code;
+                } else {
+                    $agentCode = 'AGT-' . strtoupper(substr(uniqid(), -6));
+                }
+            }
+
             // Prepare user data safely. Check if the API hid the password!
             $userData = [
                 'name'          => $old_user['name'],
                 'phone'         => $old_user['phone'] ?? null,
                 'role'          => $old_user['role'] ?? 'agent',
+                'agent_code'    => $agentCode,
                 'source_server' => $name,
                 'original_id'   => $old_user['id'],
             ];
@@ -76,7 +94,7 @@ try {
             // Only update password if provided. If missing and user is new, give a secure random fallback to avoid crashes.
             if (!empty($old_user['password'])) {
                 $userData['password'] = $old_user['password'];
-            } elseif (!User::where('email', $old_user['email'])->exists()) {
+            } elseif (!$existingUser) {
                 $userData['password'] = bcrypt(uniqid()); 
             }
 
@@ -95,8 +113,21 @@ try {
 
             foreach ($agentApps as $old_app) {
                 
-                // Format the JSON data safely just in case it comes over as an array
-                $formData = is_array($old_app['form_data']) ? json_encode($old_app['form_data']) : $old_app['form_data'];
+                $formData = $old_app['form_data'] ?? [];
+                // Decode potentially double-encoded JSON strings to ensure it's a pure array
+                while (is_string($formData)) {
+                    $decoded = json_decode($formData, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $formData = $decoded;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Ensure it's always an array for Laravel's $casts to work and blade views
+                if (!is_array($formData)) {
+                    $formData = [];
+                }
 
                 Application::updateOrCreate(
                     [
