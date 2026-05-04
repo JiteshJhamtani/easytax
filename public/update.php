@@ -14,16 +14,15 @@ if (!isset($_GET['key']) || $_GET['key'] !== $secretKey) {
 }
 
 // 2. BOOTSTRAP LARAVEL
-// This allows us to use Laravel's Database Schema Builder outside the normal app
 require __DIR__.'/../vendor/autoload.php';
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
-// Boot the framework
 $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 $kernel->handle(Illuminate\Http\Request::capture());
 
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB; // ✅ REQUIRED for Hook 11
 
 echo "<div style='font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto;'>";
 echo "<h1>🚀 EasyTax Database Updater (Apps + Agents)</h1>";
@@ -114,13 +113,10 @@ try {
             $table->string('email')->nullable();
             $table->string('phone');
             $table->string('service_interested')->nullable();
-            $table->string('source')->nullable(); // Facebook, Direct, Referral, etc.
-            $table->string('status')->default('NEW'); // NEW, CONTACTED, IN_DISCUSSION, CONVERTED, LOST
+            $table->string('source')->nullable();
+            $table->string('status')->default('NEW');
             $table->text('notes')->nullable();
-            
-            // Link to the marketer who generated this lead
             $table->foreignId('marketer_id')->nullable()->constrained('users')->nullOnDelete();
-            
             $table->timestamps();
         });
         echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Created <code>leads</code> table.</li>";
@@ -131,12 +127,13 @@ try {
     echo "<li>❌ <strong style='color:red;'>ERROR 5:</strong> " . $e->getMessage() . "</li>"; 
 }
 
-/* |--------------------------------------------------------------------------
+/*
+|--------------------------------------------------------------------------
 | HOOK 6: Securely Expand 'role' ENUM for Marketers
 |--------------------------------------------------------------------------
 */
 try {
-    Illuminate\Support\Facades\DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('ADMIN', 'AGENT', 'MARKETER') DEFAULT 'AGENT'");
+    DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('ADMIN', 'AGENT', 'MARKETER') DEFAULT 'AGENT'");
     echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Upgraded the Users 'role' ENUM to securely accept Marketers.</li>";
 } catch (\Exception $e) { 
     echo "<li>❌ <strong style='color:red;'>ERROR 6:</strong> " . $e->getMessage() . "</li>"; 
@@ -237,7 +234,7 @@ try {
 
 /*
 |--------------------------------------------------------------------------
-| HOOK 10: Add B2B Tracking Columns to Users (Agents) (NEW)
+| HOOK 10: Add B2B Tracking Columns to Users (Agents)
 |--------------------------------------------------------------------------
 */
 try {
@@ -254,9 +251,27 @@ try {
     echo "<li>❌ <strong style='color:red;'>ERROR 10:</strong> " . $e->getMessage() . "</li>"; 
 }
 
+/*
+|--------------------------------------------------------------------------
+| HOOK 11: Add Unique Idempotency Index (Prevents all future duplicates)
+|--------------------------------------------------------------------------
+*/
+try {
+    $indexExists = collect(DB::select("SHOW INDEX FROM applications WHERE Key_name = 'applications_source_unique'"))->isNotEmpty();
+    if (!$indexExists) {
+        Schema::table('applications', function (Blueprint $table) {
+            $table->unique(['source_server', 'original_id'], 'applications_source_unique');
+        });
+        echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added unique index on <code>(source_server, original_id)</code> for applications.</li>";
+    } else {
+        echo "<li>⏭️ <strong style='color:gray;'>SKIPPED:</strong> Unique index already exists.</li>";
+    }
+} catch (\Exception $e) {
+    echo "<li>❌ <strong style='color:red;'>ERROR 11:</strong> " . $e->getMessage() . "</li>";
+}
 
 echo "</ul>";
-echo "<p style='color: #666;'><strong>Done!</strong> Your server is now fully up to date and synced. You can safely close this page.</p>";
+echo "<p style='color: #666;'><strong>Done!</strong> Your server is now fully up to date. You can safely close this page.</p>";
 echo "<div style='background: #ffebee; border-left: 4px solid #f44336; padding: 15px; margin-top: 20px;'>
         <strong style='color: #d32f2f;'>⚠️ IMPORTANT SECURITY REMINDER:</strong><br>
         Please delete this <code>update.php</code> file from your server now to prevent unauthorized access.

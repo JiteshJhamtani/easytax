@@ -77,6 +77,31 @@ return [
             'engine' => null,
         ],
 
+         'db_uat' => [
+        'driver'    => 'mysql',
+        'host'      => '127.0.0.1',   // same physical server
+        'port'      => '3306',
+        'database'  => 'easytax_uat', 
+        'username'  => env('DB_USERNAME', 'root'),
+        'password'  => env('DB_PASSWORD', ''),
+        'charset'   => 'utf8mb4',
+        'collation' => 'utf8mb4_unicode_ci',
+        'prefix'    => '',
+        'strict'    => true,
+    ],
+    'db_marketing' => [
+    'driver'    => 'mysql',
+    'host'      => '127.0.0.1',
+    'port'      => '3306',
+    'database'  => 'easytax_bihar', 
+    'username'  => env('DB_USERNAME', 'root'),
+    'password'  => env('DB_PASSWORD', ''),
+    'charset'   => 'utf8mb4',
+    'collation' => 'utf8mb4_unicode_ci',
+    'prefix'    => '',
+    'strict'    => true,
+],
+
 
         'mariadb' => [
             'driver' => 'mariadb',

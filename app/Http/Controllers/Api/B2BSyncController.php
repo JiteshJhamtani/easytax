@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class B2BSyncController extends Controller 
 {
-    // 1. Export Agents
+        // 1. Export Agents
     public function exportAgents(Request $request) {
         $token = $request->bearerToken();
         $secret = env('B2B_SYNC_SECRET', 'EasyTax_Super_Secret_Key_2026!');
@@ -24,6 +24,7 @@ class B2BSyncController extends Controller
         // Case-insensitive role check
         $agents = User::whereIn('role', ['AGENT', 'agent', 'MARKETER', 'marketer'])
                       ->where('id', '>', $lastId)
+                      ->limit(500)
                       ->get()
                       ->makeVisible(['password', 'agent_code']); // Ensure agent_code isn't hidden!
 
@@ -48,7 +49,7 @@ class B2BSyncController extends Controller
         try {
             $applications = Application::where('id', '>', $lastId)
                 ->orderBy('id', 'asc')
-                // ->limit(100) 🚨 LIMIT REMOVED! The server will now send all data for a perfect 1:1 mirror.
+                ->limit(500) // 🚨 Limit restored! The sync.php script now safely chunks this
                 ->get()
                 ->map(function($app) {
                     $data = $app->toArray();

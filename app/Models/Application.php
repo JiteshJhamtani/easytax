@@ -16,7 +16,6 @@ class Application extends Model implements HasMedia
     use HasFactory, InteractsWithMedia, LogsActivity;
 
 
-
     protected $fillable = [
         'agent_id',
         'service_id',
@@ -30,6 +29,7 @@ class Application extends Model implements HasMedia
         'submitted_at',
         'completed_at',
         'payout_id',
+        'source_server', 'original_id',
     ];
 
     protected $casts = [
