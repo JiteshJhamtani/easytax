@@ -210,8 +210,8 @@
                     Dashboard
                     @if(request()->is('admin/dashboard*'))<span class="sb-item__dot"></span>@endif
                 </a>
-                
-              <!-- @if(request()->getHost() == 'b2b.easytax.live') -->
+                 <!-- @if(request()->getHost() == 'b2b.easytax.live') -->
+             
                 <div class="sb-section">Management</div>
 
                 <a href="{{ url('admin/services') }}" class="sb-item {{ request()->is('admin/services*') ? 'active' : '' }}" data-label="Services">
@@ -219,7 +219,7 @@
                     Services
                     @if(request()->is('admin/services*'))<span class="sb-item__dot"></span>@endif
                 </a>
-                <!-- @endif -->
+            @endlf
                 
 
                 <div class="sb-section">Application Types</div>

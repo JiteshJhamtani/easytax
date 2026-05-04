@@ -23,6 +23,7 @@ $kernel->handle(Illuminate\Http\Request::capture());
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB; // ✅ REQUIRED for Hook 11
+use Illuminate\Support\Facades\Artisan;
 
 echo "<div style='font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto;'>";
 echo "<h1>🚀 EasyTax Database Updater (Apps + Agents)</h1>";
@@ -268,6 +269,19 @@ try {
     }
 } catch (\Exception $e) {
     echo "<li>❌ <strong style='color:red;'>ERROR 11:</strong> " . $e->getMessage() . "</li>";
+}
+
+/*
+|--------------------------------------------------------------------------
+| HOOK 12: Clear config cache after master_connection changes
+|--------------------------------------------------------------------------
+*/
+try {
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    echo "<li>✅ Config and cache cleared.</li>";
+} catch (\Exception $e) {
+    echo "<li>❌ ERROR 12: " . $e->getMessage() . "</li>";
 }
 
 echo "</ul>";

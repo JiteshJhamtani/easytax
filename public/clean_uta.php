@@ -1,11 +1,6 @@
 <?php
-// ==========================================
-// EASYTAX LOCAL UAT CLEANUP SCRIPT (V2)
-// Safely bypasses foreign keys to wipe test data
-// ==========================================
-
 $host = 'localhost';
-$db   = 'easytax_bihar'; // Strictly targeting the local database!
+$db   = 'easytax_bihar';
 $user = 'root';
 $pass = 'Admin@123456';
 
@@ -13,21 +8,29 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // 1. Turn OFF the foreign key security guard
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");
 
-    // 2. Wipe the child tables first (logs, documents, etc.)
+    // Wipe application child tables first
     $pdo->exec("TRUNCATE TABLE application_logs;");
-    
-    // 3. Wipe the parent table
+    $pdo->exec("TRUNCATE TABLE media;"); // spatie media library docs
+
+    // Wipe applications
     $pdo->exec("TRUNCATE TABLE applications;");
 
-    // 4. Turn the security guard back ON
+    // ✅ Delete ONLY agents/marketers — keeps your ADMIN account safe
+    $pdo->exec("DELETE FROM users WHERE role IN ('AGENT', 'agent', 'MARKETER', 'marketer');");
+
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
 
-    echo "✅ SUCCESS: All test applications and their history logs have been completely wiped from the local UAT server.<br><br>";
+    // Verify what's left
+    $admins = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+    $apps   = $pdo->query("SELECT COUNT(*) FROM applications")->fetchColumn();
+
+    echo "✅ SUCCESS: Applications and agents wiped.<br>";
+    echo "Users remaining (admins only): <b>{$admins}</b><br>";
+    echo "Applications remaining: <b>{$apps}</b><br><br>";
     echo "<h3>⚠️ SECURITY REMINDER:</h3>";
-    echo "Please delete this <b>clean_uat.php</b> file from your UAT server immediately.";
+    echo "Please delete this <b>clean_uat.php</b> file from your server immediately.";
 
 } catch(PDOException $e) {
     echo "❌ ERROR: " . $e->getMessage();

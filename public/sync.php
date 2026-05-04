@@ -29,14 +29,13 @@ DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 foreach ($childDbs as $name => $connectionName) {
     echo "<li><strong>Syncing from {$name} via direct DB connection...</strong></li><ul>";
 
-    // ✅ FIX: whereNull('source_server') — only read native records, skip synced copies
+    // Only read native records — skip already-synced copies to prevent infinite loop
     $uatUsers = DB::connection($connectionName)
         ->table('users')
         ->whereIn('role', ['AGENT', 'agent', 'MARKETER', 'marketer'])
         ->whereNull('source_server')
         ->get();
 
-    // ✅ FIX: whereNull('source_server') — prevents self-sync infinite loop
     $uatApplications = DB::connection($connectionName)
         ->table('applications')
         ->whereNull('source_server')
@@ -51,12 +50,32 @@ foreach ($childDbs as $name => $connectionName) {
     foreach ($uatUsers as $old_user) {
         if (empty($old_user->email)) continue;
 
+        // ✅ FIX: Guarantee agent_code is unique on this destination server
+        // If the code from source is already taken by a DIFFERENT user, generate a new one
+        $agentCode = $old_user->agent_code ?? null;
+
+        if ($agentCode) {
+            $takenByOther = User::where('agent_code', $agentCode)
+                                ->where('email', '!=', $old_user->email)
+                                ->exists();
+            if ($takenByOther) {
+                do {
+                    $agentCode = 'AGT-' . strtoupper(substr(uniqid(), -6));
+                } while (User::where('agent_code', $agentCode)->exists());
+            }
+        } else {
+            // No agent_code at all — generate a guaranteed unique one
+            do {
+                $agentCode = 'AGT-' . strtoupper(substr(uniqid(), -6));
+            } while (User::where('agent_code', $agentCode)->exists());
+        }
+
         $b2bUser = User::updateOrCreate(
             ['email' => $old_user->email],
             [
                 'name'          => $old_user->name,
                 'role'          => $old_user->role ?? 'AGENT',
-                'agent_code'    => $old_user->agent_code ?? 'AGT-' . strtoupper(substr(uniqid(), -6)),
+                'agent_code'    => $agentCode,
                 'password'      => $old_user->password,
                 'source_server' => $name,
                 'original_id'   => $old_user->id,
@@ -64,7 +83,6 @@ foreach ($childDbs as $name => $connectionName) {
         );
 
         $agentIdMap[$old_user->id] = $b2bUser->id;
-
         if ($b2bUser->wasRecentlyCreated) $userCount++;
     }
 
@@ -78,6 +96,7 @@ foreach ($childDbs as $name => $connectionName) {
 
         if (!$b2bUserId) continue;
 
+        // Decode potentially double-encoded JSON
         $formData = $old_app->form_data;
         while (is_string($formData)) {
             $decoded = json_decode($formData, true);
@@ -86,7 +105,6 @@ foreach ($childDbs as $name => $connectionName) {
         }
         if (!is_array($formData)) $formData = [];
 
-        // ✅ FIX: removed withoutTimestamps() — it was blocking created_at from saving
         $appModel = Application::updateOrCreate(
             [
                 'original_id'   => $old_app->id,
