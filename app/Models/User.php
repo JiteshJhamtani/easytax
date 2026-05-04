@@ -19,6 +19,9 @@ class User extends Authenticatable
         'is_active',
         'agent_code',
         'notification_preference',
+        'mobile_number',
+        'whatsapp_no',
+        'address',
     ];
 
     protected $hidden = [

@@ -284,6 +284,39 @@ try {
     echo "<li>❌ ERROR 12: " . $e->getMessage() . "</li>";
 }
 
+/*
+|--------------------------------------------------------------------------
+| HOOK 13: Add Agent Contact Fields to Users Table
+|--------------------------------------------------------------------------
+*/
+try {
+    Schema::table('users', function (Blueprint $table) {
+        $added = false;
+
+        if (!Schema::hasColumn('users', 'mobile_number')) {
+            $table->string('mobile_number', 20)->nullable()->after('email');
+            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>mobile_number</code> to users table.</li>";
+            $added = true;
+        }
+        if (!Schema::hasColumn('users', 'whatsapp_no')) {
+            $table->string('whatsapp_no', 20)->nullable()->after('mobile_number');
+            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>whatsapp_no</code> to users table.</li>";
+            $added = true;
+        }
+        if (!Schema::hasColumn('users', 'address')) {
+            $table->text('address')->nullable()->after('whatsapp_no');
+            echo "<li>✅ <strong style='color:green;'>SUCCESS:</strong> Added <code>address</code> to users table.</li>";
+            $added = true;
+        }
+
+        if (!$added) {
+            echo "<li>⏭️ <strong style='color:gray;'>SKIPPED:</strong> Agent contact columns already exist.</li>";
+        }
+    });
+} catch (\Exception $e) { 
+    echo "<li>❌ <strong style='color:red;'>ERROR 13:</strong> " . $e->getMessage() . "</li>"; 
+}
+
 echo "</ul>";
 echo "<p style='color: #666;'><strong>Done!</strong> Your server is now fully up to date. You can safely close this page.</p>";
 echo "<div style='background: #ffebee; border-left: 4px solid #f44336; padding: 15px; margin-top: 20px;'>

@@ -33,6 +33,15 @@ class Service extends Model
         ];
     }
 
+    /**
+     * THE FIX: Dynamically bind this model to the B2B database
+     */
+    public function getTable()
+    {
+        $b2bDatabase = config('database.connections.master_connection.database', 'easytax_db');
+        return $b2bDatabase . '.services';
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Relationships
@@ -41,12 +50,17 @@ class Service extends Model
 
     public function applications(): HasMany
     {
-        return $this->hasMany(Application::class);
+         return $this->hasMany(Application::class)->setEagerLoads([]);
     }
 
     public function gifts(): HasMany
     {
         return $this->hasMany(Gift::class);
+    }
+
+    public function pricingRules(): HasMany 
+    {
+        return $this->hasMany(ServicePricingRule::class);
     }
 
     /*
@@ -84,10 +98,4 @@ class Service extends Model
     {
         return max(0, (float) $this->price - $this->calculateCommission((float) $this->price));
     }
-
-    public function pricingRules()
-    {
-        return $this->hasMany(ServicePricingRule::class);
-    }
-   protected $connection = 'master_connection';
 }

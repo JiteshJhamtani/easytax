@@ -70,6 +70,44 @@
                                     @enderror
                                 </div>
                             </div>
+                            {{-- Contact Info Row --}}
+                            <div class="row mt-3">
+                                <div class="col-md-6 form-group mb-4">
+                                    <label class="form-label-custom">Mobile Number</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light border-right-0 custom-icon-box">
+                                                <i class="fas fa-phone text-muted"></i>
+                                            </span>
+                                        </div>
+                                        <input type="text" name="mobile_number" class="form-control custom-input border-left-0" value="{{ old('mobile_number', $agent->mobile_number) }}" placeholder="e.g. 9876543210">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 form-group mb-4">
+                                    <label class="form-label-custom">WhatsApp Number</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light border-right-0 custom-icon-box">
+                                                <i class="fab fa-whatsapp text-muted"></i>
+                                            </span>
+                                        </div>
+                                        <input type="text" name="whatsapp_no" class="form-control custom-input border-left-0" value="{{ old('whatsapp_no', $agent->whatsapp_no) }}" placeholder="e.g. 9876543210">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12 form-group mb-4">
+                                    <label class="form-label-custom">Full Address</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-light border-right-0 custom-icon-box">
+                                                <i class="fas fa-map-marker-alt text-muted"></i>
+                                            </span>
+                                        </div>
+                                        <textarea name="address" rows="2" class="form-control custom-input border-left-0" style="height: auto;" placeholder="Enter complete address">{{ old('address', $agent->address) }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
 
                             {{-- Informational Note --}}
                             {{-- Password Reset --}}

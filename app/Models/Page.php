@@ -21,6 +21,15 @@ class Page extends Model
         'is_active' => 'boolean',
     ];
 
+    /**
+     * THE FIX: Dynamically bind this model to the B2B database
+     */
+    public function getTable()
+    {
+        $b2bDatabase = config('database.connections.master_connection.database', 'easytax_db');
+        return $b2bDatabase . '.pages';
+    }
+
     protected static function booted(): void
     {
         static::saving(function (Page $page) {
@@ -29,6 +38,4 @@ class Page extends Model
             }
         });
     }
-
-protected $connection = 'master_connection';
 }

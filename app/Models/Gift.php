@@ -30,4 +30,11 @@ class Gift extends Model implements HasMedia
                 'image/webp',
             ]);
     }
+
+    public function getTable()
+    {
+        // Change 'easytax_b2b' to 'easytax_db' here
+        $b2bDatabase = config('database.connections.master_connection.database', 'easytax_db');
+        return $b2bDatabase . '.gifts'; 
+    }
 }

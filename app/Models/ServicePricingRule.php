@@ -27,4 +27,10 @@ class ServicePricingRule extends Model
     {
         return $this->belongsTo(Service::class);
     }
+    // Add this inside your ServicePricingRule class
+    public function getTable()
+    {
+        $b2bDatabase = config('database.connections.master_connection.database', 'easytax_db');
+        return $b2bDatabase . '.service_pricing_rules'; // Ensure this matches your actual table name
+    }
 }

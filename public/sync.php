@@ -21,7 +21,8 @@ echo "<h1>🔄 EasyTax Master Data Sync</h1><ul>";
 
 $childDbs = [
     'uat' => 'db_uat',
-    // 'marketing' => 'db_marketing',
+     'marketing' => 'db_marketing',
+     'upwest'=> 'db_upwest',
 ];
 
 DB::statement('SET FOREIGN_KEY_CHECKS=0;');
