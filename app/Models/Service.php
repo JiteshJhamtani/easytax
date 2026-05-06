@@ -34,7 +34,7 @@ class Service extends Model
     }
 
     /**
-     * THE FIX: Dynamically bind this model to the B2B database
+     * THE FIX: Dynamically bind this model to the B2B database 
      */
     public function getTable()
     {

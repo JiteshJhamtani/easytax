@@ -8,19 +8,23 @@ class AgentCodeService
 {
     public static function generate(): string
     {
-        // 1. Find the absolute highest agent code in the entire database
-        // We order by the code itself (descending) to ensure we always grab the biggest number.
+        // 1. Find the most recently created agent 
         $lastAgent = User::whereNotNull('agent_code')
             ->where('agent_code', 'like', 'AGT-%')
-            ->orderBy('agent_code', 'desc')
+            ->orderBy('id', 'desc')
             ->first();
 
-        // 2. Extract the number and add 1 
         $nextNumber = $lastAgent
             ? ((int) substr($lastAgent->agent_code, 4)) + 1
             : 1;
 
-        // 3. Format it back to AGT-00000X and return it safely
-        return 'AGT-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+        // 2. ✅ Loop until we find a code that doesn't exist yet
+        //    Handles gaps caused by sync importing agents from other servers
+        do {
+            $code = 'AGT-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+            $nextNumber++;
+        } while (User::where('agent_code', $code)->exists());
+
+        return $code;
     }
 }

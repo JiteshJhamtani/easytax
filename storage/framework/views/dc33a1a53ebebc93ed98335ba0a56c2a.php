@@ -1,16 +1,14 @@
-@extends('layouts.agent')
+<?php $__env->startSection('title', 'Application #' . $application->id . ' | EasyTax'); ?>
 
-@section('title', 'Application #' . $application->id . ' | EasyTax')
-
-@section('content_header')
+<?php $__env->startSection('content_header'); ?>
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-2 pt-2">
         <div>
-            <a href="{{ route('agent.applications.index') }}"
+            <a href="<?php echo e(route('agent.applications.index')); ?>"
                 class="text-muted text-sm font-weight-bold mb-2 d-inline-block transition-hover">
                 <i class="fas fa-arrow-left mr-1"></i> Back to Applications
             </a>
 
-            @php
+            <?php
                 $status = strtolower($application->status->value ?? 'unknown');
 
                 $statusClass = match ($status) {
@@ -20,34 +18,36 @@
                     'cancelled' => 'badge-secondary-soft',
                     default => 'badge-primary-soft',
                 };
-            @endphp
+            ?>
 
             <div class="d-flex align-items-center mt-1">
                 <h1 class="h3 font-weight-bold mb-0 text-dark">
-                    Application #{{ $application->id }}
+                    Application #<?php echo e($application->id); ?>
+
                 </h1>
-                <span class="badge {{ $statusClass }} ml-3 px-3 py-2 text-uppercase"
+                <span class="badge <?php echo e($statusClass); ?> ml-3 px-3 py-2 text-uppercase"
                     style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                    {{ $application->status->value ?? 'UNKNOWN' }}
+                    <?php echo e($application->status->value ?? 'UNKNOWN'); ?>
+
                 </span>
             </div>
 
             <p class="text-muted mt-2 mb-0 text-sm">
                 <i class="far fa-calendar-alt mr-1"></i>
                 Submitted on <span
-                    class="font-weight-bold">{{ optional($application->created_at)->format('F d, Y \a\t h:i A') }}</span>
+                    class="font-weight-bold"><?php echo e(optional($application->created_at)->format('F d, Y \a\t h:i A')); ?></span>
             </p>
         </div>
     </div>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="row">
 
-        {{-- LEFT COLUMN --}}
+        
         <div class="col-lg-8">
 
-            {{-- QUICK STATS CARDS --}}
+            
             <div class="row mb-4">
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm h-100 summary-card">
@@ -58,7 +58,7 @@
                             <div>
                                 <h6 class="text-muted text-uppercase text-xs font-weight-bold mb-1">Total Amount</h6>
                                 <h4 class="mb-0 font-weight-bold text-dark">
-                                    ₹{{ number_format($application->amount ?? 0, 2) }}</h4>
+                                    ₹<?php echo e(number_format($application->amount ?? 0, 2)); ?></h4>
                             </div>
                         </div>
                     </div>
@@ -72,30 +72,30 @@
                             <div>
                                 <h6 class="text-muted text-uppercase text-xs font-weight-bold mb-1">Commission</h6>
                                 <h4 class="mb-0 font-weight-bold text-dark">
-                                    ₹{{ number_format($application->commission_amount ?? 0, 2) }}</h4>
+                                    ₹<?php echo e(number_format($application->commission_amount ?? 0, 2)); ?></h4>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-4">
-                    @php $paymentStatus = strtolower($application->payment_status->value ?? 'pending'); @endphp
+                    <?php $paymentStatus = strtolower($application->payment_status->value ?? 'pending'); ?>
                     <div class="card border-0 shadow-sm h-100 summary-card">
                         <div class="card-body d-flex align-items-center">
                             <div
-                                class="icon-box {{ $paymentStatus === 'paid' || $paymentStatus === 'success' ? 'bg-success-soft text-success' : 'bg-warning-soft text-warning' }} mr-3">
+                                class="icon-box <?php echo e($paymentStatus === 'paid' || $paymentStatus === 'success' ? 'bg-success-soft text-success' : 'bg-warning-soft text-warning'); ?> mr-3">
                                 <i
-                                    class="fas {{ $paymentStatus === 'paid' || $paymentStatus === 'success' ? 'fa-check-double' : 'fa-hourglass-half' }} fa-lg"></i>
+                                    class="fas <?php echo e($paymentStatus === 'paid' || $paymentStatus === 'success' ? 'fa-check-double' : 'fa-hourglass-half'); ?> fa-lg"></i>
                             </div>
                             <div>
                                 <h6 class="text-muted text-uppercase text-xs font-weight-bold mb-1">Payment Status</h6>
-                                <h4 class="mb-0 font-weight-bold text-dark text-capitalize">{{ $paymentStatus }}</h4>
+                                <h4 class="mb-0 font-weight-bold text-dark text-capitalize"><?php echo e($paymentStatus); ?></h4>
                             </div>
                         </div>
                     </div>  
                 </div>
             </div>
 
-            {{-- MAIN DETAILS CARD --}}
+            
             <div class="card border-0 shadow-sm mb-4 rounded-lg">
                 <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">
                     <h3 class="card-title font-weight-bold text-dark mb-0">
@@ -103,10 +103,10 @@
                         Core Details
                     </h3>
 
-                    {{-- THE BUTTONS --}}
+                    
                     <div class="d-flex gap-2">
                         
-                       @php 
+                       <?php 
                       
                             $currentStatus = $application->status instanceof \App\Enums\ApplicationStatus 
                                 ? $application->status->value 
@@ -120,30 +120,30 @@
                             $confirmMsg = $isPaid 
                                 ? 'Are you sure you want to cancel? Since payment is already completed, you must contact the Admin for a refund. Do you want to proceed?' 
                                 : 'Are you sure you want to cancel this application?';
-                        @endphp
+                        ?>
 
-                       {{-- 💳 RAZORPAY RETRY BUTTON --}}
-                       @if(in_array(strtoupper($paymentStr), ['FAILED', 'PENDING']) && strtoupper($currentStatus) !== 'CANCELLED')
-                            <form action="{{ route('applications.retryPayment', $application) }}" method="POST" class="mr-2">
-                                @csrf
+                       
+                       <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(in_array(strtoupper($paymentStr), ['FAILED', 'PENDING']) && strtoupper($currentStatus) !== 'CANCELLED'): ?>
+                            <form action="<?php echo e(route('applications.retryPayment', $application)); ?>" method="POST" class="mr-2">
+                                <?php echo csrf_field(); ?>
                                 <button type="submit" class="btn btn-sm shadow-sm font-weight-bold text-white pulse-green" style="background-color: #1E9C5D; border-color: #1E9C5D;">
                                     <i class="fas fa-credit-card mr-1"></i> Pay Now to Complete
                                 </button>
                             </form>
-                        @endif
-                        @if (strtoupper($currentStatus) !== 'CANCELLED')
-                            <form id="cancelApplicationForm" action="{{ route('agent.applications.cancel', $application) }}" method="POST" class="mr-2">
-                                @csrf
-                                @method('PATCH')
-                                <button type="button" onclick="openCancelModal('{{ addslashes($confirmMsg) }}')" class="btn btn-sm btn-outline-danger shadow-sm font-weight-bold">
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(strtoupper($currentStatus) !== 'CANCELLED'): ?>
+                            <form id="cancelApplicationForm" action="<?php echo e(route('agent.applications.cancel', $application)); ?>" method="POST" class="mr-2">
+                                <?php echo csrf_field(); ?>
+                                <?php echo method_field('PATCH'); ?>
+                                <button type="button" onclick="openCancelModal('<?php echo e(addslashes($confirmMsg)); ?>')" class="btn btn-sm btn-outline-danger shadow-sm font-weight-bold">
                                     <i class="fas fa-times-circle mr-1"></i> Cancel Application
                                 </button>
                             </form>
-                        @else
+                        <?php else: ?>
                             <button type="button" class="btn btn-sm btn-light text-muted border shadow-sm font-weight-bold" disabled>
                                 <i class="fas fa-ban mr-1"></i> Cancelled
                             </button>
-                        @endif
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
                         <button onclick="window.print()" class="btn btn-sm btn-primary shadow-sm font-weight-bold">
                             <i class="fas fa-print mr-1"></i> Print Summary
@@ -158,25 +158,25 @@
                                 <td class="text-muted text-uppercase text-xs font-weight-bold w-30 align-middle pl-4 border-top-0">
                                     Service Required</td>
                                 <td class="font-weight-bold text-dark border-top-0">
-                                    {{ $application->service->name ?? 'N/A' }}</td>
+                                    <?php echo e($application->service->name ?? 'N/A'); ?></td>
                             </tr>
                             <tr>
                                 <td class="text-muted text-uppercase text-xs font-weight-bold w-30 align-middle pl-4">
                                     Payment Reference</td>
-                                <td><code class="px-2 py-1 bg-light text-dark rounded border font-weight-bold">{{ $application->payment_reference ?? 'N/A' }}</code>
+                                <td><code class="px-2 py-1 bg-light text-dark rounded border font-weight-bold"><?php echo e($application->payment_reference ?? 'N/A'); ?></code>
                                 </td>
                             </tr>
                             <tr>
                                 <td class="text-muted text-uppercase text-xs font-weight-bold w-30 align-middle pl-4">
                                     Application ID</td>
-                                <td><span class="text-muted font-weight-bold">#{{ $application->id }}</span></td>
+                                <td><span class="text-muted font-weight-bold">#<?php echo e($application->id); ?></span></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {{-- DYNAMIC FORM DATA (SMART REPEATER GRID VIEW) --}}
+            
             <div class="card border-0 shadow-sm mb-4 rounded-lg elegant-border">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                     <h3 class="card-title font-weight-bold text-dark mb-0">
@@ -184,20 +184,20 @@
                         Client Information
                     </h3>
                     
-                    {{-- EXPORT BUTTON (For Admin View) --}}
-                    @if(isset($application) && !empty($application->form_data) && Route::has('admin.applications.exportSingle'))
-                        <a href="{{ route('admin.applications.exportSingle', $application->id) }}" class="btn btn-sm btn-outline-success font-weight-bold shadow-sm transition-hover">
+                    
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($application) && !empty($application->form_data) && Route::has('admin.applications.exportSingle')): ?>
+                        <a href="<?php echo e(route('admin.applications.exportSingle', $application->id)); ?>" class="btn btn-sm btn-outline-success font-weight-bold shadow-sm transition-hover">
                             <i class="fas fa-file-excel mr-1"></i> Export to Excel
                         </a>
-                    @endif
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
 
-                @php 
+                <?php 
                     $rawFormData = $application->form_data ?? [];
                     // Remove sensitive internal fields
                     $formData = array_filter($rawFormData, fn($key) => !in_array($key, ['admin_username', 'admin_password']), ARRAY_FILTER_USE_KEY); 
                     
-                    // 🧠 SMART REPEATER ENGINE: Handles BOTH Arrays and Claude's Flat Numbered Format
+                  // 🧠 SMART REPEATER ENGINE: Handles BOTH Arrays and Claude's Flat Numbered Format
                     $regularData = [];
                     $repeaterGroups = [];
                     
@@ -230,73 +230,80 @@
                             $regularData[$key] = $value;
                         }
                     }
-                @endphp
+                ?>
 
                 <div class="card-body p-4 bg-light rounded-bottom">
-                    @if (count($formData))
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(count($formData)): ?>
                         
-                        {{-- 1. NORMAL FLAT FIELDS --}}
+                        
                         <div class="row">
-                            @foreach ($regularData as $field => $value)
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $regularData; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $field => $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                                 <div class="col-md-6 mb-3">
                                     <div class="bg-white p-3 rounded-lg border shadow-sm h-100 data-box transition-hover">
                                         <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">
-                                            {{ Str::title(str_replace('_', ' ', $field)) }}
+                                            <?php echo e(Str::title(str_replace('_', ' ', $field))); ?>
+
                                         </span>
                                         <span class="text-dark font-weight-normal" style="word-break: break-word;">
-                                            @if (is_array($value))
-                                                {{ implode(', ', $value) }}
-                                            @elseif(is_bool($value))
-                                                <span class="badge {{ $value ? 'badge-success-soft' : 'badge-secondary-soft' }} px-2 py-1">
-                                                    {{ $value ? 'Yes' : 'No' }}
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(is_array($value)): ?>
+                                                <?php echo e(implode(', ', $value)); ?>
+
+                                            <?php elseif(is_bool($value)): ?>
+                                                <span class="badge <?php echo e($value ? 'badge-success-soft' : 'badge-secondary-soft'); ?> px-2 py-1">
+                                                    <?php echo e($value ? 'Yes' : 'No'); ?>
+
                                                 </span>
-                                            @elseif(empty($value))
+                                            <?php elseif(empty($value)): ?>
                                                 <span class="text-muted font-italic">Not provided</span>
-                                            @else
-                                                {{ $value }}
-                                            @endif
+                                            <?php else: ?>
+                                                <?php echo e($value); ?>
+
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                         </span>
                                     </div>
                                 </div>
-                            @endforeach
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         </div>
 
-                        {{-- 2. THE MAGIC REPEATER BLOCKS (Directors, Members, etc.) --}}
-                        @if(!empty($repeaterGroups))
-                            @foreach($repeaterGroups as $groupName => $items)
+                        
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($repeaterGroups)): ?>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $repeaterGroups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $groupName => $items): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                                 <div class="w-100 mt-4 mb-3 px-2">
                                     <h5 class="font-weight-bold text-dark border-bottom pb-2">
-                                        <i class="fas fa-users text-primary mr-2"></i> {{ Str::title($groupName) }} Details
+                                        <i class="fas fa-users text-primary mr-2"></i> <?php echo e(Str::title($groupName)); ?> Details
                                     </h5>
                                 </div>
                                 
                                 <div class="row">
-                                    @foreach($items as $index => $itemFields)
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $itemFields): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                                         <div class="col-12 mb-3">
                                             <div class="bg-white p-3 rounded-lg shadow-sm" style="border: 1px solid #c8eadb; border-left: 4px solid var(--brand-green, #1E9C5D);">
                                                 <h6 class="font-weight-bold mb-3 text-uppercase" style="color: var(--brand-green, #1E9C5D); letter-spacing: 0.5px;">
-                                                    {{ Str::title($groupName) }} {{ $index + 1 }}
+                                                    <?php echo e(Str::title($groupName)); ?> <?php echo e($index + 1); ?>
+
                                                 </h6>
                                                 <div class="row">
-                                                    @foreach($itemFields as $subField => $subVal)
+                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $itemFields; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subField => $subVal): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                                                         <div class="col-md-4 col-sm-6 mb-2">
                                                             <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">
-                                                                {{ Str::title(str_replace('_', ' ', $subField)) }}
+                                                                <?php echo e(Str::title(str_replace('_', ' ', $subField))); ?>
+
                                                             </span>
                                                             <span class="text-dark font-weight-bold" style="font-size: 0.95rem;">
-                                                                {{ $subVal ?: '—' }}
+                                                                <?php echo e($subVal ?: '—'); ?>
+
                                                             </span>
                                                         </div>
-                                                    @endforeach
+                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                                 </div>
                                             </div>
                                         </div>
-                                    @endforeach
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                 </div>
-                            @endforeach
-                        @endif
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                    @else
+                    <?php else: ?>
                         <div class="text-center text-muted py-4">
                             <div class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm border" style="width: 70px; height: 70px;">
                                 <i class="fas fa-inbox fa-2x text-secondary opacity-50"></i>
@@ -304,12 +311,12 @@
                             <h6 class="font-weight-bold">No Client Data</h6>
                             <p class="text-sm mb-0">No form data was captured for this application.</p>
                         </div>
-                    @endif
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
             </div>
 
-          {{-- DELIVERABLES & CREDENTIALS CARD (AGENT DISPLAY) --}}
-            @if(isset($application->form_data['admin_username']) || isset($application->form_data['admin_password']) || $application->getMedia('final_deliverables')->count())
+          
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($application->form_data['admin_username']) || isset($application->form_data['admin_password']) || $application->getMedia('final_deliverables')->count()): ?>
             <div class="card border-0 shadow-sm mb-4 rounded-lg">
                 <div class="card-header bg-white py-3 border-bottom">
                     <h3 class="card-title font-weight-bold text-dark mb-0">
@@ -318,54 +325,54 @@
                 </div>
                 <div class="card-body p-4 bg-primary-soft rounded-bottom">
                     <div class="row">
-                        @if(!empty($application->form_data['admin_username']))
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($application->form_data['admin_username'])): ?>
                         <div class="col-md-6 mb-3">
                             <div class="bg-white p-3 rounded-lg border shadow-sm h-100 data-box transition-hover">
                                 <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">GST Username</span>
-                                <span class="text-dark font-weight-bold" style="font-size: 1.1rem; letter-spacing: 1px;">{{ $application->form_data['admin_username'] }}</span>
+                                <span class="text-dark font-weight-bold" style="font-size: 1.1rem; letter-spacing: 1px;"><?php echo e($application->form_data['admin_username']); ?></span>
                             </div>
                         </div>
-                        @endif
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         
-                        @if(!empty($application->form_data['admin_password']))
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!empty($application->form_data['admin_password'])): ?>
                         <div class="col-md-6 mb-3">
                             <div class="bg-white p-3 rounded-lg border shadow-sm h-100 data-box transition-hover">
                                 <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">GST Password</span>
-                                <span class="text-dark font-weight-bold" style="font-size: 1.1rem;">{{ $application->form_data['admin_password'] }}</span>
+                                <span class="text-dark font-weight-bold" style="font-size: 1.1rem;"><?php echo e($application->form_data['admin_password']); ?></span>
                             </div>
                         </div>
-                        @endif
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     </div>
 
-                    @if ($application->getMedia('final_deliverables')->count())
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($application->getMedia('final_deliverables')->count()): ?>
                         <h6 class="font-weight-bold text-dark mt-2 mb-3">GST Certificate</h6>
                         <div class="document-list">
-                            @foreach ($application->getMedia('final_deliverables') as $doc)
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $application->getMedia('final_deliverables'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $doc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                                 <div class="document-item d-flex align-items-center p-3 mb-2 bg-white rounded-lg border shadow-sm">
                                     <div class="document-icon bg-light rounded d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
                                         <i class="fas fa-file-pdf text-danger fa-lg"></i>
                                     </div>
                                     <div class="document-info flex-grow-1">
-                                        <div class="text-dark font-weight-bold text-sm">{{ $doc->name }}</div>
+                                        <div class="text-dark font-weight-bold text-sm"><?php echo e($doc->name); ?></div>
                                     </div>
                                     <div class="d-flex gap-2">
-                                        <a href="{{ route('agent.documents.view', $doc->id) }}" target="_blank" class="btn btn-sm btn-light border text-primary"><i class="fas fa-eye"></i> View</a>
-                                        <a href="{{ route('agent.documents.download', $doc->id) }}" class="btn btn-sm btn-primary"><i class="fas fa-download"></i> Download</a>
+                                        <a href="<?php echo e(route('agent.documents.view', $doc->id)); ?>" target="_blank" class="btn btn-sm btn-light border text-primary"><i class="fas fa-eye"></i> View</a>
+                                        <a href="<?php echo e(route('agent.documents.download', $doc->id)); ?>" class="btn btn-sm btn-primary"><i class="fas fa-download"></i> Download</a>
                                     </div>
                                 </div>
-                            @endforeach
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         </div>
-                    @endif
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
             </div>
-            @endif
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
         </div>
 
-        {{-- RIGHT COLUMN --}}
+        
         <div class="col-lg-4">
 
-            {{-- DOCUMENTS --}}
+ 
             <div class="card border-0 shadow-sm rounded-lg">
                 <div class="card-header bg-white py-3 border-bottom text-center">
                     <h3 class="card-title font-weight-bold text-dark w-100 float-none mb-0">
@@ -375,19 +382,19 @@
                 </div>
 
                 <div class="card-body p-4">
-                    @php
+                    <?php
                         // Filter out 'final_deliverables' so GST Certificates don't show up twice
                         $generalDocs = $application->media->where('collection_name', '!==', 'final_deliverables');
-                    @endphp
+                    ?>
 
-                    @if ($generalDocs->count() > 0)
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($generalDocs->count() > 0): ?>
                         <div class="document-list">
-                            @foreach ($generalDocs as $doc)
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $generalDocs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $doc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
                                 <div class="document-item d-flex align-items-center p-3 mb-3 bg-white rounded-lg border shadow-sm transition-hover">
 
                                     <div class="document-icon bg-light rounded d-flex align-items-center justify-content-center mr-3"
                                         style="width: 45px; height: 45px; flex-shrink: 0;">
-                                        @php
+                                        <?php
                                             $ext = strtolower(pathinfo($doc->file_name ?? '', PATHINFO_EXTENSION));
                                             $icon = match ($ext) {
                                                 'pdf' => 'fa-file-pdf text-danger',
@@ -395,40 +402,41 @@
                                                 'doc', 'docx' => 'fa-file-word text-info',
                                                 default => 'fa-file-alt text-secondary',
                                             };
-                                        @endphp
-                                        <i class="fas {{ $icon }} fa-lg"></i>
+                                        ?>
+                                        <i class="fas <?php echo e($icon); ?> fa-lg"></i>
                                     </div>
 
                                     <div class="document-info flex-grow-1 overflow-hidden pr-2">
-                                        <div class="text-dark font-weight-bold text-truncate text-sm mb-1" title="{{ $doc->name }}">
-                                            {{ $doc->custom_properties['label'] ?? $doc->name }}
+                                        <div class="text-dark font-weight-bold text-truncate text-sm mb-1" title="<?php echo e($doc->name); ?>">
+                                            <?php echo e($doc->custom_properties['label'] ?? $doc->name); ?>
+
                                         </div>
                                         <div class="text-muted text-xs text-uppercase font-weight-bold">
-                                            {{ strtoupper($ext) ?: 'FILE' }} • {{ number_format($doc->size / 1024, 1) }} KB
+                                            <?php echo e(strtoupper($ext) ?: 'FILE'); ?> • <?php echo e(number_format($doc->size / 1024, 1)); ?> KB
                                             
-                                            {{-- Show which bucket it came from (e.g., partner_pan_1) --}}
-                                            @if($doc->collection_name !== 'documents' && $doc->collection_name !== 'default')
-                                                 • <span class="text-primary">{{ ucwords(str_replace('_', ' ', $doc->collection_name)) }}</span>
-                                            @endif
+                                            
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($doc->collection_name !== 'documents' && $doc->collection_name !== 'default'): ?>
+                                                 • <span class="text-primary"><?php echo e(ucwords(str_replace('_', ' ', $doc->collection_name))); ?></span>
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                         </div>
                                     </div>
 
-                                    {{-- SECURE VIEW AND DOWNLOAD BUTTONS --}}
+                                    
                                     <div class="d-flex flex-column flex-sm-row gap-2">
-                                        <a href="{{ route('agent.documents.view', $doc->id) }}" target="_blank"
+                                        <a href="<?php echo e(route('agent.documents.view', $doc->id)); ?>" target="_blank"
                                             class="btn btn-sm btn-light border text-primary shadow-sm px-2" title="View Document">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{{ route('agent.documents.download', $doc->id) }}"
+                                        <a href="<?php echo e(route('agent.documents.download', $doc->id)); ?>"
                                             class="btn btn-sm btn-primary shadow-sm px-2" title="Download Document">
                                             <i class="fas fa-download"></i>
                                         </a>
                                     </div>
 
                                 </div>
-                            @endforeach
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                         </div>
-                    @else
+                    <?php else: ?>
                         <div class="text-center py-4 text-muted">
                             <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
                                 style="width: 60px; height: 60px;">
@@ -437,11 +445,10 @@
                             <h6 class="font-weight-bold">No Documents</h6>
                             <p class="text-sm mb-0">No files have been attached.</p>
                         </div>
-                    @endif
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
             </div>
             
-            {{-- NOTICE --}}
             <div class="card border-0 bg-primary-soft mt-4 rounded-lg">
                 <div class="card-body">
                     <h5 class="font-weight-bold text-primary mb-2 text-sm text-uppercase">
@@ -458,7 +465,7 @@
 
     </div>
 
-    {{-- CUSTOM CANCELLATION MODAL --}}
+    
     <div id="customCancelModal" class="custom-modal-backdrop" style="display: none;">
         <div class="custom-modal-dialog shadow-lg">
             <div class="custom-modal-content">
@@ -481,9 +488,9 @@
             </div>
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('css')
+<?php $__env->startSection('css'); ?>
     <style>
         :root {
             --brand-green: #1E9C5D;
@@ -619,9 +626,9 @@
         }
         .pulse-green { animation: pulse-green 2s infinite; }
     </style>
-@stop
+<?php $__env->stopSection(); ?>
 
-@section('js')
+<?php $__env->startSection('js'); ?>
     <script>
         // --- Custom Cancellation Modal Logic ---
         function openCancelModal(message) {
@@ -648,68 +655,69 @@
 
        
     </script>
-    
-    {{-- --- RAZORPAY POPUP LOGIC --- --}}
-    @if(session('razorpay_order'))
-        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-        <script>
-            var options = {
-                "key": "{{ session('razorpay_order.key_id') }}",
-                "amount": "{{ session('razorpay_order.amount') }}",
-                "currency": "{{ session('razorpay_order.currency') }}",
-                "name": "EasyTax",
-                "description": "Application Payment Retry",
-                "order_id": "{{ session('razorpay_order.order_id') }}",
-                "handler": function (response) {
-                    // 1. Create a hidden form when payment succeeds
-                    var form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '{{ route('payment.success') }}';
+  
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('razorpay_order')): ?>
+            <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+            <script>
+                var options = {
+                    "key": "<?php echo e(session('razorpay_order.key_id')); ?>",
+                    "amount": "<?php echo e(session('razorpay_order.amount')); ?>",
+                    "currency": "<?php echo e(session('razorpay_order.currency')); ?>",
+                    "name": "EasyTax",
+                    "description": "Application Payment Retry",
+                    "order_id": "<?php echo e(session('razorpay_order.order_id')); ?>",
+                    "handler": function (response) {
+                        // 1. Create a hidden form when payment succeeds
+                        var form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '<?php echo e(route('payment.success')); ?>';
 
-                    // 2. Add CSRF Token
-                    var csrfToken = document.createElement('input');
-                    csrfToken.type = 'hidden';
-                    csrfToken.name = '_token';
-                    csrfToken.value = '{{ csrf_token() }}';
-                    form.appendChild(csrfToken);
+                        // 2. Add CSRF Token
+                        var csrfToken = document.createElement('input');
+                        csrfToken.type = 'hidden';
+                        csrfToken.name = '_token';
+                        csrfToken.value = '<?php echo e(csrf_token()); ?>';
+                        form.appendChild(csrfToken);
 
-                    // 3. Add Razorpay Verification Data
-                    var inputs = ['razorpay_payment_id', 'razorpay_order_id', 'razorpay_signature'];
-                    inputs.forEach(function(name) {
-                        var input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = name;
-                        input.value = response[name];
-                        form.appendChild(input);
-                    });
+                        // 3. Add Razorpay Verification Data
+                        var inputs = ['razorpay_payment_id', 'razorpay_order_id', 'razorpay_signature'];
+                        inputs.forEach(function(name) {
+                            var input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = name;
+                            input.value = response[name];
+                            form.appendChild(input);
+                        });
 
-                    // 4. Add Application ID
-                    var appId = document.createElement('input');
-                    appId.type = 'hidden';
-                    appId.name = 'application_id';
-                    appId.value = '{{ session('razorpay_order.application_id') }}';
-                    form.appendChild(appId);
+                        // 4. Add Application ID
+                        var appId = document.createElement('input');
+                        appId.type = 'hidden';
+                        appId.name = 'application_id';
+                        appId.value = '<?php echo e(session('razorpay_order.application_id')); ?>';
+                        form.appendChild(appId);
 
-                    // 5. Submit the form to your backend
-                    document.body.appendChild(form);
-                    form.submit();
-                },
-                "prefill": {
-                    "name": "{{ auth()->user()->name ?? 'Agent' }}",
-                    "email": "{{ auth()->user()->email ?? '' }}",
-                    "contact": "{{ auth()->user()->phone ?? '' }}"
-                },
-                "theme": {
-                    "color": "#1E9C5D"
-                }
-            };
-            
-            // Launch the Razorpay Window
-            var rzp1 = new Razorpay(options);
-            rzp1.on('payment.failed', function (response){
-                alert("Payment Failed: " + response.error.description);
-            });
-            rzp1.open();
-        </script>
-    @endif
-@stop
+                        // 5. Submit the form to your backend
+                        document.body.appendChild(form);
+                        form.submit();
+                    },
+                    "prefill": {
+                        "name": "<?php echo e(auth()->user()->name ?? 'Agent'); ?>",
+                        "email": "<?php echo e(auth()->user()->email ?? ''); ?>",
+                        "contact": "<?php echo e(auth()->user()->phone ?? ''); ?>"
+                    },
+                    "theme": {
+                        "color": "#1E9C5D"
+                    }
+                };
+                
+                // Launch the Razorpay Window
+                var rzp1 = new Razorpay(options);
+                rzp1.on('payment.failed', function (response){
+                    alert("Payment Failed: " + response.error.description);
+                });
+                rzp1.open();
+            </script>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+   
+@stopP
+<?php echo $__env->make('layouts.agent', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/uat.easytax.live/resources/views/admin/applications/show.blade.php ENDPATH**/ ?>

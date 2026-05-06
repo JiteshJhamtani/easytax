@@ -1,10 +1,8 @@
-@extends('layouts.agent')
+<?php $__env->startSection('title', $service->name . ' Application | Agent Portal'); ?>
 
-@section('title', $service->name . ' Application | Agent Portal')
-
-@section('css')
+<?php $__env->startSection('css'); ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
-    <link rel="stylesheet" href="{{ asset('assets/css/form.css') }}">
+    <link rel="stylesheet" href="<?php echo e(asset('assets/css/form.css')); ?>">
     
     <style>
         /* ── PAGE RESET ── */
@@ -241,44 +239,65 @@
             .btn-outline-secondary, .btn-submit { width: 100%; text-align: center; justify-content: center; }
         }
     </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="service-view-wrapper">
     
-    @if (session('error'))
-        <div class="alert alert-danger mx-auto mt-3" style="max-width: 1100px; border-radius: 12px;">{{ session('error') }}</div>
-    @endif
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('error')): ?>
+        <div class="alert alert-danger mx-auto mt-3" style="max-width: 1100px; border-radius: 12px;"><?php echo e(session('error')); ?></div>
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-    {{-- ── HERO SECTION ── --}}
+    
     <header class="sv-hero">
         <div class="sv-breadcrumbs">
-            <a href="{{ route('services.index') }}">Service Catalog</a>
+            <a href="<?php echo e(route('services.index')); ?>">Service Catalog</a>
             <span>/</span>
-            <span class="current">{{ $service->name }}</span>
+            <span class="current"><?php echo e($service->name); ?></span>
         </div>
         
         <div class="sv-hero-content">
             <div class="sv-title-block">
-                <h1>{{ $service->name }}</h1>
+                <h1><?php echo e($service->name); ?></h1>
                 <p>New Application Initialization</p>
             </div>
             
-            @if ($service->price > 0)
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($service->price > 0): ?>
                 <div class="sv-price-badge">
                     <span class="sv-price-label">Standard Processing Fee</span>
-                    <span class="sv-price-value">{{ money($service->price) }}</span>
+                    <span class="sv-price-value"><?php echo e(money($service->price)); ?></span>
                 </div>
-            @endif
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
         </div>
     </header>
-    {{-- ── MAIN CONTENT ── --}}
+    
     <div class="sv-main-container">
         
-        {{-- INJECTING THE MILESTONE COMPONENT --}}
-        <x-milestone-tracker :milestones="$giftMilestones" />
+        
+        <?php if (isset($component)) { $__componentOriginal0cf4b3f5908f819f1ba6f0ded5f774d8 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal0cf4b3f5908f819f1ba6f0ded5f774d8 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.milestone-tracker','data' => ['milestones' => $giftMilestones]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('milestone-tracker'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['milestones' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($giftMilestones)]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
-        {{-- ── Application Form ── --}}
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal0cf4b3f5908f819f1ba6f0ded5f774d8)): ?>
+<?php $attributes = $__attributesOriginal0cf4b3f5908f819f1ba6f0ded5f774d8; ?>
+<?php unset($__attributesOriginal0cf4b3f5908f819f1ba6f0ded5f774d8); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal0cf4b3f5908f819f1ba6f0ded5f774d8)): ?>
+<?php $component = $__componentOriginal0cf4b3f5908f819f1ba6f0ded5f774d8; ?>
+<?php unset($__componentOriginal0cf4b3f5908f819f1ba6f0ded5f774d8); ?>
+<?php endif; ?>
+
+        
         <div class="sv-card">
             <div class="form-section-layout">
                 <div class="form-section-header">
@@ -288,7 +307,8 @@
                 
                
            <div class="form-section-body form-body">
-                    {!! $form->render() !!}
+                    <?php echo $form->render(); ?>
+
                 </div>
 
 
@@ -298,8 +318,8 @@
 
     
 
-{{-- LIVE PRICE PREVIEW BOX --}}
-                    @if(in_array($service->slug, ['gst-return-filing', 'itr-filing','gst-annual-package']))
+
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(in_array($service->slug, ['gst-return-filing', 'itr-filing','gst-annual-package'])): ?>
                         <div class="card border-success mb-4 shadow-sm mt-4">
                             <div class="card-body bg-success-soft">
                                 <table class="table table-sm table-borderless mb-0 font-weight-bold">
@@ -318,32 +338,49 @@
                                 </table>
                             </div>
                         </div>
-                    @endif
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
  
 </div>
 </div>
  </div>
-{{-- INJECTING THE PAYMENT MODAL COMPONENT --}}
-<x-payment-modal 
-    :service="$service" 
-    :commission="$commissionAmount" 
-    :toPay="$amountToPay" 
-/>
 
-@endsection
-@section('js')
+<?php if (isset($component)) { $__componentOriginal224571a5377083f2e754900a8b27c9dc = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal224571a5377083f2e754900a8b27c9dc = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.payment-modal','data' => ['service' => $service,'commission' => $commissionAmount,'toPay' => $amountToPay]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('payment-modal'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['service' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($service),'commission' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($commissionAmount),'toPay' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($amountToPay)]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal224571a5377083f2e754900a8b27c9dc)): ?>
+<?php $attributes = $__attributesOriginal224571a5377083f2e754900a8b27c9dc; ?>
+<?php unset($__attributesOriginal224571a5377083f2e754900a8b27c9dc); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal224571a5377083f2e754900a8b27c9dc)): ?>
+<?php $component = $__componentOriginal224571a5377083f2e754900a8b27c9dc; ?>
+<?php unset($__componentOriginal224571a5377083f2e754900a8b27c9dc); ?>
+<?php endif; ?>
+
+<?php $__env->stopSection(); ?>
+<?php $__env->startSection('js'); ?>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script src="{{ asset('assets/js/form.js') }}"></script>
+    <script src="<?php echo e(asset('assets/js/form.js')); ?>"></script>
 
-    {{-- ── MAIN FORM BRAIN ── --}}
+    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
             // ── PRICING RULES ────────────────────────────────
-            const rawRules = @json($service->pricingRules ?? []);
+            const rawRules = <?php echo json_encode($service->pricingRules ?? [], 15, 512) ?>;
             const pricingRules = Array.isArray(rawRules) ? rawRules : Object.values(rawRules);
 
             function normalizeValue(val) {
@@ -467,8 +504,8 @@
                            
                 });
 
-                let finalTotal   = match ? parseFloat(match.base_price)        : {{ $service->price ?? 0 }};
-                let finalComm    = match ? parseFloat(match.commission_amount)  : {{ $service->commission_value ?? 0 }};
+                let finalTotal   = match ? parseFloat(match.base_price)        : <?php echo e($service->price ?? 0); ?>;
+                let finalComm    = match ? parseFloat(match.commission_amount)  : <?php echo e($service->commission_value ?? 0); ?>;
                 let walletDeduct = finalTotal - finalComm;
                 $('#calc-total').text(finalTotal.toFixed(2));
                 $('#calc-comm').text(finalComm.toFixed(2));
@@ -640,13 +677,13 @@
                 });
             }
 
-        }); {{-- end DOMContentLoaded --}}
+        }); 
     </script>
-    {{-- ── RAZORPAY GATEWAY INVOCATION ── --}}
-    @if (session('razorpay_order'))
+    
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('razorpay_order')): ?>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                const ORDER = @json(session('razorpay_order'));
+                const ORDER = <?php echo json_encode(session('razorpay_order'), 15, 512) ?>;
 
                 const options = {
                     key: ORDER.key_id,
@@ -659,12 +696,12 @@
                         // User paid successfully! Send them to the payment.success route
                         const form = document.createElement('form');
                         form.method = 'POST';
-                        form.action = '{{ route('payment.success') }}';
+                        form.action = '<?php echo e(route('payment.success')); ?>';
 
                         const csrf = document.createElement('input');
                         csrf.type = 'hidden';
                         csrf.name = '_token';
-                        csrf.value = '{{ csrf_token() }}';
+                        csrf.value = '<?php echo e(csrf_token()); ?>';
                         form.appendChild(csrf);
 
                         for (const [key, value] of Object.entries(response)) {
@@ -687,12 +724,12 @@
                             // User closed the Razorpay window without paying
                             const form = document.createElement('form');
                             form.method = 'POST';
-                            form.action = '{{ route('payment.failure') }}';
+                            form.action = '<?php echo e(route('payment.failure')); ?>';
 
                             const csrf = document.createElement('input');
                             csrf.type = 'hidden';
                             csrf.name = '_token';
-                            csrf.value = '{{ csrf_token() }}';
+                            csrf.value = '<?php echo e(csrf_token()); ?>';
                             form.appendChild(csrf);
 
                             const orderInput = document.createElement('input');
@@ -716,5 +753,6 @@
 
 
 </script>
-    @endif
-@endsection
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.agent', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/uat.easytax.live/resources/views/front/pages/services/show.blade.php ENDPATH**/ ?>

@@ -41,6 +41,16 @@ class ApplicationController extends Controller
             ->firstOrFail();
 
         $validated = $validator->validate($service->slug, $request->all());
+
+// ==========================================
+        // 🚀 DYNAMIC REPEATER BYPASS (Fix for Missing Data)
+        // ==========================================
+        foreach ($request->all() as $key => $value) {
+            // Accept both arrays AND flat numbered strings (like member_1_name)
+            if (str_starts_with($key, 'director_') || str_starts_with($key, 'member_') || str_starts_with($key, 'partner_')) {
+                $validated[$key] = $value;
+            }
+        }
         // ==========================================  
 
         Log::info("Form validation passed.");

@@ -73,4 +73,54 @@ $sample = DB::table('applications')
 echo "<pre>" . print_r($sample->toArray(), true) . "</pre>";
 
 echo "</div>";
+
+
+
+/////////////////
+// Find the form class being used
+$service = \App\Models\Service::where('slug', 'llp-registation')->first();
+$formFields = $service->form_fields ?? $service->form_data ?? null;
+echo "<pre>" . print_r($formFields, true) . "</pre>";
+
+// Also check what $form object is in the controller
+// Find the controller that loads this 
+
+// Find which class has a render() method
+$files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(app_path()));
+foreach ($files as $file) {
+    if ($file->isFile() && $file->getExtension() === 'php') {
+        $content = file_get_contents($file->getPathname());
+        if (strpos($content, 'function render') !== false && strpos($content, 'form') !== false) {
+            echo "<b>Found:</b> " . $file->getPathname() . "<br>";
+        }
+    }
+}
+
+$config = config('service_forms.llp-registation');
+echo "<pre>" . print_r($config, true) . "</pre>";
+
+// Also check FPO
+$fpo = config('service_forms.fpo-registration');
+echo "<pre>" . print_r($fpo, true) . "</pre>";
+
+$files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(resource_path('views')));
+foreach ($files as $file) {
+    if ($file->isFile() && $file->getExtension() === 'php') {
+        $content = file_get_contents($file->getPathname());
+        if (strpos($content, 'form->render') !== false) {
+            echo $file->getPathname() . "<br>";
+        }
+    }
+}
+
+
+$files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(app_path()));
+foreach ($files as $file) {
+    if ($file->isFile() && $file->getExtension() === 'php') {
+        $content = file_get_contents($file->getPathname());
+        if (strpos($content, 'agent_code') !== false && strpos($content, 'AGT-') !== false) {
+            echo $file->getPathname() . "<br>";
+        }
+    }
+}
 ?>

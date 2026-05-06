@@ -28,7 +28,7 @@ return [
     // [
     //     'text'  => 'My Commissions',
     //     'route' => 'agent.commissions',
-    //     'icon'  => 'fas fa-fw fa-coins',
+    //     'icon'  => 'fas fa-fw fa-coins', 
     // ],
 
     // [

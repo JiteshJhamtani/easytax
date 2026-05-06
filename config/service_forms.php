@@ -421,9 +421,18 @@ return [
                     [
                         'name' => 'number_of_directors',
                         'label' => 'Number of Directors (Minimum 2)',
-                        'type' => 'number',
+                        'type' => 'select',
                         'required' => true,
                         'validation' => 'required|integer|min:2',
+                        'options' => [
+                            '2' => '2 Members',
+                            '3' => '3 Members',
+                            '4' => '4 Members',
+                            '5' => '5 Members',
+                            '6' => '6 Members',
+                            '7' => '7 Members',
+                            '8' => '8 Members',
+                        ],
                     ],
                     [
                         'name' => 'resident_director',
@@ -581,9 +590,18 @@ return [
                     [
                         'name' => 'number_of_members',
                         'label' => 'Number of Members',
-                        'type' => 'number',
+                        'type' => 'select',
                         'required' => true,
-                        'validation' => 'required|integer|min:1',
+                        'validation' => 'required|integer|min:2|max:8',
+                        'options' => [
+                            '2' => '2 Members',
+                            '3' => '3 Members',
+                            '4' => '4 Members',
+                            '5' => '5 Members',
+                            '6' => '6 Members',
+                            '7' => '7 Members',
+                            '8' => '8 Members',
+                        ],
                     ],
                     [
                         'name' => 'average_land_holding',
@@ -2333,204 +2351,10 @@ return [
     'llp-registation' => [
         'label' => '',
         'sections' => [
-            'company_details' => [
-                'label' => 'Company Details',
-                'fields' => [
-                    [
-                        'name' => 'proposed_company_name',
-                        'label' => 'Proposed Company Name (Up to 2-3 options)',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string|max:255',
-                    ],
-                    [
-                        'name' => 'main_object',
-                        'label' => 'Main Object / Business Activity',
-                        'type' => 'textarea',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                    [
-                        'name' => 'authorized_capital',
-                        'label' => 'Authorized Share Capital',
-                        'type' => 'number',
-                        'required' => true,
-                        'validation' => 'required|numeric|min:100000',
-                    ],
-                    [
-                        'name' => 'paidup_capital',
-                        'label' => 'Paid-up Share Capital',
-                        'type' => 'number',
-                        'required' => true,
-                        'validation' => 'required|numeric|min:1',
-                    ],
-                    [
-                        'name' => 'registered_office_address',
-                        'label' => 'Registered Office Address',
-                        'type' => 'textarea',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                    [
-                        'name' => 'state',
-                        'label' => 'State',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                    [
-                        'name' => 'district',
-                        'label' => 'District',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                ],
-            ],
-            'director_details' => [
-                'label' => 'Director Details',
-                'fields' => [
-                    [
-                        'name' => 'number_of_directors',
-                        'label' => 'Number of Directors (Minimum 2)',
-                        'type' => 'number',
-                        'required' => true,
-                        'validation' => 'required|integer|min:2',
-                    ],
-                    [
-                        'name' => 'resident_director',
-                        'label' => 'At least one Director Resident in India?',
-                        'type' => 'select',
-                        'required' => true,
-                        'validation' => 'required|string|in:yes,no',
-                        'options' => [
-                            'yes' => 'Yes',
-                            'no' => 'No',
-                        ],
-                    ],
-                    [
-                        'name' => 'director_din_available',
-                        'label' => 'Do Directors Have DIN?',
-                        'type' => 'select',
-                        'required' => true,
-                        'validation' => 'required|string|in:yes,no',
-                        'options' => [
-                            'yes' => 'Yes',
-                            'no' => 'No',
-                        ],
-                    ],
-                ],
-            ],
-            'shareholding_details' => [
-                'label' => 'Shareholding Details',
-                'fields' => [
-                    [
-                        'name' => 'number_of_shareholders',
-                        'label' => 'Number of Shareholders',
-                        'type' => 'number',
-                        'required' => true,
-                        'validation' => 'required|integer|min:1',
-                    ],
-                    [
-                        'name' => 'shareholding_pattern',
-                        'label' => 'Shareholding Pattern (Describe % distribution)',
-                        'type' => 'textarea',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                ],
-            ],
-            'contact_details' => [
-                'label' => 'Contact Details',
-                'fields' => [
-                    [
-                        'name' => 'contact_person',
-                        'label' => 'Contact Person Name',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string|max:255',
-                    ],
-                    [
-                        'name' => 'mobile',
-                        'label' => 'Mobile Number',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|digits:10',
-                    ],
-                    [
-                        'name' => 'email',
-                        'label' => 'Email Address',
-                        'type' => 'email',
-                        'required' => true,
-                        'validation' => 'required|email',
-                    ],
-                ],
-            ],
+
         ],
         'documents' => [
-            [
-                'name' => 'director_pan',
-                'label' => 'PAN Card of Directors',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'director_address_proof',
-                'label' => 'Address Proof of Directors',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo',
-                'label' => 'Passport Size Photograph of Directors',
-                'required' => true,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'registered_office_proof',
-                'label' => 'Registered Office Address Proof (Electricity Bill / Rent Agreement)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'noc_from_owner',
-                'label' => 'NOC from Property Owner (If Rented)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-            [
-                'name' => 'moa_draft',
-                'label' => 'Draft MOA',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-            [
-                'name' => 'aoa_draft',
-                'label' => 'Draft AOA',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
+
         ],
     ],
     'opc-registation' => [
