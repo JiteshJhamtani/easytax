@@ -132,105 +132,69 @@
                     @endif
                 </div>
 
-                @php
-                    // ── Separate repeater fields from regular fields ──
-                    $excludedKeys = ['admin_username', 'admin_password'];
-                    $allFormData  = $application->form_data ?? [];
+@php 
+                    // 1. Decode JSON
+                    $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : ($application->form_data ?? []);
+                    
+                    // 2. Hide backend credentials from the loop
+                    $formData = array_filter($formData, fn($key) => !in_array($key, ['admin_username', 'admin_password', 'moa', 'aoa']), ARRAY_FILTER_USE_KEY);
 
-                    // Detect repeater prefixes: director_N_* and member_N_*
-                    $repeaterPrefixes = ['director', 'member'];
-                    $repeaterGroups   = [];   // [ 'director' => [ 1 => [...fields], 2 => [...] ] ]
-                    $regularFormData  = [];
-
-                    foreach ($allFormData as $key => $value) {
-                        if (in_array($key, $excludedKeys)) continue;
-
-                        $matched = false;
-                        foreach ($repeaterPrefixes as $prefix) {
-                            // Match pattern: prefix_N_fieldname  e.g. director_1_name
-                            if (preg_match('/^' . $prefix . '_(\d+)_(.+)$/', $key, $m)) {
-                                $repeaterGroups[$prefix][(int)$m[1]][$m[2]] = $value;
-                                $matched = true;
-                                break;
+                    // 3. SMART REPEATER ENGINE
+                    $regularData = [];
+                    $repeaterGroups = [];
+                    
+                    foreach($formData as $key => $value) {
+                        if (str_starts_with($key, 'director_') || str_starts_with($key, 'member_') || str_starts_with($key, 'partner_')) {
+                            if (preg_match('/^([a-zA-Z]+)_(\d+)_(.+)$/', $key, $matches)) {
+                                $prefix = $matches[1]; 
+                                $index = (int)$matches[2] - 1; 
+                                $subField = $matches[3]; 
+                                $repeaterGroups[$prefix][$index][$subField] = $value;
+                            } else {
+                                $regularData[$key] = $value;
                             }
+                        } else {
+                            $regularData[$key] = $value;
                         }
+                    }
 
-                        if (!$matched) {
-                            $regularFormData[$key] = $value;
+                    // 🚨 4. CLEANUP FILTER: Remove any member that is completely empty (Members 3-8) 🚨
+                    foreach ($repeaterGroups as $prefix => $items) {
+                        foreach ($items as $index => $itemData) {
+                            $hasData = false;
+                            foreach ($itemData as $val) {
+                                if (!empty($val)) {
+                                    $hasData = true;
+                                    break;
+                                }
+                            }
+                            // If all fields for this member are empty, delete the member from the view
+                            if (!$hasData) {
+                                unset($repeaterGroups[$prefix][$index]); 
+                            }
                         }
                     }
                 @endphp
 
                 <div class="card-body p-4 bg-light rounded-bottom">
-
-                    {{-- ── Regular fields grid ── --}}
-                    @if(count($regularFormData))
+                    
+                    {{-- REGULAR FORM FIELDS (Top Section) --}}
+                    @if(count($regularData) > 0)
                         <div class="row">
-                            @foreach ($regularFormData as $field => $value)
+                            @foreach($regularData as $key => $value)
                                 <div class="col-md-6 mb-3">
-                                    <div class="bg-white p-3 rounded-lg border shadow-sm h-100 data-box transition-hover">
-                                        <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">
-                                            {{ Str::title(str_replace('_', ' ', $field)) }}
-                                        </span>
+                                    <div class="bg-white p-3 rounded-lg border shadow-sm h-100 data-box transition-hover" style="border-left: 3px solid #1e9c5d !important;">
+                                        <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">{{ str_replace('_', ' ', $key) }}</span>
                                         <span class="text-dark font-weight-normal" style="word-break: break-word;">
-                                            @if(is_array($value))
-                                                {{ implode(', ', $value) }}
-                                            @elseif(is_bool($value))
-                                                <span class="badge {{ $value ? 'badge-success-soft' : 'badge-secondary-soft' }} px-2 py-1">
-                                                    {{ $value ? 'Yes' : 'No' }}
-                                                </span>
-                                            @elseif(empty($value))
-                                                <span class="text-muted font-italic">Not provided</span>
-                                            @else
-                                                {{ $value }}
-                                            @endif
+                                            {{ is_array($value) ? implode(', ', $value) : (empty($value) && $value !== '0' ? 'Not provided' : $value) }}
                                         </span>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
-                    @endif
-
-                    {{-- ── Repeater groups (Directors / Members) ── --}}
-                    @foreach($repeaterGroups as $prefix => $group)
-                        @php ksort($group); @endphp
-                        <div class="mt-4">
-                            <h6 class="font-weight-bold text-dark mb-3 text-uppercase" style="font-size:0.8rem; letter-spacing:0.05em;">
-                                <i class="fas fa-users text-primary mr-2"></i>
-                                {{ Str::title($prefix) }} Details
-                            </h6>
-
-                            @foreach($group as $index => $fields)
-                                <div class="mb-3 p-3 bg-white rounded-lg border shadow-sm"
-                                    style="border-left: 3px solid #1E9C5D !important;">
-                                    <div class="font-weight-bold text-success mb-2" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em;">
-                                        {{ Str::title($prefix) }} {{ $index }}
-                                    </div>
-                                    <div class="row">
-                                        @foreach($fields as $fieldName => $fieldValue)
-                                            <div class="col-md-6 mb-2">
-                                                <span class="d-block text-muted text-uppercase" style="font-size:0.7rem; font-weight:700;">
-                                                    {{ Str::title(str_replace('_', ' ', $fieldName)) }}
-                                                </span>
-                                                <span class="text-dark" style="word-break:break-word;">
-                                                    @if(empty($fieldValue))
-                                                        <span class="text-muted font-italic">Not provided</span>
-                                                    @else
-                                                        {{ $fieldValue }}
-                                                    @endif
-                                                </span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endforeach
-
-                    @if(empty($regularFormData) && empty($repeaterGroups))
+                    @elseif(empty($repeaterGroups))
                         <div class="text-center text-muted py-4">
-                            <div class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm border"
-                                style="width: 70px; height: 70px;">
+                            <div class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm border" style="width: 70px; height: 70px;">
                                 <i class="fas fa-inbox fa-2x text-secondary opacity-50"></i>
                             </div>
                             <h6 class="font-weight-bold">No Client Data</h6>
@@ -238,10 +202,36 @@
                         </div>
                     @endif
 
+                    {{-- DYNAMIC REPEATER BOXES (Member/Director Details) --}}
+                    @foreach($repeaterGroups as $groupName => $items)
+                        @if(count($items) > 0)
+                            <h5 class="font-weight-bold text-dark mt-4 mb-3 border-bottom pb-2">
+                                <i class="fas fa-users text-primary mr-2"></i> {{ ucfirst($groupName) }} Details
+                            </h5>
+                            
+                            @foreach($items as $index => $itemData)
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <strong class="text-muted text-xs text-uppercase mb-2 d-block">{{ ucfirst($groupName) }} {{ $index + 1 }}</strong>
+                                    </div>
+                                    @foreach($itemData as $subKey => $subValue)
+                                        <div class="col-md-4 mb-3">
+                                            <div class="bg-white p-3 rounded-lg border shadow-sm h-100 data-box transition-hover" style="border-left: 3px solid #1e9c5d !important;">
+                                                <span class="d-block text-muted text-xs font-weight-bold text-uppercase mb-1">{{ str_replace('_', ' ', $subKey) }}</span>
+                                                <span class="text-dark font-weight-normal" style="word-break: break-word;">
+                                                    {{ empty($subValue) && $subValue !== '0' ? 'Not provided' : $subValue }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        @endif
+                    @endforeach
+
                 </div>
             </div>
-
-           {{-- IDENTIFY THE SERVICE TYPE --}}
+{{-- IDENTIFY THE SERVICE TYPE --}}
             @php
                 $companyServices = [
                     'fpo-registration', 
@@ -255,92 +245,56 @@
                 $isGstSetup = ($application->service->slug ?? '') === 'gst-registration';
             @endphp
 
-            {{-- ============================================================== --}}
-            {{-- SCENARIO 1: COMPANY REGISTRATIONS (MOA / AOA / INCORPORATION) --}}
-            {{-- ============================================================== --}}
-            @if($isCompanySetup && (!empty($application->form_data['moa']) || !empty($application->form_data['aoa']) || $application->getMedia('final_deliverables')->count()))
-            <div class="card border-0 shadow-sm mb-4 rounded-lg">
-                <div class="card-header bg-white py-3 border-bottom">
+            {{-- ADMIN INPUT FORM FOR COMPANY OR GST DELIVERABLES --}}
+            @if($isCompanySetup || $isGstSetup)
+            <div class="card border-0 shadow-sm mb-4 rounded-lg elegant-border">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                     <h3 class="card-title font-weight-bold text-dark mb-0">
-                        <i class="fas fa-file-signature text-primary mr-2"></i> Corporate Documents
+                        <i class="fas fa-key text-primary mr-2"></i> Corporate Documents & Deliverables
                     </h3>
                 </div>
                 <div class="card-body p-4 bg-primary-soft rounded-bottom">
-                    <div class="row">
-                        @if(!empty($application->form_data['moa']))
-                        <div class="col-md-6 mb-3">
-                            <div class="bg-white p-3 rounded-lg border shadow-sm h-100 data-box transition-hover">
-                                <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">MOA Details</span>
-                                <span class="text-dark font-weight-normal" style="font-size: 1.05rem; word-wrap: break-word;">{{ $application->form_data['moa'] }}</span>
-                            </div>
-                        </div>
-                        @endif
-                        
-                        @if(!empty($application->form_data['aoa']))
-                        <div class="col-md-6 mb-3">
-                            <div class="bg-white p-3 rounded-lg border shadow-sm h-100 data-box transition-hover">
-                                <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">AOA Details</span>
-                                <span class="text-dark font-weight-normal" style="font-size: 1.05rem; word-wrap: break-word;">{{ $application->form_data['aoa'] }}</span>
-                            </div>
-                        </div>
-                        @endif
-                    </div>
-
-                    @if ($application->getMedia('final_deliverables')->count())
-                        <h6 class="font-weight-bold text-dark mt-3 mb-3">Incorporation Certificate</h6>
-                        <div class="document-list">
-                            @foreach ($application->getMedia('final_deliverables') as $doc)
-                                <div class="document-item d-flex align-items-center p-3 mb-2 bg-white rounded-lg border shadow-sm">
-                                    <div class="document-icon bg-light rounded d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
-                                        <i class="fas fa-file-pdf text-danger fa-lg"></i>
-                                    </div>
-                                    <div class="document-info flex-grow-1">
-                                        <div class="text-dark font-weight-bold text-sm">{{ $doc->name }}</div>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ route('agent.documents.view', $doc->id) }}" target="_blank" class="btn btn-sm btn-light border text-primary"><i class="fas fa-eye"></i> View</a>
-                                        <a href="{{ route('agent.documents.download', $doc->id) }}" class="btn btn-sm btn-primary"><i class="fas fa-download"></i> Download</a>
-                                    </div>
+                    
+                    {{-- THE FORM WHERE ADMIN TYPES MOA / AOA OR GST --}}
+                    <form action="{{ route('admin.applications.storeCredentials', $application->id) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="row">
+                            
+                            @if($isCompanySetup)
+                                {{-- 🏢 INPUT FIELDS FOR COMPANY MOA/AOA --}}
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-dark text-sm">MOA Details</label>
+                                    <input type="text" name="moa" class="form-control rounded-lg" value="{{ $application->form_data['moa'] ?? '' }}" placeholder="Enter MOA ">
                                 </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            </div>
-            
-            {{-- ============================================================== --}}
-            {{-- SCENARIO 2: GST REGISTRATION (USERNAME / PASSWORD)             --}}
-            {{-- ============================================================== --}}
-            @elseif($isGstSetup && (!empty($application->form_data['admin_username']) || !empty($application->form_data['admin_password']) || $application->getMedia('final_deliverables')->count()))
-            <div class="card border-0 shadow-sm mb-4 rounded-lg">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h3 class="card-title font-weight-bold text-dark mb-0">
-                        <i class="fas fa-key text-primary mr-2"></i> GST Credentials & Deliverables
-                    </h3>
-                </div>
-                <div class="card-body p-4 bg-primary-soft rounded-bottom">
-                    <div class="row">
-                        @if(!empty($application->form_data['admin_username']))
-                        <div class="col-md-6 mb-3">
-                            <div class="bg-white p-3 rounded-lg border shadow-sm h-100 data-box transition-hover">
-                                <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">GST Username</span>
-                                <span class="text-dark font-weight-bold" style="font-size: 1.1rem; letter-spacing: 1px;">{{ $application->form_data['admin_username'] }}</span>
-                            </div>
-                        </div>
-                        @endif
-                        
-                        @if(!empty($application->form_data['admin_password']))
-                        <div class="col-md-6 mb-3">
-                            <div class="bg-white p-3 rounded-lg border shadow-sm h-100 data-box transition-hover">
-                                <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">GST Password</span>
-                                <span class="text-dark font-weight-bold" style="font-size: 1.1rem;">{{ $application->form_data['admin_password'] }}</span>
-                            </div>
-                        </div>
-                        @endif
-                    </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-dark text-sm">AOA Details</label>
+                                    <input type="text" name="aoa" class="form-control rounded-lg" value="{{ $application->form_data['aoa'] ?? '' }}" placeholder="Enter AOA ">
+                                </div>
+                                
+                            @elseif($isGstSetup)
+                                {{-- 📄 INPUT FIELDS FOR GST --}}
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-dark text-sm">GST Username</label>
+                                    <input type="text" name="admin_username" class="form-control rounded-lg" value="{{ $application->form_data['admin_username'] ?? '' }}" placeholder="Enter Username for Agent">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="font-weight-bold text-dark text-sm">GST Password</label>
+                                    <input type="text" name="admin_password" class="form-control rounded-lg" value="{{ $application->form_data['admin_password'] ?? '' }}" placeholder="Enter Password for Agent">
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="font-weight-bold text-dark text-sm">Upload GST Certificate (PDF/Image)</label>
+                                    <input type="file" name="final_document" class="form-control-file" accept=".pdf,.png,.jpg,.jpeg">
+                                </div>
+                            @endif
 
+                        </div>
+                        <button type="submit" class="btn btn-primary font-weight-bold shadow-sm">Save & Share with Agent</button>
+                    </form>
+
+                    {{-- Show Uploaded Deliverables --}}
                     @if ($application->getMedia('final_deliverables')->count())
-                        <h6 class="font-weight-bold text-dark mt-3 mb-3">GST Certificate</h6>
+                        <hr class="my-4 border-light">
+                        <h6 class="font-weight-bold text-dark mb-3">Uploaded Certificate</h6>
                         <div class="document-list">
                             @foreach ($application->getMedia('final_deliverables') as $doc)
                                 <div class="document-item d-flex align-items-center p-3 mb-2 bg-white rounded-lg border shadow-sm">
@@ -351,8 +305,11 @@
                                         <div class="text-dark font-weight-bold text-sm">{{ $doc->name }}</div>
                                     </div>
                                     <div class="d-flex gap-2">
-                                        <a href="{{ route('agent.documents.view', $doc->id) }}" target="_blank" class="btn btn-sm btn-light border text-primary"><i class="fas fa-eye"></i> View</a>
-                                        <a href="{{ route('agent.documents.download', $doc->id) }}" class="btn btn-sm btn-primary"><i class="fas fa-download"></i> Download</a>
+                                        <a href="{{ route('admin.documents.view', $doc->id) }}" target="_blank" class="btn btn-sm btn-light border text-primary"><i class="fas fa-eye"></i></a>
+                                        <form action="{{ route('admin.applications.deleteDocument', $doc->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this document?');">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                        </form>
                                     </div>
                                 </div>
                             @endforeach
@@ -655,7 +612,7 @@
         .bg-danger-soft  { background-color: #fce8e6 !important; }
         .bg-info-soft    { background-color: #e0f2fe !important; color: #0284c7 !important; }
         .bg-secondary-soft { background-color: #f1f3f4 !important; }
-        .text-primary-dark { color: #1a73e8 !important; }
+        .text-primary-dark { color: #1e9c5d !important; }
         .badge-primary-soft   { background-color:#e8f0fe; color:#1a73e8; border:1px solid #d2e3fc; }
         .badge-success-soft   { background-color:#e6f4ea; color:#137333; border:1px solid #ceead6; }
         .badge-warning-soft   { background-color:#fef7e0; color:#b06000; border:1px solid #feefc3; }
@@ -664,7 +621,7 @@
         .badge-secondary-soft { background-color:#f1f3f4; color:#5f6368; border:1px solid #e8eaed; }
         .icon-box { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .detail-table td { padding:1.2rem 1rem; vertical-align:middle; }
-        .data-box { border-left: 3px solid #1a73e8 !important; }
+        .data-box { border-left: 3px solid #1e9c5d !important; }
         .transition-hover { transition: all 0.2s ease-in-out; }
         .data-box:hover, .document-item:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.08) !important; }
         .btn { border-radius: 8px; letter-spacing: 0.3px; }

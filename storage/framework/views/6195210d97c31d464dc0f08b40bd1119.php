@@ -248,6 +248,17 @@
         <div class="alert alert-danger mx-auto mt-3" style="max-width: 1100px; border-radius: 12px;"><?php echo e(session('error')); ?></div>
     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($errors->any()): ?>
+        <div class="alert alert-danger mx-auto mt-3" style="max-width: 1100px; border-radius: 12px; background-color: #fef2f2; border: 1px solid #f87171; color: #991b1b;">
+            <h6 style="font-weight: bold; margin-bottom: 0.5rem;">Please fix the following errors:</h6>
+            <ul style="margin-bottom: 0; padding-left: 1.5rem;">
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoop($loop->index); ?><?php endif; ?>
+                    <li><?php echo e($error); ?></li>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+            </ul>
+        </div>
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
     
     <header class="sv-hero">
         <div class="sv-breadcrumbs">
@@ -481,7 +492,7 @@
                 }
             }
 
-            // ── PRICING CALCULATOR ───────────────────────────
+           // ── PRICING CALCULATOR ───────────────────────────
             function calculateDynamicPrice() {
                 let selectedGst  = normalizeValue($('select[name="gst_type"]').val() || $('input[name="gst_type"]:checked').val());
                 let selectedFreq = normalizeValue($('select[name="frequency_of_return"]').val() || $('input[name="frequency_of_return"]:checked').val());
@@ -501,11 +512,10 @@
                            (normalizeValue(rule.itr_business)      === '' || normalizeValue(rule.itr_business)      === s_bus) &&
                            (normalizeValue(rule.itr_capital_gains) === '' || normalizeValue(rule.itr_capital_gains) === s_cg) &&
                            (normalizeValue(rule.itr_salary)        === '' || normalizeValue(rule.itr_salary)        === s_sal);
-                           
                 });
 
                 let finalTotal   = match ? parseFloat(match.base_price)        : <?php echo e($service->price ?? 0); ?>;
-                let finalComm    = match ? parseFloat(match.commission_amount)  : <?php echo e($service->commission_value ?? 0); ?>;
+                let finalComm    = match ? parseFloat(match.commission_amount) : <?php echo e($service->commission_value ?? 0); ?>;
                 let walletDeduct = finalTotal - finalComm;
                 $('#calc-total').text(finalTotal.toFixed(2));
                 $('#calc-comm').text(finalComm.toFixed(2));
@@ -518,167 +528,94 @@
             });
             setTimeout(() => { handleNestedFields(); calculateDynamicPrice(); }, 500);
 
-          const REPEATERS = [
-                {
-                    // 1. For Section 8, OPC, and Private Limited Company
-                    triggerName : 'number_of_directors',
-                    dinTrigger  : 'director_din_available',
-                    prefix      : 'director',
-                    sectionTitle: 'Director Details',
-                    min: 1, max: 8, // Set to 1 to accommodate OPCs
-                    fields: [
-                        { name: 'name',    label: 'Full Name',           type: 'text',     required: true  },
-                       
-                        { name: 'phone',   label: 'Mobile Number',       type: 'text',     required: true  },
-                        { name: 'email',   label: 'Email Address',       type: 'email',    required: true  },
-                       
-                    ]
-                },
-                {
-                    // 2. For FPO Registration
-                    triggerName : 'number_of_members',
-                    prefix      : 'member',
-                    sectionTitle: 'Member Details',
-                    min: 2, max: 15,
-                    fields: [
-                        { name: 'name',         label: 'Full Name',            type: 'text', required: true  },
-                        { name: 'phone',        label: 'Mobile Number',        type: 'text', required: true  },
-                        { name: 'email',        label: 'Email Address',        type: 'email',    required: true  },
-
-                    ]
-                },
-                {
-                    // 3. For LLP Registration
-                    triggerName : 'number_of_partners',
-                    dinTrigger  : 'partner_dpin_available', // LLPs use DPIN instead of DIN
-                    prefix      : 'partner',
-                    sectionTitle: 'Partner Details',
-                    min: 2, max: 8,
-                    fields: [
-                        { name: 'name',    label: 'Full Name',           type: 'text',     required: true  },
-                        { name: 'phone',   label: 'Mobile Number',       type: 'text',     required: true  },
-                        { name: 'email',   label: 'Email Address',       type: 'email',    required: true  },
-                       
-                    ]
-                }
+// ── SMART FORM HIDE/SHOW ENGINE ───────────────────────────
+            const REPEATER_CONFIGS = [
+                { trigger: 'number_of_members', prefix: 'member' },
+                { trigger: 'number_of_directors', prefix: 'director' },
+                { trigger: 'number_of_partners', prefix: 'partner' }
             ];
 
-
-
-            function buildField(prefix, index, fieldCfg, showDin) {
-                const fieldName = `${prefix}_${index}_${fieldCfg.name}`;
-                if (fieldCfg.dinConditional && !showDin) return '';
-                const required = fieldCfg.required ? 'required' : '';
-                const star     = fieldCfg.required ? '<span class="required">*</span>' : '';
-                const existing = document.querySelector(`[name="${fieldName}"]`);
-                const savedVal = existing ? existing.value : '';
-                let input = fieldCfg.type === 'textarea'
-                    ? `<textarea name="${fieldName}" class="form-control" rows="2" ${required}>${savedVal}</textarea>`
-                    : `<input type="${fieldCfg.type}" name="${fieldName}" class="form-control" value="${savedVal}" ${required}>`;
-                const spanStyle = fieldCfg.type === 'textarea' ? 'style="grid-column:span 2;"' : '';
-                return `<div class="form-group" ${spanStyle}><label>${fieldCfg.label}${star}</label>${input}</div>`;
-            }
-
-            function buildCard(prefix, index, fields, showDin) {
-                const fieldsHtml = fields.map(f => buildField(prefix, index, f, showDin)).join('');
-                return `
-                    <div class="repeater-card" data-index="${index}" style="
-                        grid-column:span 2; background:#f8fffe;
-                        border:1.5px solid #c8eadb; border-radius:12px;
-                        padding:1.25rem 1.5rem 0.5rem; margin-bottom:0.5rem;">
-                        <div style="margin-bottom:1rem;">
-                            <span style="font-weight:700;font-size:0.9rem;color:#1E9C5D;text-transform:uppercase;letter-spacing:0.05em;">
-                                ${prefix.charAt(0).toUpperCase() + prefix.slice(1)} ${index}
-                            </span>
-                        </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem 1.5rem;">
-                            ${fieldsHtml}
-                        </div>
-                    </div>`;
-            }
-
-          function getRepeaterContainer(triggerName) {
-                const id = `repeater-container-${triggerName}`;
-                let container = document.getElementById(id);
-                
-                if (!container) {
-                    container = document.createElement('div');
-                    container.id = id;
-                    container.style.cssText = 'grid-column:span 2; margin-top:0.5rem;';
+            function applyDynamicHideShow() {
+                REPEATER_CONFIGS.forEach(cfg => {
+                    // Find the dropdown (handles normal names or array names)
+                    let $dropdown = $('select').filter(function() {
+                        return ($(this).attr('name') || '').includes(cfg.trigger);
+                    });
                     
-                    // 🚀 NEW: Search for the "Contact Details" section
-                    const allSections = document.querySelectorAll('.form-section');
-                    let contactSection = null;
-                    
-                    allSections.forEach(section => {
-                        const heading = section.querySelector('h3');
-                        if (heading && heading.textContent.toLowerCase().includes('contact')) {
-                            contactSection = section;
+                    if ($dropdown.length === 0) return; // Skip if this service doesn't have it
+
+                    $dropdown.on('change', function() {
+                        let count = parseInt($(this).val()) || 0;
+                        
+                        // Loop 1 through 8 (Max potential fields)
+                        for (let i = 1; i <= 8; i++) {
+                            
+                            // 1. Find Data Fields (e.g., member_1_name)
+                            let $dataFields = $(':input').not('[type="file"]').filter(function() {
+                                return ($(this).attr('name') || '').includes(cfg.prefix + '_' + i + '_');
+                            });
+                            
+                            // 2. Find Document Uploads (BULLETPROOF FILE FINDER)
+                            let $fileFields = $('input[type="file"]').filter(function() {
+                                let name = $(this).attr('name') || '';
+                                // This matches bank_statement_1, documents[bank_statement_1], bank_statement_1[], etc.
+                                return name.endsWith('_' + i) || name.includes('_' + i + ']') || name.includes('_' + i + '[');
+                            });
+                            
+                            // 3. Find the Entire Section Wrapper (e.g., "Member 1 Details")
+                            let sectionTitleRegex = new RegExp(cfg.prefix + '\\s+' + i, 'i');
+                            let $section = $('.form-section').filter(function() {
+                                let text = $(this).find('h3').text();
+                                return sectionTitleRegex.test(text);
+                            });
+
+                            // Group all wrappers to hide/show cleanly
+                            let $containers = $dataFields.closest('.form-group').add($fileFields.closest('.form-group'));
+
+                            if (i <= count) {
+                                // SHOW: The user needs this index
+                                $containers.show();
+                                $section.show();
+                                
+                                // Re-apply 'required' if the field originally needed it
+                                $dataFields.add($fileFields).each(function() {
+                                    if ($(this).data('was-required')) {
+                                        $(this).prop('required', true);
+                                    }
+                                });
+                            } else {
+                                // HIDE: The user doesn't need this index
+                                $containers.hide();
+                                $section.hide();
+                                
+                                // Remove 'required' so the form can submit without error, and clear values
+                                $dataFields.add($fileFields).each(function() {
+                                    if ($(this).prop('required')) {
+                                        $(this).data('was-required', true); // Remember it was required
+                                        $(this).prop('required', false);
+                                    }
+                                    if ($(this).is(':checkbox, :radio')) {
+                                        $(this).prop('checked', false);
+                                    } else {
+                                        $(this).val('');
+                                    }
+                                });
+                            }
                         }
                     });
 
-                    // Inject into Contact section, or fallback to the current section
-                    const targetSection = contactSection || (() => {
-                        const trigger = document.querySelector(`[name="${triggerName}"]`);
-                        return trigger ? trigger.closest('.form-section') : null;
-                    })();
-
-                    if (!targetSection) return null;
-                    
-                    const grid = targetSection.querySelector('.form-grid');
-                    if (grid) grid.insertBefore(container, grid.firstChild); // Puts it at the top of the section
-                }
-                return container;
-            }
-            function renderRepeater(cfg) {
-                const trigger = document.querySelector(`[name="${cfg.triggerName}"]`);
-                if (!trigger) return;
-                const container = getRepeaterContainer(cfg.triggerName);
-                if (!container) return;
-                let count = Math.min(Math.max(parseInt(trigger.value) || 0, 0), cfg.max);
-                const showDin = cfg.dinTrigger
-                    ? (document.querySelector(`[name="${cfg.dinTrigger}"]`)?.value === 'yes')
-                    : false;
-                trigger.setCustomValidity(count > 0 && count < cfg.min ? `Minimum ${cfg.min} required` : '');
-                if (count < cfg.min) { container.innerHTML = ''; return; }
-                let html = `<div style="grid-column:span 2;display:grid;grid-template-columns:1fr;gap:0.75rem;margin-top:0.75rem;">`;
-                for (let i = 1; i <= count; i++) html += buildCard(cfg.prefix, i, cfg.fields, showDin);
-                html += '</div>';
-                container.innerHTML = html;
-            }
-
-            REPEATERS.forEach(cfg => {
-                const trigger = document.querySelector(`[name="${cfg.triggerName}"]`);
-                if (!trigger) return;
-                trigger.setAttribute('min', cfg.min);
-                trigger.setAttribute('max', cfg.max);
-                trigger.addEventListener('input',  () => renderRepeater(cfg));
-                trigger.addEventListener('change', () => renderRepeater(cfg));
-                if (cfg.dinTrigger) {
-                    const dinSelect = document.querySelector(`[name="${cfg.dinTrigger}"]`);
-                    if (dinSelect) dinSelect.addEventListener('change', () => renderRepeater(cfg));
-                }
-                if (trigger.value) renderRepeater(cfg);
-            });
-
-            const form = document.querySelector('form');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    REPEATERS.forEach(cfg => {
-                        const trigger = document.querySelector(`[name="${cfg.triggerName}"]`);
-                        if (!trigger || !trigger.value) return;
-                        const count = parseInt(trigger.value);
-                        if (count < cfg.min || count > cfg.max) {
-                            e.preventDefault();
-                            alert(`${cfg.sectionTitle}: number must be between ${cfg.min} and ${cfg.max}.`);
-                            trigger.focus();
-                        }
-                    });
+                    // Trigger immediately on page load to hide extras
+                    $dropdown.trigger('change');
                 });
             }
 
-        }); 
+            // Start the engine
+            applyDynamicHideShow();
+
+        }); // end DOMContentLoaded
     </script>
+    
+   
     
     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('razorpay_order')): ?>
         <script>

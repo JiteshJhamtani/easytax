@@ -425,13 +425,13 @@ return [
                         'required' => true,
                         'validation' => 'required|integer|min:2',
                         'options' => [
-                            '2' => '2 Members',
-                            '3' => '3 Members',
-                            '4' => '4 Members',
-                            '5' => '5 Members',
-                            '6' => '6 Members',
-                            '7' => '7 Members',
-                            '8' => '8 Members',
+                            '2' => '2 Directors',
+                            '3' => '3 Directors',
+                            '4' => '4 Directors',
+                            '5' => '5 Directors',
+                            '6' => '6 Directors',
+                            '7' => '7 Directors',
+                            '8' => '8 Directors',
                         ],
                     ],
                     [
@@ -447,56 +447,216 @@ return [
                     ],
                 ],
             ],
-            'contact_details' => [
-                'label' => 'Contact Details',
+            'director_1_details' => [
+                'label' => 'Director 1 Details',
                 'fields' => [
                     [
-                        'name' => 'contact_mobile',
-                        'label' => 'Contact Mobile Number',
+                        'name' => 'director_1_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_1_mobile',
+                        'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
                         'validation' => 'required|digits:10',
                     ],
                     [
-                        'name' => 'contact_email',
-                        'label' => 'Contact Email Address',
+                        'name' => 'director_1_email',
+                        'label' => 'Email Address',
                         'type' => 'email',
                         'required' => true,
                         'validation' => 'required|email',
                     ],
                 ],
             ],
+            'director_2_details' => [
+                'label' => 'Director 2 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_2_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_2_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|digits:10',
+                    ],
+                    [
+                        'name' => 'director_2_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => true,
+                        'validation' => 'required|email',
+                    ],
+                ],
+            ],
+            'director_3_details' => [
+                'label' => 'Director 3 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_3_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_3_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_3_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_4_details' => [
+                'label' => 'Director 4 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_4_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_4_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_4_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_5_details' => [
+                'label' => 'Director 5 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_5_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_5_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_5_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_6_details' => [
+                'label' => 'Director 6 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_6_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_6_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_6_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_7_details' => [
+                'label' => 'Director 7 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_7_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_7_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_7_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_8_details' => [
+                'label' => 'Director 8 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_8_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_8_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_8_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
         ],
         'documents' => [
-            [
-                'name' => 'director_pan',
-                'label' => 'Director PAN Card (Self Attested)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'director_address_proof',
-                'label' => 'Director Address Proof (Self Attested)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo',
-                'label' => 'Passport Size Photo of Directors',
-                'required' => true,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
             [
                 'name' => 'office_address_proof',
                 'label' => 'Registered Office Address Proof (Utility Bill / Rent Agreement)',
@@ -518,19 +678,323 @@ return [
                 ],
             ],
             [
-                'name' => 'moa_draft',
-                'label' => 'Draft Memorandum of Association (MOA)',
-                'required' => true,
+                'name' => 'pan_card_1',
+                'label' => 'PAN Card (Director 1)',
+                'required' => false,
                 'mimes' => [
                     'pdf',
+                    'jpg',
+                    'png',
                 ],
             ],
             [
-                'name' => 'aoa_draft',
-                'label' => 'Draft Articles of Association (AOA)',
-                'required' => true,
+                'name' => 'pan_card_2',
+                'label' => 'PAN Card (Director 2)',
+                'required' => false,
                 'mimes' => [
                     'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_3',
+                'label' => 'PAN Card (Director 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_4',
+                'label' => 'PAN Card (Director 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_5',
+                'label' => 'PAN Card (Director 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_6',
+                'label' => 'PAN Card (Director 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_7',
+                'label' => 'PAN Card (Director 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_8',
+                'label' => 'PAN Card (Director 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_1',
+                'label' => 'Aadhaar Card (Director 1)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_2',
+                'label' => 'Aadhaar Card (Director 2)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_3',
+                'label' => 'Aadhaar Card (Director 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_4',
+                'label' => 'Aadhaar Card (Director 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_5',
+                'label' => 'Aadhaar Card (Director 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_6',
+                'label' => 'Aadhaar Card (Director 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_7',
+                'label' => 'Aadhaar Card (Director 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_8',
+                'label' => 'Aadhaar Card (Director 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_1',
+                'label' => 'Bank Statement (Director 1)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_2',
+                'label' => 'Bank Statement (Director 2)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_3',
+                'label' => 'Bank Statement (Director 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_4',
+                'label' => 'Bank Statement (Director 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_5',
+                'label' => 'Bank Statement (Director 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_6',
+                'label' => 'Bank Statement (Director 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_7',
+                'label' => 'Bank Statement (Director 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_8',
+                'label' => 'Bank Statement (Director 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_1',
+                'label' => 'Passport Photo (Director 1)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_2',
+                'label' => 'Passport Photo (Director 2)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_3',
+                'label' => 'Passport Photo (Director 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_4',
+                'label' => 'Passport Photo (Director 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_5',
+                'label' => 'Passport Photo (Director 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_6',
+                'label' => 'Passport Photo (Director 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_7',
+                'label' => 'Passport Photo (Director 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_8',
+                'label' => 'Passport Photo (Director 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
                 ],
             ],
         ],
@@ -643,29 +1107,211 @@ return [
                     ],
                 ],
             ],
-            'contact_details' => [
-                'label' => 'Contact Details',
+            'contact_1_details' => [
+                'label' => 'Member 1 Details',
                 'fields' => [
                     [
-                        'name' => 'contact_person',
+                        'name' => 'member_1_name',
                         'label' => 'Contact Person Name',
                         'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string|max:255',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
                     ],
                     [
-                        'name' => 'mobile',
+                        'name' => 'member_1_mobile',
                         'label' => 'Mobile Number',
                         'type' => 'text',
-                        'required' => true,
+                        'required' => false,
                         'validation' => 'required|digits:10',
                     ],
                     [
-                        'name' => 'email',
+                        'name' => 'member_1_email',
                         'label' => 'Email Address',
                         'type' => 'email',
-                        'required' => true,
+                        'required' => false,
                         'validation' => 'required|email',
+                    ],
+                ],
+            ],
+            'member_2_details' => [
+                'label' => 'Member 2 Details',
+                'fields' => [
+                    [
+                        'name' => 'member_2_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'member_2_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'member_2_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'member_3_details' => [
+                'label' => 'Member 3 Details',
+                'fields' => [
+                    [
+                        'name' => 'member_3_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'member_3_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'member_3_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'member_4_details' => [
+                'label' => 'Member 4 Details',
+                'fields' => [
+                    [
+                        'name' => 'member_4_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'member_4_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'member_4_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'member_5_details' => [
+                'label' => 'Member 5 Details',
+                'fields' => [
+                    [
+                        'name' => 'member_5_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'member_5_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'member_5_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'member_6_details' => [
+                'label' => 'Member 6 Details',
+                'fields' => [
+                    [
+                        'name' => 'member_6_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'member_6_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'member_6_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'member_7_details' => [
+                'label' => 'Member 7 Details',
+                'fields' => [
+                    [
+                        'name' => 'member_7_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'member_7_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'member_7_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'member_8_details' => [
+                'label' => 'Member 8 Details',
+                'fields' => [
+                    [
+                        'name' => 'member_8_name',
+                        'label' => 'Contact Person Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'member_8_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'member_8_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
                     ],
                 ],
             ],
@@ -674,7 +1320,7 @@ return [
             [
                 'name' => 'member_list',
                 'label' => 'List of Members (Mandatory for Registration)',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'xls',
@@ -684,7 +1330,7 @@ return [
             [
                 'name' => 'identity_proof_members',
                 'label' => 'Identity Proof of Members/Promoters',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'jpg',
@@ -707,6 +1353,328 @@ return [
                 'required' => false,
                 'mimes' => [
                     'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_1',
+                'label' => 'Last Two Months Bank Statement',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_2',
+                'label' => 'Last Two Months Bank Statement',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_3',
+                'label' => 'Last Two Months Bank Statement',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_4',
+                'label' => 'Last Two Months Bank Statement',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_5',
+                'label' => 'Last Two Months Bank Statement',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_6',
+                'label' => 'Last Two Months Bank Statement',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_7',
+                'label' => 'Last Two Months Bank Statement',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_8',
+                'label' => 'Last Two Months Bank Statement',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'electricity_bill_1',
+                'label' => 'Electricity Bill',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'electricity_bill_2',
+                'label' => 'Electricity Bill',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'electricity_bill_3',
+                'label' => 'Electricity Bill',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'electricity_bill_4',
+                'label' => 'Electricity Bill',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'electricity_bill_5',
+                'label' => 'Electricity Bill',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'electricity_bill_6',
+                'label' => 'Electricity Bill',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'electricity_bill_7',
+                'label' => 'Electricity Bill',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'electricity_bill_8',
+                'label' => 'Electricity Bill',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_1',
+                'label' => 'PAN Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_2',
+                'label' => 'PAN Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_3',
+                'label' => 'PAN Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_4',
+                'label' => 'PAN Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_5',
+                'label' => 'PAN Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_6',
+                'label' => 'PAN Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_7',
+                'label' => 'PAN Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_8',
+                'label' => 'PAN Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_1',
+                'label' => 'Aadhaar Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_2',
+                'label' => 'Aadhaar Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_3',
+                'label' => 'Aadhaar Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_4',
+                'label' => 'Aadhaar Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_5',
+                'label' => 'Aadhaar Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_6',
+                'label' => 'Aadhaar Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_7',
+                'label' => 'Aadhaar Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar_card_8',
+                'label' => 'Aadhaar Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
                 ],
             ],
         ],
@@ -1212,7 +2180,7 @@ return [
                         'name' => 'plan',
                         'label' => 'Plan Options',
                         'type' => 'select',
-                        'required' => false,
+                        'required' => true,
                         'validation' => 'nullable|string',
                         'options' => [
                             'one_time' => 'One Time',
@@ -1224,7 +2192,7 @@ return [
                         'name' => 'month',
                         'label' => 'Select Month',
                         'type' => 'select',
-                        'required' => false,
+                        'required' => true,
                         'validation' => 'nullable|string',
                         'options' => [
                             'april' => 'April',
@@ -1245,7 +2213,7 @@ return [
                         'name' => 'quarter',
                         'label' => 'Quarter',
                         'type' => 'select',
-                        'required' => false,
+                        'required' => true,
                         'validation' => 'nullable|string',
                         'options' => [
                             'q1' => 'April - June',
@@ -1358,9 +2326,18 @@ return [
                     [
                         'name' => 'number_of_directors',
                         'label' => 'Number of Directors (Minimum 2)',
-                        'type' => 'number',
+                        'type' => 'select',
                         'required' => true,
                         'validation' => 'required|integer|min:2',
+                        'options' => [
+                            '2' => '2 Directors',
+                            '3' => '3 Directors',
+                            '4' => '4 Directors',
+                            '5' => '5 Directors',
+                            '6' => '6 Directors',
+                            '7' => '7 Directors',
+                            '8' => '8 Directors',
+                        ],
                     ],
                     [
                         'name' => 'resident_director',
@@ -1405,25 +2382,25 @@ return [
                     ],
                 ],
             ],
-            'contact_details' => [
-                'label' => 'Contact Details',
+            'director_1_details' => [
+                'label' => 'Director 1 Details',
                 'fields' => [
                     [
-                        'name' => 'contact_person',
-                        'label' => 'Contact Person Name',
+                        'name' => 'director_1_name',
+                        'label' => 'Full Name',
                         'type' => 'text',
                         'required' => true,
                         'validation' => 'required|string|max:255',
                     ],
                     [
-                        'name' => 'mobile',
+                        'name' => 'director_1_mobile',
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
                         'validation' => 'required|digits:10',
                     ],
                     [
-                        'name' => 'email',
+                        'name' => 'director_1_email',
                         'label' => 'Email Address',
                         'type' => 'email',
                         'required' => true,
@@ -1431,11 +2408,193 @@ return [
                     ],
                 ],
             ],
+            'director_2_details' => [
+                'label' => 'Director 2 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_2_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_2_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|digits:10',
+                    ],
+                    [
+                        'name' => 'director_2_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => true,
+                        'validation' => 'required|email',
+                    ],
+                ],
+            ],
+            'director_3_details' => [
+                'label' => 'Director 3 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_3_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_3_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_3_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_4_details' => [
+                'label' => 'Director 4 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_4_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_4_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_4_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_5_details' => [
+                'label' => 'Director 5 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_5_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_5_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_5_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_6_details' => [
+                'label' => 'Director 6 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_6_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_6_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_6_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_7_details' => [
+                'label' => 'Director 7 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_7_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_7_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_7_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_8_details' => [
+                'label' => 'Director 8 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_8_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_8_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_8_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
         ],
         'documents' => [
             [
-                'name' => 'director_pan',
-                'label' => 'PAN Card of Directors',
+                'name' => 'pan_card_1',
+                'label' => 'PAN Card (Director 1)',
                 'required' => true,
                 'mimes' => [
                     'pdf',
@@ -1444,8 +2603,8 @@ return [
                 ],
             ],
             [
-                'name' => 'director_address_proof',
-                'label' => 'Address Proof of Directors',
+                'name' => 'address_proof_1',
+                'label' => 'Address Proof (Director 1)',
                 'required' => true,
                 'mimes' => [
                     'pdf',
@@ -1454,10 +2613,293 @@ return [
                 ],
             ],
             [
-                'name' => 'passport_photo',
-                'label' => 'Passport Size Photograph of Directors',
+                'name' => 'passport_photo_1',
+                'label' => 'Passport Photo (Director 1)',
                 'required' => true,
                 'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_1',
+                'label' => 'Bank Statement (Director 1)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_2',
+                'label' => 'PAN Card (Director 2)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_2',
+                'label' => 'Address Proof (Director 2)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_2',
+                'label' => 'Passport Photo (Director 2)',
+                'required' => true,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_2',
+                'label' => 'Bank Statement (Director 2)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_3',
+                'label' => 'PAN Card (Director 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_3',
+                'label' => 'Address Proof (Director 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_3',
+                'label' => 'Passport Photo (Director 3)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_3',
+                'label' => 'Bank Statement (Director 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_4',
+                'label' => 'PAN Card (Director 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_4',
+                'label' => 'Address Proof (Director 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_4',
+                'label' => 'Passport Photo (Director 4)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_4',
+                'label' => 'Bank Statement (Director 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_5',
+                'label' => 'PAN Card (Director 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_5',
+                'label' => 'Address Proof (Director 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_5',
+                'label' => 'Passport Photo (Director 5)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_5',
+                'label' => 'Bank Statement (Director 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_6',
+                'label' => 'PAN Card (Director 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_6',
+                'label' => 'Address Proof (Director 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_6',
+                'label' => 'Passport Photo (Director 6)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_6',
+                'label' => 'Bank Statement (Director 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_7',
+                'label' => 'PAN Card (Director 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_7',
+                'label' => 'Address Proof (Director 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_7',
+                'label' => 'Passport Photo (Director 7)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_7',
+                'label' => 'Bank Statement (Director 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_8',
+                'label' => 'PAN Card (Director 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_8',
+                'label' => 'Address Proof (Director 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_8',
+                'label' => 'Passport Photo (Director 8)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_8',
+                'label' => 'Bank Statement (Director 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
                     'jpg',
                     'png',
                 ],
@@ -1476,22 +2918,6 @@ return [
                 'name' => 'noc_from_owner',
                 'label' => 'NOC from Property Owner (If Rented)',
                 'required' => false,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-            [
-                'name' => 'moa_draft',
-                'label' => 'Draft MOA',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-            [
-                'name' => 'aoa_draft',
-                'label' => 'Draft AOA',
-                'required' => true,
                 'mimes' => [
                     'pdf',
                 ],
@@ -2370,14 +3796,14 @@ return [
                     ],
                     [
                         'name' => 'authorized_capital',
-                        'label' => 'Authorized Share Capital',
+                        'label' => 'Authorized Share Capital / Contribution',
                         'type' => 'number',
                         'required' => true,
                         'validation' => 'required|numeric|min:100000',
                     ],
                     [
                         'name' => 'paidup_capital',
-                        'label' => 'Paid-up Share Capital',
+                        'label' => 'Paid-up Share Capital / Contribution',
                         'type' => 'number',
                         'required' => true,
                         'validation' => 'required|numeric|min:1',
@@ -2405,19 +3831,28 @@ return [
                     ],
                 ],
             ],
-            'director_details' => [
-                'label' => 'Director Details',
+            'partner_details' => [
+                'label' => 'Partner Details',
                 'fields' => [
                     [
-                        'name' => 'number_of_directors',
-                        'label' => 'Number of Directors (Minimum 2)',
-                        'type' => 'number',
+                        'name' => 'number_of_partners',
+                        'label' => 'Number of Partners (Minimum 2)',
+                        'type' => 'select',
                         'required' => true,
                         'validation' => 'required|integer|min:2',
+                        'options' => [
+                            '2' => '2 Partners',
+                            '3' => '3 Partners',
+                            '4' => '4 Partners',
+                            '5' => '5 Partners',
+                            '6' => '6 Partners',
+                            '7' => '7 Partners',
+                            '8' => '8 Partners',
+                        ],
                     ],
                     [
-                        'name' => 'resident_director',
-                        'label' => 'At least one Director Resident in India?',
+                        'name' => 'resident_partner',
+                        'label' => 'At least one Partner Resident in India?',
                         'type' => 'select',
                         'required' => true,
                         'validation' => 'required|string|in:yes,no',
@@ -2427,8 +3862,8 @@ return [
                         ],
                     ],
                     [
-                        'name' => 'director_din_available',
-                        'label' => 'Do Directors Have DIN?',
+                        'name' => 'partner_dpin_available',
+                        'label' => 'Do Partners Have DPIN/DIN?',
                         'type' => 'select',
                         'required' => true,
                         'validation' => 'required|string|in:yes,no',
@@ -2440,43 +3875,43 @@ return [
                 ],
             ],
             'shareholding_details' => [
-                'label' => 'Shareholding Details',
+                'label' => 'Contribution Details',
                 'fields' => [
                     [
                         'name' => 'number_of_shareholders',
-                        'label' => 'Number of Shareholders',
+                        'label' => 'Number of Partners contributing',
                         'type' => 'number',
                         'required' => true,
                         'validation' => 'required|integer|min:1',
                     ],
                     [
                         'name' => 'shareholding_pattern',
-                        'label' => 'Shareholding Pattern (Describe % distribution)',
+                        'label' => 'Contribution Pattern (Describe % distribution)',
                         'type' => 'textarea',
                         'required' => true,
                         'validation' => 'required|string',
                     ],
                 ],
             ],
-            'contact_details' => [
-                'label' => 'Contact Details',
+            'partner_1_details' => [
+                'label' => 'Partner 1 Details',
                 'fields' => [
                     [
-                        'name' => 'contact_person',
-                        'label' => 'Contact Person Name',
+                        'name' => 'partner_1_name',
+                        'label' => 'Full Name',
                         'type' => 'text',
                         'required' => true,
                         'validation' => 'required|string|max:255',
                     ],
                     [
-                        'name' => 'mobile',
+                        'name' => 'partner_1_mobile',
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
                         'validation' => 'required|digits:10',
                     ],
                     [
-                        'name' => 'email',
+                        'name' => 'partner_1_email',
                         'label' => 'Email Address',
                         'type' => 'email',
                         'required' => true,
@@ -2484,11 +3919,193 @@ return [
                     ],
                 ],
             ],
+            'partner_2_details' => [
+                'label' => 'Partner 2 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_2_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_2_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_2_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => true,
+                        'validation' => 'required|email',
+                    ],
+                ],
+            ],
+            'partner_3_details' => [
+                'label' => 'Partner 3 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_3_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_3_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_3_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_4_details' => [
+                'label' => 'Partner 4 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_4_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_4_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_4_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_5_details' => [
+                'label' => 'Partner 5 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_5_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_5_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_5_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_6_details' => [
+                'label' => 'Partner 6 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_6_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_6_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_6_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_7_details' => [
+                'label' => 'Partner 7 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_7_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_7_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_7_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_8_details' => [
+                'label' => 'Partner 8 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_8_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_8_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_8_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
         ],
         'documents' => [
             [
-                'name' => 'director_pan',
-                'label' => 'PAN Card of Directors',
+                'name' => 'pan_card_1',
+                'label' => 'PAN Card (Partner 1)',
                 'required' => true,
                 'mimes' => [
                     'pdf',
@@ -2497,8 +4114,8 @@ return [
                 ],
             ],
             [
-                'name' => 'director_address_proof',
-                'label' => 'Address Proof of Directors',
+                'name' => 'address_proof_1',
+                'label' => 'Address Proof (Partner 1)',
                 'required' => true,
                 'mimes' => [
                     'pdf',
@@ -2507,10 +4124,293 @@ return [
                 ],
             ],
             [
-                'name' => 'passport_photo',
-                'label' => 'Passport Size Photograph of Directors',
+                'name' => 'passport_photo_1',
+                'label' => 'Passport Photo (Partner 1)',
                 'required' => true,
                 'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_1',
+                'label' => 'Bank Statement (Partner 1)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_2',
+                'label' => 'PAN Card (Partner 2)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_2',
+                'label' => 'Address Proof (Partner 2)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_2',
+                'label' => 'Passport Photo (Partner 2)',
+                'required' => true,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_2',
+                'label' => 'Bank Statement (Partner 2)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_3',
+                'label' => 'PAN Card (Partner 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_3',
+                'label' => 'Address Proof (Partner 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_3',
+                'label' => 'Passport Photo (Partner 3)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_3',
+                'label' => 'Bank Statement (Partner 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_4',
+                'label' => 'PAN Card (Partner 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_4',
+                'label' => 'Address Proof (Partner 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_4',
+                'label' => 'Passport Photo (Partner 4)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_4',
+                'label' => 'Bank Statement (Partner 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_5',
+                'label' => 'PAN Card (Partner 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_5',
+                'label' => 'Address Proof (Partner 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_5',
+                'label' => 'Passport Photo (Partner 5)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_5',
+                'label' => 'Bank Statement (Partner 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_6',
+                'label' => 'PAN Card (Partner 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_6',
+                'label' => 'Address Proof (Partner 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_6',
+                'label' => 'Passport Photo (Partner 6)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_6',
+                'label' => 'Bank Statement (Partner 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_7',
+                'label' => 'PAN Card (Partner 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_7',
+                'label' => 'Address Proof (Partner 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_7',
+                'label' => 'Passport Photo (Partner 7)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_7',
+                'label' => 'Bank Statement (Partner 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_8',
+                'label' => 'PAN Card (Partner 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_8',
+                'label' => 'Address Proof (Partner 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_8',
+                'label' => 'Passport Photo (Partner 8)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_8',
+                'label' => 'Bank Statement (Partner 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
                     'jpg',
                     'png',
                 ],
@@ -2535,7 +4435,7 @@ return [
             ],
             [
                 'name' => 'moa_draft',
-                'label' => 'Draft MOA',
+                'label' => 'Draft LLP Agreement / MOA',
                 'required' => true,
                 'mimes' => [
                     'pdf',
@@ -2612,15 +4512,8 @@ return [
                 'label' => 'Director Details',
                 'fields' => [
                     [
-                        'name' => 'number_of_directors',
-                        'label' => 'Number of Directors (Minimum 2)',
-                        'type' => 'number',
-                        'required' => true,
-                        'validation' => 'required|integer|min:2',
-                    ],
-                    [
                         'name' => 'resident_director',
-                        'label' => 'At least one Director Resident in India?',
+                        'label' => 'Is Director Resident in India?',
                         'type' => 'select',
                         'required' => true,
                         'validation' => 'required|string|in:yes,no',
@@ -2631,7 +4524,7 @@ return [
                     ],
                     [
                         'name' => 'director_din_available',
-                        'label' => 'Do Directors Have DIN?',
+                        'label' => 'Does Director Have DIN?',
                         'type' => 'select',
                         'required' => true,
                         'validation' => 'required|string|in:yes,no',
@@ -2640,47 +4533,49 @@ return [
                             'no' => 'No',
                         ],
                     ],
-                ],
-            ],
-            'shareholding_details' => [
-                'label' => 'Shareholding Details',
-                'fields' => [
                     [
-                        'name' => 'number_of_shareholders',
-                        'label' => 'Number of Shareholders',
-                        'type' => 'number',
-                        'required' => true,
-                        'validation' => 'required|integer|min:1',
-                    ],
-                    [
-                        'name' => 'shareholding_pattern',
-                        'label' => 'Shareholding Pattern (Describe % distribution)',
-                        'type' => 'textarea',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                ],
-            ],
-            'contact_details' => [
-                'label' => 'Contact Details',
-                'fields' => [
-                    [
-                        'name' => 'contact_person',
-                        'label' => 'Contact Person Name',
+                        'name' => 'director_name',
+                        'label' => 'Director Full Name',
                         'type' => 'text',
                         'required' => true,
                         'validation' => 'required|string|max:255',
                     ],
                     [
-                        'name' => 'mobile',
-                        'label' => 'Mobile Number',
+                        'name' => 'director_mobile',
+                        'label' => 'Director Mobile Number',
                         'type' => 'text',
                         'required' => true,
                         'validation' => 'required|digits:10',
                     ],
                     [
-                        'name' => 'email',
-                        'label' => 'Email Address',
+                        'name' => 'director_email',
+                        'label' => 'Director Email Address',
+                        'type' => 'email',
+                        'required' => true,
+                        'validation' => 'required|email',
+                    ],
+                ],
+            ],
+            'nominee_details' => [
+                'label' => 'Nominee Details (Mandatory for OPC)',
+                'fields' => [
+                    [
+                        'name' => 'nominee_name',
+                        'label' => 'Nominee Full Name',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'nominee_mobile',
+                        'label' => 'Nominee Mobile Number',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|digits:10',
+                    ],
+                    [
+                        'name' => 'nominee_email',
+                        'label' => 'Nominee Email Address',
                         'type' => 'email',
                         'required' => true,
                         'validation' => 'required|email',
@@ -2691,7 +4586,7 @@ return [
         'documents' => [
             [
                 'name' => 'director_pan',
-                'label' => 'PAN Card of Directors',
+                'label' => 'PAN Card (Director)',
                 'required' => true,
                 'mimes' => [
                     'pdf',
@@ -2701,7 +4596,7 @@ return [
             ],
             [
                 'name' => 'director_address_proof',
-                'label' => 'Address Proof of Directors',
+                'label' => 'Address Proof (Director)',
                 'required' => true,
                 'mimes' => [
                     'pdf',
@@ -2710,8 +4605,47 @@ return [
                 ],
             ],
             [
-                'name' => 'passport_photo',
-                'label' => 'Passport Size Photograph of Directors',
+                'name' => 'director_passport_photo',
+                'label' => 'Passport Size Photograph (Director)',
+                'required' => true,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'director_bank_statement',
+                'label' => 'Bank Statement (Director)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'nominee_pan',
+                'label' => 'PAN Card (Nominee)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'nominee_address_proof',
+                'label' => 'Address Proof (Nominee)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'nominee_passport_photo',
+                'label' => 'Passport Size Photograph (Nominee)',
                 'required' => true,
                 'mimes' => [
                     'jpg',

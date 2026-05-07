@@ -466,27 +466,52 @@ class ApplicationController extends Controller
 
     public function storeCredentials(Request $request, Application $application)
     {
+        // 1. Added moa and aoa to the validation rules
         $request->validate([
             'admin_username' => 'nullable|string', 
             'admin_password' => 'nullable|string',
+            'moa'            => 'nullable|string',
+            'aoa'            => 'nullable|string',
             'final_document' => 'nullable|file|mimes:pdf,png,jpg,jpeg|max:5120',
         ]);
 
-        $formData = $application->form_data ?? [];
+        // Safely decode JSON if it comes out as a string
+        $formData = is_string($application->form_data) 
+            ? json_decode($application->form_data, true) 
+            : ($application->form_data ?? []);
+
+        // 2. Save GST Credentials
         if ($request->has('admin_username')) {
             $formData['admin_username'] = $request->admin_username;
         }
         if ($request->has('admin_password')) {
             $formData['admin_password'] = $request->admin_password;
         }
+
+        // 3. Save Corporate Documents (MOA / AOA)
+        if ($request->has('moa')) {
+            $formData['moa'] = $request->moa;
+        }
+        if ($request->has('aoa')) {
+            $formData['aoa'] = $request->aoa;
+        }
+
+        // Update the database
         $application->update(['form_data' => $formData]);
 
+        // 4. Handle File Upload with Smart Labeling
         if ($request->hasFile('final_document')) {
+            // Automatically name the file correctly based on what was submitted
+            $certLabel = ($request->has('moa') || $request->has('aoa')) 
+                ? 'Incorporation Certificate' 
+                : 'GST Certificate';
+
             $application->addMediaFromRequest('final_document')
-                ->withCustomProperties(['label' => 'GST Certificate']) 
+                ->withCustomProperties(['label' => $certLabel]) 
                 ->toMediaCollection('final_deliverables', 'private');
         }
 
+        // Log the activity
         activity('application')
             ->performedOn($application)
             ->causedBy(auth()->user())

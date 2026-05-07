@@ -210,7 +210,8 @@
                     Dashboard
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->is('admin/dashboard*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </a>
-                
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->getHost() == 'b2b.easytax.live' || request()->getHost() == 'uat.easytax.live'): ?>       
+
                 <div class="sb-section">Management</div>
 
                 <a href="<?php echo e(url('admin/services')); ?>" class="sb-item <?php echo e(request()->is('admin/services*') ? 'active' : ''); ?>" data-label="Services">
@@ -219,7 +220,7 @@
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->is('admin/services*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </a>
             
-                
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
                 <div class="sb-section">Application Types</div>
 
@@ -254,8 +255,9 @@
                     Agents
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->is('admin/agents*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </a>
- <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->getHost() == 'b2b.easytax.live'): ?>
-                <div class="sb-section">System</div>
+<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->getHost() == 'b2b.easytax.live' || request()->getHost() == 'uat.easytax.live'): ?>       
+       
+<div class="sb-section">System</div>
 
                 <div class="sb-has-submenu <?php echo e(request()->is('admin/gifts*') ? 'open' : ''); ?>">
                     <div class="sb-submenu-toggle <?php echo e(request()->is('admin/gifts*') ? 'active' : ''); ?>" onclick="this.parentElement.classList.toggle('open')">
