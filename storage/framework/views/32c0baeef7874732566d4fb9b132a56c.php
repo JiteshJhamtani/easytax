@@ -18,7 +18,7 @@
         tailwind.config = { 
             darkMode: 'class',
             corePlugins: {
-                preflight: false, // CRITICAL: This stops Tailwind from breaking your Bootstrap Sidebar!
+                preflight: false, // CRITICAL: This stops Tailwind from breaking your Bootstrap Sidebar! 
             }
         }
     </script>
@@ -227,13 +227,7 @@
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->is('agent/dashboard*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </a>
             
-            <!-- <a href="<?php echo e(url('services/itr-filing')); ?>" class="sb-item <?php echo e(request()->is('services/itr-filing*') ? 'active' : ''); ?>" data-label="New Application">
-                <span class="sb-item__icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-                </span>
-                New Application
-            </a>
-             -->
+            
             <a href="<?php echo e(url('services')); ?>" class="sb-item <?php echo e(request()->is('services') ? 'active' : ''); ?>" data-label="More Applications">
                 <span class="sb-item__icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>

@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,10 +17,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // 
     }
+
     /**
      * Bootstrap any application services.
      */
-
     public function boot(): void
     {
         // 1. Force HTTPS on Production/UAT
@@ -35,6 +37,18 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('unreadCount', $user->unreadNotifications()->count());
             }
         });
+
+        // 3. Custom EasyTax Password Reset Email Template
+        ResetPassword::toMailUsing(function (object $notifiable, string $token) {
+            return (new MailMessage)
+                ->subject('Reset Your EasyTax Agent Password')
+                ->greeting('Hello Agent,')
+                ->line('We received a request to reset the password for your EasyTax account.')
+                ->action('Reset My Password', url(route('password.reset', [
+                    'token' => $token,
+                    'email' => $notifiable->getEmailForPasswordReset(),
+                ], false)))
+                ->line('If you did not request this, please ignore this email. Your account is safe.');
+        });
     }
-  
 }

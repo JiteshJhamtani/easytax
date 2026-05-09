@@ -258,7 +258,7 @@ return [
                         'label' => 'IFSC Code',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|string|string',
+                        'validation' => 'nullable|string',
                     ],
                     [
                         'name' => 'bank_account_number3',
@@ -276,7 +276,7 @@ return [
                     ],
                     [
                         'name' => 'bank_account_number4',
-                        'label' => 'th Bank Account Number(optional)',
+                        'label' => '4th Bank Account Number(optional)',
                         'type' => 'text',
                         'required' => false,
                         'validation' => 'nullable|string',
@@ -1742,9 +1742,18 @@ return [
                     [
                         'name' => 'number_of_directors',
                         'label' => 'Number of Directors (Minimum 2)',
-                        'type' => 'number',
+                        'type' => 'select',
                         'required' => true,
                         'validation' => 'required|integer|min:2',
+                        'options' => [
+                            '2' => '2 Directors',
+                            '3' => '3 Directors',
+                            '4' => '4 Directors',
+                            '5' => '5 Directors',
+                            '6' => '6 Directors',
+                            '7' => '7 Directors',
+                            '8' => '8 Directors',
+                        ],
                     ],
                     [
                         'name' => 'resident_director',
@@ -1759,31 +1768,220 @@ return [
                     ],
                 ],
             ],
-            'contact_details' => [
-                'label' => 'Contact Details',
+            'director_1_details' => [
+                'label' => 'Director 1 Details',
                 'fields' => [
                     [
-                        'name' => 'contact_mobile',
-                        'label' => 'Contact Mobile Number',
+                        'name' => 'director_1_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_1_mobile',
+                        'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
                         'validation' => 'required|digits:10',
                     ],
                     [
-                        'name' => 'contact_email',
-                        'label' => 'Contact Email Address',
+                        'name' => 'director_1_email',
+                        'label' => 'Email Address',
                         'type' => 'email',
                         'required' => true,
                         'validation' => 'required|email',
                     ],
                 ],
             ],
+            'director_2_details' => [
+                'label' => 'Director 2 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_2_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_2_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|digits:10',
+                    ],
+                    [
+                        'name' => 'director_2_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => true,
+                        'validation' => 'required|email',
+                    ],
+                ],
+            ],
+            'director_3_details' => [
+                'label' => 'Director 3 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_3_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_3_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_3_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_4_details' => [
+                'label' => 'Director 4 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_4_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_4_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_4_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_5_details' => [
+                'label' => 'Director 5 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_5_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_5_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_5_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_6_details' => [
+                'label' => 'Director 6 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_6_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_6_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_6_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_7_details' => [
+                'label' => 'Director 7 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_7_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_7_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_7_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'director_8_details' => [
+                'label' => 'Director 8 Details',
+                'fields' => [
+                    [
+                        'name' => 'director_8_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_8_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'director_8_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
         ],
         'documents' => [
             [
-                'name' => 'director_pan',
-                'label' => 'Director PAN Card (Self Attested)',
-                'required' => true,
+                'name' => 'pan_card_1',
+                'label' => 'PAN Card (Director 1)',
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'jpg',
@@ -1791,9 +1989,9 @@ return [
                 ],
             ],
             [
-                'name' => 'director_address_proof',
-                'label' => 'Director Address Proof (Self Attested)',
-                'required' => true,
+                'name' => 'address_proof_1',
+                'label' => 'Address Proof (Director 1)',
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'jpg',
@@ -1801,9 +1999,212 @@ return [
                 ],
             ],
             [
-                'name' => 'passport_photo',
-                'label' => 'Passport Size Photo of Directors',
-                'required' => true,
+                'name' => 'passport_photo_1',
+                'label' => 'Passport Photo (Director 1)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_2',
+                'label' => 'PAN Card (Director 2)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_2',
+                'label' => 'Address Proof (Director 2)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_2',
+                'label' => 'Passport Photo (Director 2)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_3',
+                'label' => 'PAN Card (Director 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_3',
+                'label' => 'Address Proof (Director 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_3',
+                'label' => 'Passport Photo (Director 3)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_4',
+                'label' => 'PAN Card (Director 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_4',
+                'label' => 'Address Proof (Director 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_4',
+                'label' => 'Passport Photo (Director 4)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_5',
+                'label' => 'PAN Card (Director 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_5',
+                'label' => 'Address Proof (Director 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_5',
+                'label' => 'Passport Photo (Director 5)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_6',
+                'label' => 'PAN Card (Director 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_6',
+                'label' => 'Address Proof (Director 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_6',
+                'label' => 'Passport Photo (Director 6)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_7',
+                'label' => 'PAN Card (Director 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_7',
+                'label' => 'Address Proof (Director 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_7',
+                'label' => 'Passport Photo (Director 7)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_8',
+                'label' => 'PAN Card (Director 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_8',
+                'label' => 'Address Proof (Director 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_8',
+                'label' => 'Passport Photo (Director 8)',
+                'required' => false,
                 'mimes' => [
                     'jpg',
                     'png',
@@ -1812,7 +2213,7 @@ return [
             [
                 'name' => 'office_address_proof',
                 'label' => 'Registered Office Address Proof (Utility Bill / Rent Agreement)',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'jpg',
@@ -1827,22 +2228,6 @@ return [
                     'pdf',
                     'jpg',
                     'png',
-                ],
-            ],
-            [
-                'name' => 'moa_draft',
-                'label' => 'Draft Memorandum of Association (MOA)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-            [
-                'name' => 'aoa_draft',
-                'label' => 'Draft Articles of Association (AOA)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
                 ],
             ],
         ],
@@ -2979,10 +3364,19 @@ return [
                 'fields' => [
                     [
                         'name' => 'number_of_partners',
-                        'label' => 'Number of Partners (Max 4)',
-                        'type' => 'number',
+                        'label' => 'Number of Partners (Minimum 2)',
+                        'type' => 'select',
                         'required' => true,
-                        'validation' => 'required|integer|min:2|max:4',
+                        'validation' => 'required|integer|min:2',
+                        'options' => [
+                            '2' => '2 Partners',
+                            '3' => '3 Partners',
+                            '4' => '4 Partners',
+                            '5' => '5 Partners',
+                            '6' => '6 Partners',
+                            '7' => '7 Partners',
+                            '8' => '8 Partners',
+                        ],
                     ],
                     [
                         'name' => 'profit_sharing_ratio',
@@ -2993,89 +3387,208 @@ return [
                     ],
                 ],
             ],
-            'contact_details' => [
-                'label' => 'Contact Details',
+            'partner_1_details' => [
+                'label' => 'Partner 1 Details',
                 'fields' => [
                     [
-                        'name' => 'contact_person_1',
-                        'label' => 'Partner 1: Name',
+                        'name' => 'partner_1_name',
+                        'label' => 'Full Name',
                         'type' => 'text',
                         'required' => true,
                         'validation' => 'required|string|max:255',
                     ],
                     [
-                        'name' => 'mobile_1',
-                        'label' => 'Partner 1: Mobile',
+                        'name' => 'partner_1_mobile',
+                        'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
                         'validation' => 'required|digits:10',
                     ],
                     [
-                        'name' => 'email_1',
-                        'label' => 'Partner 1: Email',
+                        'name' => 'partner_1_email',
+                        'label' => 'Email Address',
                         'type' => 'email',
                         'required' => true,
                         'validation' => 'required|email',
                     ],
+                ],
+            ],
+            'partner_2_details' => [
+                'label' => 'Partner 2 Details',
+                'fields' => [
                     [
-                        'name' => 'contact_person_2',
-                        'label' => 'Partner 2: Name',
+                        'name' => 'partner_2_name',
+                        'label' => 'Full Name',
                         'type' => 'text',
                         'required' => true,
                         'validation' => 'required|string|max:255',
                     ],
                     [
-                        'name' => 'mobile_2',
-                        'label' => 'Partner 2: Mobile',
+                        'name' => 'partner_2_mobile',
+                        'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
                         'validation' => 'required|digits:10',
                     ],
                     [
-                        'name' => 'email_2',
-                        'label' => 'Partner 2: Email',
+                        'name' => 'partner_2_email',
+                        'label' => 'Email Address',
                         'type' => 'email',
                         'required' => true,
                         'validation' => 'required|email',
                     ],
+                ],
+            ],
+            'partner_3_details' => [
+                'label' => 'Partner 3 Details',
+                'fields' => [
                     [
-                        'name' => 'contact_person_3',
-                        'label' => 'Partner 3: Name',
+                        'name' => 'partner_3_name',
+                        'label' => 'Full Name',
                         'type' => 'text',
                         'required' => false,
                         'validation' => 'nullable|string|max:255',
                     ],
                     [
-                        'name' => 'mobile_3',
-                        'label' => 'Partner 3: Mobile',
+                        'name' => 'partner_3_mobile',
+                        'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
                         'validation' => 'nullable|digits:10',
                     ],
                     [
-                        'name' => 'email_3',
-                        'label' => 'Partner 3: Email',
+                        'name' => 'partner_3_email',
+                        'label' => 'Email Address',
                         'type' => 'email',
                         'required' => false,
                         'validation' => 'nullable|email',
                     ],
+                ],
+            ],
+            'partner_4_details' => [
+                'label' => 'Partner 4 Details',
+                'fields' => [
                     [
-                        'name' => 'contact_person_4',
-                        'label' => 'Partner 4: Name',
+                        'name' => 'partner_4_name',
+                        'label' => 'Full Name',
                         'type' => 'text',
                         'required' => false,
                         'validation' => 'nullable|string|max:255',
                     ],
                     [
-                        'name' => 'mobile_4',
-                        'label' => 'Partner 4: Mobile',
+                        'name' => 'partner_4_mobile',
+                        'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
                         'validation' => 'nullable|digits:10',
                     ],
                     [
-                        'name' => 'email_4',
-                        'label' => 'Partner 4: Email',
+                        'name' => 'partner_4_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_5_details' => [
+                'label' => 'Partner 5 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_5_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_5_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_5_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_6_details' => [
+                'label' => 'Partner 6 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_6_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_6_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_6_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_7_details' => [
+                'label' => 'Partner 7 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_7_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_7_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_7_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_8_details' => [
+                'label' => 'Partner 8 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_8_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_8_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_8_email',
+                        'label' => 'Email Address',
                         'type' => 'email',
                         'required' => false,
                         'validation' => 'nullable|email',
@@ -3085,9 +3598,241 @@ return [
         ],
         'documents' => [
             [
+                'name' => 'pan_card_1',
+                'label' => 'PAN Card (Partner 1)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_1',
+                'label' => 'Address Proof (Partner 1)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_1',
+                'label' => 'Passport Photo (Partner 1)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_2',
+                'label' => 'PAN Card (Partner 2)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_2',
+                'label' => 'Address Proof (Partner 2)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_2',
+                'label' => 'Passport Photo (Partner 2)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_3',
+                'label' => 'PAN Card (Partner 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_3',
+                'label' => 'Address Proof (Partner 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_3',
+                'label' => 'Passport Photo (Partner 3)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_4',
+                'label' => 'PAN Card (Partner 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_4',
+                'label' => 'Address Proof (Partner 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_4',
+                'label' => 'Passport Photo (Partner 4)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_5',
+                'label' => 'PAN Card (Partner 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_5',
+                'label' => 'Address Proof (Partner 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_5',
+                'label' => 'Passport Photo (Partner 5)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_6',
+                'label' => 'PAN Card (Partner 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_6',
+                'label' => 'Address Proof (Partner 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_6',
+                'label' => 'Passport Photo (Partner 6)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_7',
+                'label' => 'PAN Card (Partner 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_7',
+                'label' => 'Address Proof (Partner 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_7',
+                'label' => 'Passport Photo (Partner 7)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_8',
+                'label' => 'PAN Card (Partner 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_8',
+                'label' => 'Address Proof (Partner 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_8',
+                'label' => 'Passport Photo (Partner 8)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
                 'name' => 'business_address_proof',
                 'label' => 'Business Address Proof (Electricity Bill / Rent Agreement)',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'jpg',
@@ -3105,125 +3850,9 @@ return [
             [
                 'name' => 'partnership_deed_draft',
                 'label' => 'Draft Partnership Deed',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-            [
-                'name' => 'partner_pan_1',
-                'label' => 'Partner 1: PAN Card',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'partner_address_proof_1',
-                'label' => 'Partner 1: Address Proof',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo_1',
-                'label' => 'Partner 1: Passport Photo',
-                'required' => true,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'partner_pan_2',
-                'label' => 'Partner 2: PAN Card',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'partner_address_proof_2',
-                'label' => 'Partner 2: Address Proof',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo_2',
-                'label' => 'Partner 2: Passport Photo',
-                'required' => true,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'partner_pan_3',
-                'label' => 'Partner 3: PAN Card',
                 'required' => false,
                 'mimes' => [
                     'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'partner_address_proof_3',
-                'label' => 'Partner 3: Address Proof',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo_3',
-                'label' => 'Partner 3: Passport Photo',
-                'required' => false,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'partner_pan_4',
-                'label' => 'Partner 4: PAN Card',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'partner_address_proof_4',
-                'label' => 'Partner 4: Address Proof',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo_4',
-                'label' => 'Partner 4: Passport Photo',
-                'required' => false,
-                'mimes' => [
-                    'jpg',
-                    'png',
                 ],
             ],
         ],
@@ -3584,22 +4213,6 @@ return [
                     'png',
                 ],
             ],
-            [
-                'name' => 'moa_draft',
-                'label' => 'Draft Memorandum of Association (MOA)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-            [
-                'name' => 'aoa_draft',
-                'label' => 'Draft Articles of Association (AOA)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
         ],
     ],
     'section-8-registration' => [
@@ -3762,928 +4375,6 @@ return [
                     'pdf',
                     'jpg',
                     'png',
-                ],
-            ],
-            [
-                'name' => 'trust_deed_or_moa',
-                'label' => 'Draft Trust Deed / MOA / AOA (As Applicable)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-        ],
-    ],
-    'llp-registation' => [
-        'label' => '',
-        'sections' => [
-            'company_details' => [
-                'label' => 'Company Details',
-                'fields' => [
-                    [
-                        'name' => 'proposed_company_name',
-                        'label' => 'Proposed Company Name (Up to 2-3 options)',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string|max:255',
-                    ],
-                    [
-                        'name' => 'main_object',
-                        'label' => 'Main Object / Business Activity',
-                        'type' => 'textarea',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                    [
-                        'name' => 'authorized_capital',
-                        'label' => 'Authorized Share Capital / Contribution',
-                        'type' => 'number',
-                        'required' => true,
-                        'validation' => 'required|numeric|min:100000',
-                    ],
-                    [
-                        'name' => 'paidup_capital',
-                        'label' => 'Paid-up Share Capital / Contribution',
-                        'type' => 'number',
-                        'required' => true,
-                        'validation' => 'required|numeric|min:1',
-                    ],
-                    [
-                        'name' => 'registered_office_address',
-                        'label' => 'Registered Office Address',
-                        'type' => 'textarea',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                    [
-                        'name' => 'state',
-                        'label' => 'State',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                    [
-                        'name' => 'district',
-                        'label' => 'District',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                ],
-            ],
-            'partner_details' => [
-                'label' => 'Partner Details',
-                'fields' => [
-                    [
-                        'name' => 'number_of_partners',
-                        'label' => 'Number of Partners (Minimum 2)',
-                        'type' => 'select',
-                        'required' => true,
-                        'validation' => 'required|integer|min:2',
-                        'options' => [
-                            '2' => '2 Partners',
-                            '3' => '3 Partners',
-                            '4' => '4 Partners',
-                            '5' => '5 Partners',
-                            '6' => '6 Partners',
-                            '7' => '7 Partners',
-                            '8' => '8 Partners',
-                        ],
-                    ],
-                    [
-                        'name' => 'resident_partner',
-                        'label' => 'At least one Partner Resident in India?',
-                        'type' => 'select',
-                        'required' => true,
-                        'validation' => 'required|string|in:yes,no',
-                        'options' => [
-                            'yes' => 'Yes',
-                            'no' => 'No',
-                        ],
-                    ],
-                    [
-                        'name' => 'partner_dpin_available',
-                        'label' => 'Do Partners Have DPIN/DIN?',
-                        'type' => 'select',
-                        'required' => true,
-                        'validation' => 'required|string|in:yes,no',
-                        'options' => [
-                            'yes' => 'Yes',
-                            'no' => 'No',
-                        ],
-                    ],
-                ],
-            ],
-            'shareholding_details' => [
-                'label' => 'Contribution Details',
-                'fields' => [
-                    [
-                        'name' => 'number_of_shareholders',
-                        'label' => 'Number of Partners contributing',
-                        'type' => 'number',
-                        'required' => true,
-                        'validation' => 'required|integer|min:1',
-                    ],
-                    [
-                        'name' => 'shareholding_pattern',
-                        'label' => 'Contribution Pattern (Describe % distribution)',
-                        'type' => 'textarea',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                ],
-            ],
-            'partner_1_details' => [
-                'label' => 'Partner 1 Details',
-                'fields' => [
-                    [
-                        'name' => 'partner_1_name',
-                        'label' => 'Full Name',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string|max:255',
-                    ],
-                    [
-                        'name' => 'partner_1_mobile',
-                        'label' => 'Mobile Number',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|digits:10',
-                    ],
-                    [
-                        'name' => 'partner_1_email',
-                        'label' => 'Email Address',
-                        'type' => 'email',
-                        'required' => true,
-                        'validation' => 'required|email',
-                    ],
-                ],
-            ],
-            'partner_2_details' => [
-                'label' => 'Partner 2 Details',
-                'fields' => [
-                    [
-                        'name' => 'partner_2_name',
-                        'label' => 'Full Name',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string|max:255',
-                    ],
-                    [
-                        'name' => 'partner_2_mobile',
-                        'label' => 'Mobile Number',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|digits:10',
-                    ],
-                    [
-                        'name' => 'partner_2_email',
-                        'label' => 'Email Address',
-                        'type' => 'email',
-                        'required' => true,
-                        'validation' => 'required|email',
-                    ],
-                ],
-            ],
-            'partner_3_details' => [
-                'label' => 'Partner 3 Details',
-                'fields' => [
-                    [
-                        'name' => 'partner_3_name',
-                        'label' => 'Full Name',
-                        'type' => 'text',
-                        'required' => false,
-                        'validation' => 'nullable|string|max:255',
-                    ],
-                    [
-                        'name' => 'partner_3_mobile',
-                        'label' => 'Mobile Number',
-                        'type' => 'text',
-                        'required' => false,
-                        'validation' => 'nullable|digits:10',
-                    ],
-                    [
-                        'name' => 'partner_3_email',
-                        'label' => 'Email Address',
-                        'type' => 'email',
-                        'required' => false,
-                        'validation' => 'nullable|email',
-                    ],
-                ],
-            ],
-            'partner_4_details' => [
-                'label' => 'Partner 4 Details',
-                'fields' => [
-                    [
-                        'name' => 'partner_4_name',
-                        'label' => 'Full Name',
-                        'type' => 'text',
-                        'required' => false,
-                        'validation' => 'nullable|string|max:255',
-                    ],
-                    [
-                        'name' => 'partner_4_mobile',
-                        'label' => 'Mobile Number',
-                        'type' => 'text',
-                        'required' => false,
-                        'validation' => 'nullable|digits:10',
-                    ],
-                    [
-                        'name' => 'partner_4_email',
-                        'label' => 'Email Address',
-                        'type' => 'email',
-                        'required' => false,
-                        'validation' => 'nullable|email',
-                    ],
-                ],
-            ],
-            'partner_5_details' => [
-                'label' => 'Partner 5 Details',
-                'fields' => [
-                    [
-                        'name' => 'partner_5_name',
-                        'label' => 'Full Name',
-                        'type' => 'text',
-                        'required' => false,
-                        'validation' => 'nullable|string|max:255',
-                    ],
-                    [
-                        'name' => 'partner_5_mobile',
-                        'label' => 'Mobile Number',
-                        'type' => 'text',
-                        'required' => false,
-                        'validation' => 'nullable|digits:10',
-                    ],
-                    [
-                        'name' => 'partner_5_email',
-                        'label' => 'Email Address',
-                        'type' => 'email',
-                        'required' => false,
-                        'validation' => 'nullable|email',
-                    ],
-                ],
-            ],
-            'partner_6_details' => [
-                'label' => 'Partner 6 Details',
-                'fields' => [
-                    [
-                        'name' => 'partner_6_name',
-                        'label' => 'Full Name',
-                        'type' => 'text',
-                        'required' => false,
-                        'validation' => 'nullable|string|max:255',
-                    ],
-                    [
-                        'name' => 'partner_6_mobile',
-                        'label' => 'Mobile Number',
-                        'type' => 'text',
-                        'required' => false,
-                        'validation' => 'nullable|digits:10',
-                    ],
-                    [
-                        'name' => 'partner_6_email',
-                        'label' => 'Email Address',
-                        'type' => 'email',
-                        'required' => false,
-                        'validation' => 'nullable|email',
-                    ],
-                ],
-            ],
-            'partner_7_details' => [
-                'label' => 'Partner 7 Details',
-                'fields' => [
-                    [
-                        'name' => 'partner_7_name',
-                        'label' => 'Full Name',
-                        'type' => 'text',
-                        'required' => false,
-                        'validation' => 'nullable|string|max:255',
-                    ],
-                    [
-                        'name' => 'partner_7_mobile',
-                        'label' => 'Mobile Number',
-                        'type' => 'text',
-                        'required' => false,
-                        'validation' => 'nullable|digits:10',
-                    ],
-                    [
-                        'name' => 'partner_7_email',
-                        'label' => 'Email Address',
-                        'type' => 'email',
-                        'required' => false,
-                        'validation' => 'nullable|email',
-                    ],
-                ],
-            ],
-            'partner_8_details' => [
-                'label' => 'Partner 8 Details',
-                'fields' => [
-                    [
-                        'name' => 'partner_8_name',
-                        'label' => 'Full Name',
-                        'type' => 'text',
-                        'required' => false,
-                        'validation' => 'nullable|string|max:255',
-                    ],
-                    [
-                        'name' => 'partner_8_mobile',
-                        'label' => 'Mobile Number',
-                        'type' => 'text',
-                        'required' => false,
-                        'validation' => 'nullable|digits:10',
-                    ],
-                    [
-                        'name' => 'partner_8_email',
-                        'label' => 'Email Address',
-                        'type' => 'email',
-                        'required' => false,
-                        'validation' => 'nullable|email',
-                    ],
-                ],
-            ],
-        ],
-        'documents' => [
-            [
-                'name' => 'pan_card_1',
-                'label' => 'PAN Card (Partner 1)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'address_proof_1',
-                'label' => 'Address Proof (Partner 1)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo_1',
-                'label' => 'Passport Photo (Partner 1)',
-                'required' => true,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'bank_statement_1',
-                'label' => 'Bank Statement (Partner 1)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'pan_card_2',
-                'label' => 'PAN Card (Partner 2)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'address_proof_2',
-                'label' => 'Address Proof (Partner 2)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo_2',
-                'label' => 'Passport Photo (Partner 2)',
-                'required' => true,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'bank_statement_2',
-                'label' => 'Bank Statement (Partner 2)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'pan_card_3',
-                'label' => 'PAN Card (Partner 3)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'address_proof_3',
-                'label' => 'Address Proof (Partner 3)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo_3',
-                'label' => 'Passport Photo (Partner 3)',
-                'required' => false,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'bank_statement_3',
-                'label' => 'Bank Statement (Partner 3)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'pan_card_4',
-                'label' => 'PAN Card (Partner 4)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'address_proof_4',
-                'label' => 'Address Proof (Partner 4)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo_4',
-                'label' => 'Passport Photo (Partner 4)',
-                'required' => false,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'bank_statement_4',
-                'label' => 'Bank Statement (Partner 4)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'pan_card_5',
-                'label' => 'PAN Card (Partner 5)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'address_proof_5',
-                'label' => 'Address Proof (Partner 5)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo_5',
-                'label' => 'Passport Photo (Partner 5)',
-                'required' => false,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'bank_statement_5',
-                'label' => 'Bank Statement (Partner 5)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'pan_card_6',
-                'label' => 'PAN Card (Partner 6)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'address_proof_6',
-                'label' => 'Address Proof (Partner 6)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo_6',
-                'label' => 'Passport Photo (Partner 6)',
-                'required' => false,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'bank_statement_6',
-                'label' => 'Bank Statement (Partner 6)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'pan_card_7',
-                'label' => 'PAN Card (Partner 7)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'address_proof_7',
-                'label' => 'Address Proof (Partner 7)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo_7',
-                'label' => 'Passport Photo (Partner 7)',
-                'required' => false,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'bank_statement_7',
-                'label' => 'Bank Statement (Partner 7)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'pan_card_8',
-                'label' => 'PAN Card (Partner 8)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'address_proof_8',
-                'label' => 'Address Proof (Partner 8)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'passport_photo_8',
-                'label' => 'Passport Photo (Partner 8)',
-                'required' => false,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'bank_statement_8',
-                'label' => 'Bank Statement (Partner 8)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'registered_office_proof',
-                'label' => 'Registered Office Address Proof (Electricity Bill / Rent Agreement)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'noc_from_owner',
-                'label' => 'NOC from Property Owner (If Rented)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-            [
-                'name' => 'moa_draft',
-                'label' => 'Draft LLP Agreement / MOA',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-            [
-                'name' => 'aoa_draft',
-                'label' => 'Draft AOA',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-        ],
-    ],
-    'opc-registation' => [
-        'label' => '',
-        'sections' => [
-            'company_details' => [
-                'label' => 'Company Details',
-                'fields' => [
-                    [
-                        'name' => 'proposed_company_name',
-                        'label' => 'Proposed Company Name (Up to 2-3 options)',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string|max:255',
-                    ],
-                    [
-                        'name' => 'main_object',
-                        'label' => 'Main Object / Business Activity',
-                        'type' => 'textarea',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                    [
-                        'name' => 'authorized_capital',
-                        'label' => 'Authorized Share Capital',
-                        'type' => 'number',
-                        'required' => true,
-                        'validation' => 'required|numeric|min:100000',
-                    ],
-                    [
-                        'name' => 'paidup_capital',
-                        'label' => 'Paid-up Share Capital',
-                        'type' => 'number',
-                        'required' => true,
-                        'validation' => 'required|numeric|min:1',
-                    ],
-                    [
-                        'name' => 'registered_office_address',
-                        'label' => 'Registered Office Address',
-                        'type' => 'textarea',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                    [
-                        'name' => 'state',
-                        'label' => 'State',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                    [
-                        'name' => 'district',
-                        'label' => 'District',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string',
-                    ],
-                ],
-            ],
-            'director_details' => [
-                'label' => 'Director Details',
-                'fields' => [
-                    [
-                        'name' => 'resident_director',
-                        'label' => 'Is Director Resident in India?',
-                        'type' => 'select',
-                        'required' => true,
-                        'validation' => 'required|string|in:yes,no',
-                        'options' => [
-                            'yes' => 'Yes',
-                            'no' => 'No',
-                        ],
-                    ],
-                    [
-                        'name' => 'director_din_available',
-                        'label' => 'Does Director Have DIN?',
-                        'type' => 'select',
-                        'required' => true,
-                        'validation' => 'required|string|in:yes,no',
-                        'options' => [
-                            'yes' => 'Yes',
-                            'no' => 'No',
-                        ],
-                    ],
-                    [
-                        'name' => 'director_name',
-                        'label' => 'Director Full Name',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string|max:255',
-                    ],
-                    [
-                        'name' => 'director_mobile',
-                        'label' => 'Director Mobile Number',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|digits:10',
-                    ],
-                    [
-                        'name' => 'director_email',
-                        'label' => 'Director Email Address',
-                        'type' => 'email',
-                        'required' => true,
-                        'validation' => 'required|email',
-                    ],
-                ],
-            ],
-            'nominee_details' => [
-                'label' => 'Nominee Details (Mandatory for OPC)',
-                'fields' => [
-                    [
-                        'name' => 'nominee_name',
-                        'label' => 'Nominee Full Name',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|string|max:255',
-                    ],
-                    [
-                        'name' => 'nominee_mobile',
-                        'label' => 'Nominee Mobile Number',
-                        'type' => 'text',
-                        'required' => true,
-                        'validation' => 'required|digits:10',
-                    ],
-                    [
-                        'name' => 'nominee_email',
-                        'label' => 'Nominee Email Address',
-                        'type' => 'email',
-                        'required' => true,
-                        'validation' => 'required|email',
-                    ],
-                ],
-            ],
-        ],
-        'documents' => [
-            [
-                'name' => 'director_pan',
-                'label' => 'PAN Card (Director)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'director_address_proof',
-                'label' => 'Address Proof (Director)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'director_passport_photo',
-                'label' => 'Passport Size Photograph (Director)',
-                'required' => true,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'director_bank_statement',
-                'label' => 'Bank Statement (Director)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'nominee_pan',
-                'label' => 'PAN Card (Nominee)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'nominee_address_proof',
-                'label' => 'Address Proof (Nominee)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'nominee_passport_photo',
-                'label' => 'Passport Size Photograph (Nominee)',
-                'required' => true,
-                'mimes' => [
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'registered_office_proof',
-                'label' => 'Registered Office Address Proof (Electricity Bill / Rent Agreement)',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                    'jpg',
-                    'png',
-                ],
-            ],
-            [
-                'name' => 'noc_from_owner',
-                'label' => 'NOC from Property Owner (If Rented)',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-            [
-                'name' => 'moa_draft',
-                'label' => 'Draft MOA',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-            [
-                'name' => 'aoa_draft',
-                'label' => 'Draft AOA',
-                'required' => true,
-                'mimes' => [
-                    'pdf',
                 ],
             ],
         ],
@@ -5382,7 +5073,1357 @@ return [
             ],
         ],
         'documents' => [
-
+            [
+                'name' => 'bill_doc_1',
+                'label' => 'Bill Document 1',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_2',
+                'label' => 'Bill Document 2',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_3',
+                'label' => 'Bill Document 3',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_4',
+                'label' => 'Bill Document 4',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_5',
+                'label' => 'Bill Document 5',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_6',
+                'label' => 'Bill Document 6',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_7',
+                'label' => 'Bill Document 7',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_8',
+                'label' => 'Bill Document 8',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_9',
+                'label' => 'Bill Document 9',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_10',
+                'label' => 'Bill Document 10',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_11',
+                'label' => 'Bill Document 11',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_12',
+                'label' => 'Bill Document 12',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_13',
+                'label' => 'Bill Document 13',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_14',
+                'label' => 'Bill Document 14',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_15',
+                'label' => 'Bill Document 15',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_16',
+                'label' => 'Bill Document 16',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_17',
+                'label' => 'Bill Document 17',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_18',
+                'label' => 'Bill Document 18',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_19',
+                'label' => 'Bill Document 19',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_20',
+                'label' => 'Bill Document 20',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_21',
+                'label' => 'Bill Document 21',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_22',
+                'label' => 'Bill Document 22',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_23',
+                'label' => 'Bill Document 23',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_24',
+                'label' => 'Bill Document 24',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_25',
+                'label' => 'Bill Document 25',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_26',
+                'label' => 'Bill Document 26',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_27',
+                'label' => 'Bill Document 27',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_28',
+                'label' => 'Bill Document 28',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_29',
+                'label' => 'Bill Document 29',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bill_doc_30',
+                'label' => 'Bill Document 30',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+        ],
+    ],
+    'trademark-registration' => [
+        'label' => '',
+        'sections' => [
+            'applicant_information' => [
+                'label' => 'Applicant Information',
+                'fields' => [
+                    [
+                        'name' => 'applicant_name',
+                        'label' => 'Applicant / Entity Legal Name',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'entity_type',
+                        'label' => 'Entity Type',
+                        'type' => 'select',
+                        'required' => true,
+                        'validation' => 'required|string',
+                        'options' => [
+                            'individual' => 'Individual',
+                            'proprietorship' => 'Sole Proprietorship',
+                            'startup' => 'Registered Startup (DPIIT)',
+                            'msme' => 'MSME / Udyam Registered',
+                            'private_limited' => 'Private Limited Company',
+                            'llp' => 'Limited Liability Partnership (LLP)',
+                            'other' => 'Other / Trust / Society',
+                        ],
+                    ],
+                    [
+                        'name' => 'registered_address',
+                        'label' => 'Registered Address (Matches Govt. ID/Certificate)',
+                        'type' => 'textarea',
+                        'required' => true,
+                        'validation' => 'required|string',
+                    ],
+                    [
+                        'name' => 'nationality',
+                        'label' => 'Nationality / Country of Incorporation',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:100',
+                    ],
+                ],
+            ],
+            'trademark_details' => [
+                'label' => 'Trademark Details',
+                'fields' => [
+                    [
+                        'name' => 'trademark_name',
+                        'label' => 'Trademark Name / Word Mark (Type the exact brand name)',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'trademark_type',
+                        'label' => 'Type of Trademark',
+                        'type' => 'select',
+                        'required' => true,
+                        'validation' => 'required|string',
+                        'options' => [
+                            'word_mark' => 'Word Mark (Text Only)',
+                            'device_mark' => 'Device Mark (Logo / Design)',
+                            'sound_mark' => 'Sound Mark',
+                            'color_mark' => 'Color Mark',
+                        ],
+                    ],
+                    [
+                        'name' => 'trademark_class',
+                        'label' => 'Trademark Class(es) (e.g., Class 9, Class 35)',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                ],
+            ],
+            'usage_status' => [
+                'label' => 'Usage Status',
+                'fields' => [
+                    [
+                        'name' => 'current_usage_status',
+                        'label' => 'Current Usage Status',
+                        'type' => 'select',
+                        'required' => true,
+                        'validation' => 'required|string|in:proposed,already_in_use',
+                        'options' => [
+                            'proposed' => 'Proposed to be used (Future Use)',
+                            'already_in_use' => 'Already in use',
+                        ],
+                    ],
+                    [
+                        'name' => 'date_of_first_use',
+                        'label' => 'Date of First Use (Leave blank if Proposed)',
+                        'type' => 'date',
+                        'required' => false,
+                        'validation' => 'nullable|date',
+                    ],
+                ],
+            ],
+        ],
+        'documents' => [
+            [
+                'name' => 'tm_48_power_of_attorney',
+                'label' => 'Power of Attorney (Form TM-48) - Signed',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'applicant_identity_proof',
+                'label' => 'Identity Proof of Applicant / Authorized Signatory (PAN & Aadhaar)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'trademark_logo_file',
+                'label' => 'Logo / Device Mark Image (If applicable)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'msme_startup_certificate',
+                'label' => 'MSME / Startup Certificate (For 50% Govt Fee Discount)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'user_affidavit_evidence',
+                'label' => 'User Affidavit & Evidence of Prior Use (Invoices/Marketing)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                ],
+            ],
+            [
+                'name' => 'board_resolution',
+                'label' => 'Board Resolution (Required only for Companies/LLPs)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                ],
+            ],
+            [
+                'name' => 'gst_certificate',
+                'label' => 'GST Certificate',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+        ],
+    ],
+    'opc-registration' => [
+        'label' => '',
+        'sections' => [
+            'company_details' => [
+                'label' => 'Company Details',
+                'fields' => [
+                    [
+                        'name' => 'proposed_company_name',
+                        'label' => 'Proposed Company Name (Up to 2-3 options)',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'main_object',
+                        'label' => 'Main Object / Business Activity',
+                        'type' => 'textarea',
+                        'required' => true,
+                        'validation' => 'required|string',
+                    ],
+                    [
+                        'name' => 'authorized_capital',
+                        'label' => 'Authorized Share Capital',
+                        'type' => 'number',
+                        'required' => true,
+                        'validation' => 'required|numeric|min:100000',
+                    ],
+                    [
+                        'name' => 'paidup_capital',
+                        'label' => 'Paid-up Share Capital',
+                        'type' => 'number',
+                        'required' => true,
+                        'validation' => 'required|numeric|min:1',
+                    ],
+                    [
+                        'name' => 'registered_office_address',
+                        'label' => 'Registered Office Address',
+                        'type' => 'textarea',
+                        'required' => true,
+                        'validation' => 'required|string',
+                    ],
+                    [
+                        'name' => 'state',
+                        'label' => 'State',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string',
+                    ],
+                    [
+                        'name' => 'district',
+                        'label' => 'District',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string',
+                    ],
+                ],
+            ],
+            'director_details' => [
+                'label' => 'Director Details',
+                'fields' => [
+                    [
+                        'name' => 'resident_director',
+                        'label' => 'Is Director Resident in India?',
+                        'type' => 'select',
+                        'required' => true,
+                        'validation' => 'required|string|in:yes,no',
+                        'options' => [
+                            'yes' => 'Yes',
+                            'no' => 'No',
+                        ],
+                    ],
+                    [
+                        'name' => 'director_din_available',
+                        'label' => 'Does Director Have DIN?',
+                        'type' => 'select',
+                        'required' => true,
+                        'validation' => 'required|string|in:yes,no',
+                        'options' => [
+                            'yes' => 'Yes',
+                            'no' => 'No',
+                        ],
+                    ],
+                    [
+                        'name' => 'director_name',
+                        'label' => 'Director Full Name',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'director_mobile',
+                        'label' => 'Director Mobile Number',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|digits:10',
+                    ],
+                    [
+                        'name' => 'director_email',
+                        'label' => 'Director Email Address',
+                        'type' => 'email',
+                        'required' => true,
+                        'validation' => 'required|email',
+                    ],
+                ],
+            ],
+            'nominee_details' => [
+                'label' => 'Nominee Details (Mandatory for OPC)',
+                'fields' => [
+                    [
+                        'name' => 'nominee_name',
+                        'label' => 'Nominee Full Name',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'nominee_mobile',
+                        'label' => 'Nominee Mobile Number',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|digits:10',
+                    ],
+                    [
+                        'name' => 'nominee_email',
+                        'label' => 'Nominee Email Address',
+                        'type' => 'email',
+                        'required' => true,
+                        'validation' => 'required|email',
+                    ],
+                ],
+            ],
+        ],
+        'documents' => [
+            [
+                'name' => 'director_pan',
+                'label' => 'PAN Card (Director)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'director_address_proof',
+                'label' => 'Address Proof (Director)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'director_passport_photo',
+                'label' => 'Passport Size Photograph (Director)',
+                'required' => true,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'director_bank_statement',
+                'label' => 'Bank Statement (Director)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'nominee_pan',
+                'label' => 'PAN Card (Nominee)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'nominee_address_proof',
+                'label' => 'Address Proof (Nominee)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'nominee_passport_photo',
+                'label' => 'Passport Size Photograph (Nominee)',
+                'required' => true,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'registered_office_proof',
+                'label' => 'Registered Office Address Proof (Electricity Bill / Rent Agreement)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'noc_from_owner',
+                'label' => 'NOC from Property Owner (If Rented)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                ],
+            ],
+        ],
+    ],
+    'llp-registration' => [
+        'label' => '',
+        'sections' => [
+            'company_details' => [
+                'label' => 'Company Details',
+                'fields' => [
+                    [
+                        'name' => 'proposed_company_name',
+                        'label' => 'Proposed Company Name (Up to 2-3 options)',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'main_object',
+                        'label' => 'Main Object / Business Activity',
+                        'type' => 'textarea',
+                        'required' => true,
+                        'validation' => 'required|string',
+                    ],
+                    [
+                        'name' => 'authorized_capital',
+                        'label' => 'Authorized Share Capital / Contribution',
+                        'type' => 'number',
+                        'required' => true,
+                        'validation' => 'required|numeric|min:100000',
+                    ],
+                    [
+                        'name' => 'paidup_capital',
+                        'label' => 'Paid-up Share Capital / Contribution',
+                        'type' => 'number',
+                        'required' => true,
+                        'validation' => 'required|numeric|min:1',
+                    ],
+                    [
+                        'name' => 'registered_office_address',
+                        'label' => 'Registered Office Address',
+                        'type' => 'textarea',
+                        'required' => true,
+                        'validation' => 'required|string',
+                    ],
+                    [
+                        'name' => 'state',
+                        'label' => 'State',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string',
+                    ],
+                    [
+                        'name' => 'district',
+                        'label' => 'District',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string',
+                    ],
+                ],
+            ],
+            'partner_details' => [
+                'label' => 'Partner Details',
+                'fields' => [
+                    [
+                        'name' => 'number_of_partners',
+                        'label' => 'Number of Partners (Minimum 2)',
+                        'type' => 'select',
+                        'required' => true,
+                        'validation' => 'required|integer|min:2',
+                        'options' => [
+                            '2' => '2 Partners',
+                            '3' => '3 Partners',
+                            '4' => '4 Partners',
+                            '5' => '5 Partners',
+                            '6' => '6 Partners',
+                            '7' => '7 Partners',
+                            '8' => '8 Partners',
+                        ],
+                    ],
+                    [
+                        'name' => 'resident_partner',
+                        'label' => 'At least one Partner Resident in India?',
+                        'type' => 'select',
+                        'required' => true,
+                        'validation' => 'required|string|in:yes,no',
+                        'options' => [
+                            'yes' => 'Yes',
+                            'no' => 'No',
+                        ],
+                    ],
+                    [
+                        'name' => 'partner_dpin_available',
+                        'label' => 'Do Partners Have DPIN/DIN?',
+                        'type' => 'select',
+                        'required' => true,
+                        'validation' => 'required|string|in:yes,no',
+                        'options' => [
+                            'yes' => 'Yes',
+                            'no' => 'No',
+                        ],
+                    ],
+                ],
+            ],
+            'shareholding_details' => [
+                'label' => 'Contribution Details',
+                'fields' => [
+                    [
+                        'name' => 'number_of_shareholders',
+                        'label' => 'Number of Partners contributing',
+                        'type' => 'number',
+                        'required' => true,
+                        'validation' => 'required|integer|min:1',
+                    ],
+                    [
+                        'name' => 'shareholding_pattern',
+                        'label' => 'Contribution Pattern (Describe % distribution)',
+                        'type' => 'textarea',
+                        'required' => true,
+                        'validation' => 'required|string',
+                    ],
+                ],
+            ],
+            'partner_1_details' => [
+                'label' => 'Partner 1 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_1_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_1_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_1_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => true,
+                        'validation' => 'required|email',
+                    ],
+                ],
+            ],
+            'partner_2_details' => [
+                'label' => 'Partner 2 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_2_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_2_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => true,
+                        'validation' => 'required|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_2_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => true,
+                        'validation' => 'required|email',
+                    ],
+                ],
+            ],
+            'partner_3_details' => [
+                'label' => 'Partner 3 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_3_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_3_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_3_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_4_details' => [
+                'label' => 'Partner 4 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_4_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_4_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_4_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_5_details' => [
+                'label' => 'Partner 5 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_5_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_5_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_5_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_6_details' => [
+                'label' => 'Partner 6 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_6_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_6_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_6_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_7_details' => [
+                'label' => 'Partner 7 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_7_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_7_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_7_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+            'partner_8_details' => [
+                'label' => 'Partner 8 Details',
+                'fields' => [
+                    [
+                        'name' => 'partner_8_name',
+                        'label' => 'Full Name',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                    ],
+                    [
+                        'name' => 'partner_8_mobile',
+                        'label' => 'Mobile Number',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|digits:10',
+                    ],
+                    [
+                        'name' => 'partner_8_email',
+                        'label' => 'Email Address',
+                        'type' => 'email',
+                        'required' => false,
+                        'validation' => 'nullable|email',
+                    ],
+                ],
+            ],
+        ],
+        'documents' => [
+            [
+                'name' => 'pan_card_1',
+                'label' => 'PAN Card (Partner 1)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_1',
+                'label' => 'Address Proof (Partner 1)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_1',
+                'label' => 'Passport Photo (Partner 1)',
+                'required' => true,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_1',
+                'label' => 'Bank Statement (Partner 1)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_2',
+                'label' => 'PAN Card (Partner 2)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_2',
+                'label' => 'Address Proof (Partner 2)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_2',
+                'label' => 'Passport Photo (Partner 2)',
+                'required' => true,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_2',
+                'label' => 'Bank Statement (Partner 2)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_3',
+                'label' => 'PAN Card (Partner 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_3',
+                'label' => 'Address Proof (Partner 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_3',
+                'label' => 'Passport Photo (Partner 3)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_3',
+                'label' => 'Bank Statement (Partner 3)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_4',
+                'label' => 'PAN Card (Partner 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_4',
+                'label' => 'Address Proof (Partner 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_4',
+                'label' => 'Passport Photo (Partner 4)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_4',
+                'label' => 'Bank Statement (Partner 4)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_5',
+                'label' => 'PAN Card (Partner 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_5',
+                'label' => 'Address Proof (Partner 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_5',
+                'label' => 'Passport Photo (Partner 5)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_5',
+                'label' => 'Bank Statement (Partner 5)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_6',
+                'label' => 'PAN Card (Partner 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_6',
+                'label' => 'Address Proof (Partner 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_6',
+                'label' => 'Passport Photo (Partner 6)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_6',
+                'label' => 'Bank Statement (Partner 6)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_7',
+                'label' => 'PAN Card (Partner 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_7',
+                'label' => 'Address Proof (Partner 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_7',
+                'label' => 'Passport Photo (Partner 7)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_7',
+                'label' => 'Bank Statement (Partner 7)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan_card_8',
+                'label' => 'PAN Card (Partner 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'address_proof_8',
+                'label' => 'Address Proof (Partner 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'passport_photo_8',
+                'label' => 'Passport Photo (Partner 8)',
+                'required' => false,
+                'mimes' => [
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'bank_statement_8',
+                'label' => 'Bank Statement (Partner 8)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'registered_office_proof',
+                'label' => 'Registered Office Address Proof (Electricity Bill / Rent Agreement)',
+                'required' => true,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'noc_from_owner',
+                'label' => 'NOC from Property Owner (If Rented)',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                ],
+            ],
         ],
     ],
 ];

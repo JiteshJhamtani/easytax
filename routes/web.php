@@ -16,13 +16,18 @@ use App\Http\Controllers\Front\HomeController;
 use App\Http\Controllers\Front\ServiceController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-   use App\Http\Controllers\Api\B2BSyncController;
+use App\Http\Controllers\Api\B2BSyncController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
+
+
 
 
 
 /*
 |--------------------------------------------------------------------------
-| Public
+| Public 
+
 |--------------------------------------------------------------------------
 */
 
@@ -75,6 +80,27 @@ Route::middleware('auth')->group(function () {
         ->name('password.update');
 });
 
+
+// The page that shows the "Forgot Password" form
+Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])
+    ->middleware('guest')
+    ->name('password.request');
+
+// The route that actually sends the email
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+    ->middleware('guest')
+    ->name('password.email');
+
+
+// The link the user clicks inside their email
+Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
+    ->middleware('guest')
+    ->name('password.reset');
+
+// The route that processes the new password submission
+Route::post('/reset-password', [NewPasswordController::class, 'store'])
+    ->middleware('guest')
+    ->name('password.store');    
 /*
 |--------------------------------------------------------------------------
 | Agent Routes  the id 453 (rksingh) is completly removed from 

@@ -1,6 +1,6 @@
 <?php
 $host = 'localhost';
-$db   = 'easytax_bihar';
+$db   = 'easytax_uat';
 $user = 'root';
 $pass = 'Admin@123456';
 

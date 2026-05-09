@@ -392,8 +392,7 @@
                 });
             }
 
-            // ── NESTED FIELD VISIBILITY ──────────────────────
-            function handleNestedFields() {
+           function handleNestedFields() {
                 let businessVal = $('input[name="has_business"]:checked').val();
                 let itrTurnoverWrapper = $('input[name="turnover"]').closest('.form-group');
                 if (businessVal === 'yes') {
@@ -439,6 +438,7 @@
                 let planWrapper    = $('select[name="plan"]').closest('.form-group');
                 let monthWrapper   = $('select[name="month"]').closest('.form-group');
                 let quarterWrapper = $('select[name="quarter"]').closest('.form-group');
+                
                 if (frequency === 'monthly') {
                     planWrapper.show(); monthWrapper.show(); quarterWrapper.hide();
                     $('select[name="plan"] option[value="yearly_12"]').show();
@@ -447,7 +447,9 @@
                     planWrapper.show(); monthWrapper.hide(); quarterWrapper.show();
                     $('select[name="plan"] option[value="yearly_4"]').show();
                     $('select[name="plan"] option[value="yearly_12"]').hide();
-                } else if (frequency === 'annual' || frequency === 'annual_gstr4') {
+                } 
+                // 👇 FIX #1: Added annual_gstr9 to this condition! 👇
+                else if (frequency === 'annual' || frequency === 'annual_gstr4' || frequency === 'annual_gstr9') {
                     planWrapper.hide(); monthWrapper.hide(); quarterWrapper.hide();
                     $('select[name="plan"]').val('');
                     $('select[name="month"]').val('');
@@ -455,7 +457,9 @@
                 }
             }
 
-           // ── PRICING CALCULATOR ───────────────────────────
+       
+          
+            // ── PRICING CALCULATOR ───────────────────────────
             function calculateDynamicPrice() {
                 let selectedGst  = normalizeValue($('select[name="gst_type"]').val() || $('input[name="gst_type"]:checked').val());
                 let selectedFreq = normalizeValue($('select[name="frequency_of_return"]').val() || $('input[name="frequency_of_return"]:checked').val());
@@ -465,16 +469,18 @@
                 let s_cg   = normalizeValue($('select[name="has_capital_gains"]').val() || $('input[name="has_capital_gains"]:checked').val());
                 let s_sal  = normalizeValue($('select[name="has_salary"]').val() || $('input[name="has_salary"]:checked').val());
                 let selectedTurnover = normalizeValue($('select[name="turnover"]').val() || $('input[name="turnover"]:checked').val() || $('select[name="annual_turnover_range"]').val() || $('select[name="total_bills"]').val());
+                
 
                 let match = pricingRules.find(rule => {
-                    return (normalizeValue(rule.gst_type)          === '' || normalizeValue(rule.gst_type)          === selectedGst) &&
-                           (normalizeValue(rule.frequency)         === '' || normalizeValue(rule.frequency)         === selectedFreq) &&
-                           (normalizeValue(rule.plan)              === '' || normalizeValue(rule.plan)              === selectedPlan) &&
-                           (normalizeValue(rule.turnover)          === '' || normalizeValue(rule.turnover)          === selectedTurnover) &&
-                           (normalizeValue(rule.itr_type)          === '' || normalizeValue(rule.itr_type)          === s_type) &&
-                           (normalizeValue(rule.itr_business)      === '' || normalizeValue(rule.itr_business)      === s_bus) &&
-                           (normalizeValue(rule.itr_capital_gains) === '' || normalizeValue(rule.itr_capital_gains) === s_cg) &&
-                           (normalizeValue(rule.itr_salary)        === '' || normalizeValue(rule.itr_salary)        === s_sal);
+                    // 👇 FIX #2: Added === 'any' checks to every single line! 👇
+                    return (normalizeValue(rule.gst_type)          === '' || normalizeValue(rule.gst_type)          === 'any' || normalizeValue(rule.gst_type)          === selectedGst) &&
+                           (normalizeValue(rule.frequency)         === '' || normalizeValue(rule.frequency)         === 'any' || normalizeValue(rule.frequency)         === selectedFreq) &&
+                           (normalizeValue(rule.plan)              === '' || normalizeValue(rule.plan)              === 'any' || normalizeValue(rule.plan)              === selectedPlan) &&
+                           (normalizeValue(rule.turnover)          === '' || normalizeValue(rule.turnover)          === 'any' || normalizeValue(rule.turnover)          === selectedTurnover) &&
+                           (normalizeValue(rule.itr_type)          === '' || normalizeValue(rule.itr_type)          === 'any' || normalizeValue(rule.itr_type)          === s_type) &&
+                           (normalizeValue(rule.itr_business)      === '' || normalizeValue(rule.itr_business)      === 'any' || normalizeValue(rule.itr_business)      === s_bus) &&
+                           (normalizeValue(rule.itr_capital_gains) === '' || normalizeValue(rule.itr_capital_gains) === 'any' || normalizeValue(rule.itr_capital_gains) === s_cg) &&
+                           (normalizeValue(rule.itr_salary)        === '' || normalizeValue(rule.itr_salary)        === 'any' || normalizeValue(rule.itr_salary)        === s_sal);
                 });
 
                 let finalTotal   = match ? parseFloat(match.base_price)        : {{ $service->price ?? 0 }};
@@ -491,7 +497,7 @@
             });
             setTimeout(() => { handleNestedFields(); calculateDynamicPrice(); }, 500);
 
-// ── SMART FORM HIDE/SHOW ENGINE ───────────────────────────
+// ── SMART FORM HIDE/SHOW ENGINE ─────────────────────────── 
             const REPEATER_CONFIGS = [
                 { trigger: 'number_of_members', prefix: 'member' },
                 { trigger: 'number_of_directors', prefix: 'director' },
@@ -576,6 +582,65 @@
             applyDynamicHideShow();
 
         }); // end DOMContentLoaded
+
+        // ── THE OMNISCIENT MUTATION OBSERVER ENGINE ──────────────────
+            console.log("Add-More Script is officially loaded and watching...");
+
+            (function() {
+                // Create an observer that watches the entire page for HTML changes
+                var observer = new MutationObserver(function(mutations, obs) {
+                    
+                    // Look for our 30 documents
+                    var myDocs = $('input[type="file"]').filter(function() {
+                        return $(this).attr('name') && $(this).attr('name').includes('bill_doc_');
+                    });
+
+                    // If it found them AND we haven't added the button yet...
+                    if (myDocs.length > 0 && $('#add-more-bills-btn').length === 0) {
+                        
+                        console.log("Form detected! Hiding 29 documents now.");
+
+                        // 1. Hide documents 2 through 30
+                        myDocs.each(function(index) {
+                            if (index > 0) { 
+                                $(this).closest('.form-group').hide();
+                            }
+                        });
+
+                        // 2. Inject the Button right below the first document
+                        let firstWrapper = myDocs.first().closest('.form-group');
+                        firstWrapper.after(`
+                            <div class="col-12 mb-3 mt-2" id="add-more-wrapper">
+                                <button type="button" id="add-more-bills-btn" class="btn btn-primary btn-sm" style="background-color: #0d6efd; color: white; border-radius: 5px; padding: 6px 16px; border: none; font-weight: bold; cursor: pointer;">
+                                    + Add Another Bill
+                                </button>
+                            </div>
+                        `);
+
+                        // 3. Button Click Logic
+                        let visibleCount = 1;
+                        $(document).off('click', '#add-more-bills-btn').on('click', '#add-more-bills-btn', function() {
+                            if (visibleCount < myDocs.length) {
+                                let nextWrapper = $(myDocs[visibleCount]).closest('.form-group');
+                                nextWrapper.slideDown(250);
+                                
+                                // Move the button down below the newly opened box
+                                $('#add-more-wrapper').insertAfter(nextWrapper);
+                                
+                                visibleCount++;
+                            }
+
+                            // Hide the button permanently if they reach 30
+                            if (visibleCount >= myDocs.length) {
+                                $('#add-more-wrapper').hide();
+                            }
+                        });
+                    }
+                });
+
+                // Start watching the body for any dynamic HTML injections
+                observer.observe(document.body, { childList: true, subtree: true });
+            })();
     </script>
     
    
@@ -651,7 +716,7 @@
                 setTimeout(() => { rzp.open(); }, 300);
             });
 
-
+           
 </script>
     @endif
 @endsection

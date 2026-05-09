@@ -6,7 +6,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Default Session Driver
+    | Default Session Driver 
     |--------------------------------------------------------------------------
     |
     | This option determines the default session driver that is utilized for
@@ -15,7 +15,6 @@ return [
     |
     | Supported: "file", "cookie", "database", "memcached",
     |            "redis", "dynamodb", "array"
-    |
     */
 
     'driver' => env('SESSION_DRIVER', 'database'),
@@ -27,7 +26,7 @@ return [
     |
     | Here you may specify the number of minutes that you wish the session
     | to be allowed to remain idle before it expires. If you want them
-    | to expire immediately when the browser is closed then you may
+    | to expire immediately when the browser is closed then you may 
     | indicate that via the expire_on_close configuration option.
     |
     */

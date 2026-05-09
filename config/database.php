@@ -79,7 +79,7 @@ return [
 
          'db_uat' => [
         'driver'    => 'mysql',
-        'host'      => '127.0.0.1',   // 
+        'host'      => '127.0.0.1',   
         'port'      => '3306',
         'database'  => 'easytax_uat', 
         'username'  => env('DB_USERNAME', 'root'),

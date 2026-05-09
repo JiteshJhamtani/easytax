@@ -246,78 +246,7 @@
             @endphp
 
             {{-- ADMIN INPUT FORM FOR COMPANY OR GST DELIVERABLES --}}
-            @if($isCompanySetup || $isGstSetup)
-            <div class="card border-0 shadow-sm mb-4 rounded-lg elegant-border">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                    <h3 class="card-title font-weight-bold text-dark mb-0">
-                        <i class="fas fa-key text-primary mr-2"></i> Corporate Documents & Deliverables
-                    </h3>
-                </div>
-                <div class="card-body p-4 bg-primary-soft rounded-bottom">
-                    
-                    {{-- THE FORM WHERE ADMIN TYPES MOA / AOA OR GST --}}
-                    <form action="{{ route('admin.applications.storeCredentials', $application->id) }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        <div class="row">
-                            
-                            @if($isCompanySetup)
-                                {{-- 🏢 INPUT FIELDS FOR COMPANY MOA/AOA --}}
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-dark text-sm">MOA Details</label>
-                                    <input type="text" name="moa" class="form-control rounded-lg" value="{{ $application->form_data['moa'] ?? '' }}" placeholder="Enter MOA ">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-dark text-sm">AOA Details</label>
-                                    <input type="text" name="aoa" class="form-control rounded-lg" value="{{ $application->form_data['aoa'] ?? '' }}" placeholder="Enter AOA ">
-                                </div>
-                                
-                            @elseif($isGstSetup)
-                                {{-- 📄 INPUT FIELDS FOR GST --}}
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-dark text-sm">GST Username</label>
-                                    <input type="text" name="admin_username" class="form-control rounded-lg" value="{{ $application->form_data['admin_username'] ?? '' }}" placeholder="Enter Username for Agent">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="font-weight-bold text-dark text-sm">GST Password</label>
-                                    <input type="text" name="admin_password" class="form-control rounded-lg" value="{{ $application->form_data['admin_password'] ?? '' }}" placeholder="Enter Password for Agent">
-                                </div>
-                                <div class="col-md-12 mb-3">
-                                    <label class="font-weight-bold text-dark text-sm">Upload GST Certificate (PDF/Image)</label>
-                                    <input type="file" name="final_document" class="form-control-file" accept=".pdf,.png,.jpg,.jpeg">
-                                </div>
-                            @endif
-
-                        </div>
-                        <button type="submit" class="btn btn-primary font-weight-bold shadow-sm">Save & Share with Agent</button>
-                    </form>
-
-                    {{-- Show Uploaded Deliverables --}}
-                    @if ($application->getMedia('final_deliverables')->count())
-                        <hr class="my-4 border-light">
-                        <h6 class="font-weight-bold text-dark mb-3">Uploaded Certificate</h6>
-                        <div class="document-list">
-                            @foreach ($application->getMedia('final_deliverables') as $doc)
-                                <div class="document-item d-flex align-items-center p-3 mb-2 bg-white rounded-lg border shadow-sm">
-                                    <div class="document-icon bg-light rounded d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
-                                        <i class="fas fa-file-pdf text-danger fa-lg"></i>
-                                    </div>
-                                    <div class="document-info flex-grow-1">
-                                        <div class="text-dark font-weight-bold text-sm">{{ $doc->name }}</div>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ route('admin.documents.view', $doc->id) }}" target="_blank" class="btn btn-sm btn-light border text-primary"><i class="fas fa-eye"></i></a>
-                                        <form action="{{ route('admin.applications.deleteDocument', $doc->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this document?');">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
-                                        </form>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            </div>
-            @endif
+           
         </div>
 
         {{-- ── RIGHT COLUMN ── --}}
@@ -483,6 +412,82 @@
                         </div>
                     @endif
 
+                    {{-- COMPANY specific uploads (MOA & AOA) --}}
+                    @if($isCompanySetup)
+                        <div class="row px-2 mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">
+                                    <i class="fas fa-file-pdf text-danger mr-1"></i> Draft MOA
+                                </label>
+                                @php $moaDoc = $application->getFirstMedia('moa_document'); @endphp
+                                @if($moaDoc)
+                                    <div class="d-flex align-items-center bg-white border rounded p-2 shadow-sm">
+                                        <div class="text-truncate flex-grow-1 text-xs font-weight-bold mr-2 text-dark"
+                                            title="{{ $moaDoc->name }}">{{ $moaDoc->name }}</div>
+                                        <div class="d-flex gap-1">
+                                            <a href="{{ route('admin.documents.view', $moaDoc->id) }}" target="_blank"
+                                                class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
+                                            <form action="{{ route('admin.applications.deleteDocument', $moaDoc->id) }}"
+                                                method="POST" class="d-inline"
+                                                onsubmit="return confirm('Delete this document?');">
+                                                @csrf @method('DELETE')
+                                                <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                @else
+                                    <form action="{{ route('admin.applications.uploadDocument', $application->id) }}"
+                                        method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <input type="file" name="moa_file" class="form-control border-light shadow-sm"
+                                            style="height:auto;padding:0.35rem 0.5rem;font-size:0.8rem;border-radius:6px;"
+                                            accept=".pdf,.doc,.docx" onchange="this.form.submit()">
+                                    </form>
+                                @endif
+                                @error('moa_file')
+                                    <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">
+                                    <i class="fas fa-file-pdf text-danger mr-1"></i> Draft AOA
+                                </label>
+                                @php $aoaDoc = $application->getFirstMedia('aoa_document'); @endphp
+                                @if($aoaDoc)
+                                    <div class="d-flex align-items-center bg-white border rounded p-2 shadow-sm">
+                                        <div class="text-truncate flex-grow-1 text-xs font-weight-bold mr-2 text-dark"
+                                            title="{{ $aoaDoc->name }}">{{ $aoaDoc->name }}</div>
+                                        <div class="d-flex gap-1">
+                                            <a href="{{ route('admin.documents.view', $aoaDoc->id) }}" target="_blank"
+                                                class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
+                                            <form action="{{ route('admin.applications.deleteDocument', $aoaDoc->id) }}"
+                                                method="POST" class="d-inline"
+                                                onsubmit="return confirm('Delete this document?');">
+                                                @csrf @method('DELETE')
+                                                <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                @else
+                                    <form action="{{ route('admin.applications.uploadDocument', $application->id) }}"
+                                        method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <input type="file" name="aoa_file"
+                                            class="form-control border-light shadow-sm"
+                                            style="height:auto;padding:0.35rem 0.5rem;font-size:0.8rem;border-radius:6px;"
+                                            accept=".pdf,.doc,.docx" onchange="this.form.submit()">
+                                    </form>
+                                @endif
+                                @error('aoa_file')
+                                    <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Hidden delete forms --}}
                     @if(isset($ackDoc) && $ackDoc)
                         <form id="delete-ack-{{ $ackDoc->id }}"
@@ -498,11 +503,21 @@
                             @csrf @method('DELETE')
                         </form>
                     @endif
+                    @if(isset($moaDoc) && $moaDoc)
+                        <form id="delete-moa-{{ $moaDoc->id }}" action="{{ route('admin.applications.deleteDocument', $moaDoc->id) }}" method="POST" class="d-none">
+                            @csrf @method('DELETE')
+                        </form>
+                    @endif
+                    @if(isset($aoaDoc) && $aoaDoc)
+                        <form id="delete-aoa-{{ $aoaDoc->id }}" action="{{ route('admin.applications.deleteDocument', $aoaDoc->id) }}" method="POST" class="d-none">
+                            @csrf @method('DELETE')
+                        </form>
+                    @endif
 
                     {{-- Document lists --}}
                     @php
                         $adminCollections   = ['final_deliverables', 'admin_uploads', 'documents', 'default'];
-                        $specialCollections = ['itr_acknowledgement', 'computation_sheet'];
+                        $specialCollections = ['itr_acknowledgement', 'computation_sheet','moa_document', 'aoa_document'];
                         $adminDocs          = $application->media->whereIn('collection_name', $adminCollections);
                         $agentDocs          = $application->media->whereNotIn('collection_name', array_merge($adminCollections, $specialCollections));
 

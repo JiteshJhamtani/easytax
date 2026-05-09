@@ -417,12 +417,14 @@ class ApplicationController extends Controller
         }
     }
 
-   public function uploadDocument(Request $request, Application $application)
+  public function uploadDocument(Request $request, Application $application)
     {
         $request->validate([
             'document'         => 'nullable|file|mimes:pdf,png,jpg,jpeg|max:5120',
             'ack_file'         => 'nullable|file|mimes:pdf|max:5120',
             'computation_file' => 'nullable|file|mimes:pdf|max:5120',
+            'moa_file'         => 'nullable|file|mimes:pdf,doc,docx|max:5120', // New validation
+            'aoa_file'         => 'nullable|file|mimes:pdf,doc,docx|max:5120', // New validation
         ]);
 
         $uploaded = false; 
@@ -452,6 +454,20 @@ class ApplicationController extends Controller
             $uploaded = true;
         }
 
+        // NEW: Handle Draft MOA Upload
+        if ($request->hasFile('moa_file')) {
+            $application->clearMediaCollection('moa_document'); // Clear old one if replacing
+            $application->addMediaFromRequest('moa_file')->toMediaCollection('moa_document', 'private');
+            $uploaded = true;
+        }
+
+        // NEW: Handle Draft AOA Upload
+        if ($request->hasFile('aoa_file')) {
+            $application->clearMediaCollection('aoa_document'); // Clear old one if replacing
+            $application->addMediaFromRequest('aoa_file')->toMediaCollection('aoa_document', 'private');
+            $uploaded = true;
+        }
+
         if (!$uploaded) {
             return back()->with('error', 'Please select a file to upload.');
         }
@@ -466,12 +482,10 @@ class ApplicationController extends Controller
 
     public function storeCredentials(Request $request, Application $application)
     {
-        // 1. Added moa and aoa to the validation rules
+        // Removed the old moa/aoa string validations
         $request->validate([
             'admin_username' => 'nullable|string', 
             'admin_password' => 'nullable|string',
-            'moa'            => 'nullable|string',
-            'aoa'            => 'nullable|string',
             'final_document' => 'nullable|file|mimes:pdf,png,jpg,jpeg|max:5120',
         ]);
 
@@ -480,7 +494,7 @@ class ApplicationController extends Controller
             ? json_decode($application->form_data, true) 
             : ($application->form_data ?? []);
 
-        // 2. Save GST Credentials
+        // Save GST Credentials
         if ($request->has('admin_username')) {
             $formData['admin_username'] = $request->admin_username;
         }
@@ -488,23 +502,17 @@ class ApplicationController extends Controller
             $formData['admin_password'] = $request->admin_password;
         }
 
-        // 3. Save Corporate Documents (MOA / AOA)
-        if ($request->has('moa')) {
-            $formData['moa'] = $request->moa;
-        }
-        if ($request->has('aoa')) {
-            $formData['aoa'] = $request->aoa;
-        }
-
         // Update the database
         $application->update(['form_data' => $formData]);
 
-        // 4. Handle File Upload with Smart Labeling
+        // Handle File Upload with Smart Labeling
         if ($request->hasFile('final_document')) {
-            // Automatically name the file correctly based on what was submitted
-            $certLabel = ($request->has('moa') || $request->has('aoa')) 
-                ? 'Incorporation Certificate' 
-                : 'GST Certificate';
+            // Check if it is a company service based on the slug
+            $companyServices = ['fpo-registration', 'section-8-company', 'llp-registration', 'opc-registration', 'private-limited-company-registration'];
+            $isCompanySetup = in_array($application->service->slug ?? '', $companyServices);
+            
+            // Automatically name the file correctly
+            $certLabel = $isCompanySetup ? 'Incorporation Certificate' : 'GST Certificate';
 
             $application->addMediaFromRequest('final_document')
                 ->withCustomProperties(['label' => $certLabel]) 
