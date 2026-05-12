@@ -105,11 +105,13 @@ Route::post('/reset-password', [NewPasswordController::class, 'store'])
     ->name('password.store');    
 /*
 |--------------------------------------------------------------------------
-| Agent Routes  the id 453 (rksingh) is completly removed from 
+| Agent Routes  
 |--------------------------------------------------------------------------
 */
 Route::get('/auto-login', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'crossServerLogin']);
 
+
+Route::post('/agent/validate-coupon', [\App\Http\Controllers\Agent\CouponController::class, 'validateCoupon'])->name('agent.validate_coupon');
 
 Route::middleware(['auth', 'agent', 'sidebar'])->prefix('services')->group(function () {
 
@@ -180,7 +182,7 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
 | Admin Routes
 |--------------------------------------------------------------------------
 */
-
+ 
 Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])
@@ -221,6 +223,8 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
     Route::get('/applications/{id}/balance-sheet', [App\Http\Controllers\Admin\ApplicationController::class, 'balanceSheetForm'])->name('applications.balance-sheet');
 
     Route::post('/applications/{id}/balance-sheet/generate', [App\Http\Controllers\Admin\ApplicationController::class, 'generateBalanceSheetPdf'])->name('applications.balance-sheet.generate');
+
+   
 
     /*
     |--------------------------------------------------------------------------
@@ -350,6 +354,12 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
     Route::get('/documents/{media}/download', [AdminApplicationController::class, 'downloadDocument'])
         ->name('documents.download');
 });
+
+// Promo & Coupon Management
+Route::get('/admin/coupons', [\App\Http\Controllers\Admin\CouponController::class, 'index'])->name('admin.coupons.index');
+Route::post('/admin/coupons', [\App\Http\Controllers\Admin\CouponController::class, 'store'])->name('admin.coupons.store');
+Route::post('/admin/coupons/{id}/toggle', [\App\Http\Controllers\Admin\CouponController::class, 'toggle'])->name('admin.coupons.toggle');
+Route::delete('/admin/coupons/{id}', [\App\Http\Controllers\Admin\CouponController::class, 'destroy'])->name('admin.coupons.destroy');
 
 /*
 |--------------------------------------------------------------------------

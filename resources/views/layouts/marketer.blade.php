@@ -228,9 +228,7 @@
             </a>
             
             <a href="{{ route('crm.leads.index') }}" class="sb-item {{ request()->routeIs('crm.leads.*') ? 'active' : '' }}" data-label="My Leads">
-                <span class="sb-item__icon">
-                    <i class="fas fa-magnet" style="color: #8b5cf6; font-size: 16px;"></i>
-                </span>
+                <span class="sb-item__icon"><i class="fas fa-magnet"></i></span>
                 My Leads
                 @if(request()->routeIs('crm.leads.*'))<span class="sb-item__dot"></span>@endif
             </a>

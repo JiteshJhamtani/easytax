@@ -22,6 +22,8 @@ class Application extends Model implements HasMedia
         'form_data',
         'amount',
         'commission_amount',
+        'coupon_id',
+        'coupon_bonus',
         'payment_status',
         'payment_reference',
         'status',

@@ -43,7 +43,7 @@ class DashboardController extends Controller
             'total_revenue' => Application::query()
                 ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
                 ->where('payment_status', '!=', 'FAILED')
-                ->sum('amount'),
+                ->sum(DB::raw('amount - commission_amount')),
             
             'total_commission' => Application::query()
                 ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
@@ -67,7 +67,7 @@ class DashboardController extends Controller
             ->select(
                 DB::raw("DATE_FORMAT(submitted_at, '%Y-%m') as month"),
                 DB::raw('COUNT(*) as applications_count'),
-                DB::raw("SUM(CASE WHEN payment_status = 'SUCCESS' THEN amount ELSE 0 END) as revenue")
+                DB::raw("SUM(CASE WHEN payment_status = 'SUCCESS' THEN (amount - commission_amount) ELSE 0 END) as revenue")
             )
             ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
             ->where('payment_status', '!=', 'FAILED')
@@ -88,7 +88,7 @@ class DashboardController extends Controller
                 'users.agent_code',
                 'users.name',
                 DB::raw('COUNT(applications.id) as applications_count'),
-                DB::raw('COALESCE(SUM(applications.amount), 0) as total_revenue'),
+                DB::raw('COALESCE(SUM(applications.amount - applications.commission_amount), 0) as total_revenue'),
                 DB::raw('COALESCE(SUM(applications.commission_amount), 0) as commission_earned')
             )
             ->join('applications', 'users.id', '=', 'applications.agent_id')
@@ -104,7 +104,7 @@ class DashboardController extends Controller
         
         // 1. We query the LOCAL applications table first (keeping your filters intact)
         $topServicesStats = Application::query()
-            ->selectRaw('service_id, COUNT(id) as applications_count, COALESCE(SUM(amount), 0) as revenue')
+            ->selectRaw('service_id, COUNT(id) as applications_count, COALESCE(SUM(amount - commission_amount), 0) as revenue')
             ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
             ->where('payment_status', '!=', 'FAILED')
             ->groupBy('service_id')

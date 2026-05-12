@@ -124,7 +124,7 @@ return [
                         'name' => 'itr_type',
                         'label' => 'Financial/Tax Year',
                         'type' => 'select',
-                        'required' => true,
+                        'required' => false,
                         'validation' => 'required|string',
                         'options' => [
                             '2027-28' => 'F.Y. 2027-28',
@@ -138,7 +138,7 @@ return [
                         'name' => 'type_user',
                         'label' => 'User Type',
                         'type' => 'select',
-                        'required' => true,
+                        'required' => false,
                         'validation' => 'required|string',
                         'options' => [
                             'vle' => 'VLE',
@@ -149,7 +149,7 @@ return [
                         'name' => 'has_business',
                         'label' => 'Business / Other Income?',
                         'type' => 'select',
-                        'required' => true,
+                        'required' => false,
                         'validation' => 'required|string',
                         'options' => [
                             'yes' => 'Yes',
@@ -171,7 +171,7 @@ return [
                         'name' => 'has_salary',
                         'label' => 'Salary Income?',
                         'type' => 'select',
-                        'required' => true,
+                        'required' => false,
                         'validation' => 'required|string',
                         'options' => [
                             'yes' => 'Yes',
@@ -189,7 +189,7 @@ return [
                         'name' => 'has_capital_gains',
                         'label' => 'Capital Gain Transactions?',
                         'type' => 'select',
-                        'required' => true,
+                        'required' => false,
                         'validation' => 'required|string',
                         'options' => [
                             'yes' => 'Yes',
@@ -200,7 +200,7 @@ return [
                         'name' => 'bank_account_type',
                         'label' => 'Account Type',
                         'type' => 'select',
-                        'required' => true,
+                        'required' => false,
                         'validation' => 'required|string',
                         'options' => [
                             'savings' => 'Savings Account',
@@ -213,7 +213,7 @@ return [
                         'name' => 'income_over_250k',
                         'label' => 'Is your annual income more than 2,50,000?',
                         'type' => 'select',
-                        'required' => true,
+                        'required' => false,
                         'validation' => 'required|string',
                         'options' => [
                             'yes' => 'Yes',
@@ -224,7 +224,7 @@ return [
                         'name' => 'it_password',
                         'label' => 'Income Tax Password (if available)',
                         'type' => 'password',
-                        'required' => true,
+                        'required' => false,
                         'validation' => 'nullable|string',
                     ],
                 ],
@@ -243,7 +243,7 @@ return [
                         'name' => 'ifsc_code',
                         'label' => 'IFSC Code',
                         'type' => 'text',
-                        'required' => true,
+                        'required' => false,
                         'validation' => 'required|string',
                     ],
                     [

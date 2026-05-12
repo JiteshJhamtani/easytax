@@ -175,7 +175,6 @@
             <div class="form-group mb-0" style="width: 250px;">
                 <select id="serverSelector" class="form-control font-weight-bold border-primary shadow-sm">
                     <option value="local" selected>📍 Local Data (This Server)</option>
-                    <option value="uat">☁️ UAT Server</option>
                     <option value="b2b">☁️ B2B Server</option>
                     <option value="upwest">☁️ Upwest Server</option>
                     <option value="marketing">☁️ Marketing Server</option>

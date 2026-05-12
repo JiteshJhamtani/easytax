@@ -309,7 +309,7 @@
 
     
 
-{{-- LIVE PRICE PREVIEW BOX --}}
+{{-- LIVE PRICE PREVIEW BOX WITH COUPON SYSTEM --}}
                     @if(in_array($service->slug, ['gst-return-filing', 'itr-filing','gst-annual-package']))
                         <div class="card border-success mb-4 shadow-sm mt-4">
                             <div class="card-body bg-success-soft">
@@ -319,14 +319,31 @@
                                         <td class="text-right text-dark" style="font-size: 1.2rem;">₹<span id="calc-total">0.00</span></td>
                                     </tr>
                                     <tr>
-                                        <td class="text-success text-uppercase text-xs">Your Commission (Approx)</td>
+                                        <td class="text-success text-uppercase text-xs">Base Commission</td>
                                         <td class="text-right text-success">₹<span id="calc-comm">0.00</span></td>
                                     </tr>
+                                    
+                                    <tr id="promo-row" style="display: none;">
+                                        <td class="text-primary text-uppercase text-xs">Promo Bonus (<span id="applied-promo-name"></span>)</td>
+                                        <td class="text-right text-primary">+ ₹<span id="promo-bonus-amount">0.00</span></td>
+                                    </tr>
+
                                     <tr class="border-top border-success">
-                                        <td class="text-dark text-uppercase text-sm pt-2">Wallet Deduct</td>
+                                        <td class="text-dark text-uppercase text-sm pt-2">Total Payable Now</td>
                                         <td class="text-right text-danger pt-2" style="font-size: 1.3rem;">₹<span id="calc-deduct">0.00</span></td>
                                     </tr>
                                 </table>
+                                
+                                @if($service->slug === 'itr-filing')
+                                <div class="input-group mt-3">
+                                    <input type="text" id="promo-code-input" class="form-control text-uppercase" placeholder="Enter Promo Code (e.g. ITR50)" style="min-height: 38px;">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-dark" type="button" id="apply-promo-btn" style="border-radius: 0 8px 8px 0;">Apply</button>
+                                    </div>
+                                </div>
+                                <small id="promo-message" class="form-text text-muted mt-1"></small>
+                                @endif
+
                             </div>
                         </div>
                     @endif
@@ -353,7 +370,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-            // ── PRICING RULES ────────────────────────────────
+            // ── PRICING RULES ──────────────────────────────── 
             const rawRules = @json($service->pricingRules ?? []);
             const pricingRules = Array.isArray(rawRules) ? rawRules : Object.values(rawRules);
 
@@ -459,6 +476,10 @@
 
        
           
+           // ── GLOBAL PROMO VARIABLES ──
+            let appliedPromoBonus = 0;
+            let appliedPromoCode = '';
+
             // ── PRICING CALCULATOR ───────────────────────────
             function calculateDynamicPrice() {
                 let selectedGst  = normalizeValue($('select[name="gst_type"]').val() || $('input[name="gst_type"]:checked').val());
@@ -470,9 +491,7 @@
                 let s_sal  = normalizeValue($('select[name="has_salary"]').val() || $('input[name="has_salary"]:checked').val());
                 let selectedTurnover = normalizeValue($('select[name="turnover"]').val() || $('input[name="turnover"]:checked').val() || $('select[name="annual_turnover_range"]').val() || $('select[name="total_bills"]').val());
                 
-
                 let match = pricingRules.find(rule => {
-                    // 👇 FIX #2: Added === 'any' checks to every single line! 👇
                     return (normalizeValue(rule.gst_type)          === '' || normalizeValue(rule.gst_type)          === 'any' || normalizeValue(rule.gst_type)          === selectedGst) &&
                            (normalizeValue(rule.frequency)         === '' || normalizeValue(rule.frequency)         === 'any' || normalizeValue(rule.frequency)         === selectedFreq) &&
                            (normalizeValue(rule.plan)              === '' || normalizeValue(rule.plan)              === 'any' || normalizeValue(rule.plan)              === selectedPlan) &&
@@ -484,10 +503,17 @@
                 });
 
                 let finalTotal   = match ? parseFloat(match.base_price)        : {{ $service->price ?? 0 }};
-                let finalComm    = match ? parseFloat(match.commission_amount) : {{ $service->commission_value ?? 0 }};
-                let walletDeduct = finalTotal - finalComm;
+                let baseComm     = match ? parseFloat(match.commission_amount) : {{ $service->commission_value ?? 0 }};
+                
+                // ADD THE COUPON BONUS TO THE COMMISSION
+                let totalComm = baseComm + appliedPromoBonus;
+                let walletDeduct = finalTotal - totalComm;
+
+                // Ensure wallet deduct never goes below 0
+                if(walletDeduct < 0) walletDeduct = 0;
+
                 $('#calc-total').text(finalTotal.toFixed(2));
-                $('#calc-comm').text(finalComm.toFixed(2));
+                $('#calc-comm').text(baseComm.toFixed(2));
                 $('#calc-deduct').text(walletDeduct.toFixed(2));
             }
 
@@ -580,6 +606,67 @@
 
             // Start the engine
             applyDynamicHideShow();
+
+            // ── COUPON SYSTEM LOGIC ───────────────────────────
+            $('#apply-promo-btn').on('click', function() {
+                let codeInput = $('#promo-code-input').val().toUpperCase().trim();
+                let $btn = $(this);
+                let $msg = $('#promo-message');
+
+                if (!codeInput) return;
+
+                $btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+                $msg.removeClass('text-danger text-success').addClass('text-muted').text("Verifying code...");
+
+                // Call the backend API
+                fetch('/agent/validate-coupon', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ 
+                        code: codeInput,
+                        service_slug: '{{ $service->slug }}' 
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    $btn.html('Apply');
+
+                    if (data.valid) {
+                        // Update global variables
+                        appliedPromoBonus = parseFloat(data.bonus);
+                        appliedPromoCode = data.code;
+
+                        // Show the UI Row
+                        $('#promo-row').show();
+                        $('#applied-promo-name').text(data.code);
+                        $('#promo-bonus-amount').text(appliedPromoBonus.toFixed(2));
+
+                        // Recalculate totals
+                        calculateDynamicPrice();
+
+                        // Add a hidden input directly inside the form so Laravel gets it on submit
+                        if($('#hidden-coupon-input').length === 0) {
+                            $('form').append('<input type="hidden" name="applied_coupon" id="hidden-coupon-input" value="'+data.code+'">');
+                        } else {
+                            $('#hidden-coupon-input').val(data.code);
+                        }
+
+                        // Lock the UI
+                        $('#promo-code-input').prop('disabled', true);
+                        $msg.removeClass('text-muted text-danger').addClass('text-success font-weight-bold').html('<i class="fas fa-check-circle"></i> Promo applied successfully!');
+                    } else {
+                        $btn.prop('disabled', false);
+                        $msg.removeClass('text-muted text-success').addClass('text-danger').text(data.message || "Invalid or expired promo code.");
+                    }
+                })
+                .catch(error => {
+                    $btn.html('Apply').prop('disabled', false);
+                    $msg.removeClass('text-muted text-success').addClass('text-danger').text("Connection error. Try again.");
+                });
+            });
 
         }); // end DOMContentLoaded
 

@@ -219,7 +219,7 @@
         <nav class="sb-nav">
             <div class="sb-section">Applications</div>
             
-            <a href="{{ url('agent/dashboard') }}" class="sb-item {{ request()->is('agent/dashboard*') ? 'active' : '' }}" data-label="Dashboard">
+            <a href="{{ url('agent/dashboard') }}" class="sb-item {{ request()->routeIs('agent.dashboard') ? 'active' : '' }}" data-label="Dashboard">
                 <span class="sb-item__icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 </span>
@@ -238,22 +238,22 @@
 
 
             <a href="{{ route('agent.applications.index', ['type' => 'itr-filing']) }}" class="sb-item {{ request()->query('type') === 'itr-filing' ? 'active' : '' }}" data-label="ITR Filing">
-                <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar" style="color: var(--green);"></i></span>
+                <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar"></i></span>
                 ITR Filing
             </a>
 
             <a href="{{ route('agent.applications.index', ['type' => 'gst-registration']) }}" class="sb-item {{ request()->query('type') === 'gst-registration' ? 'active' : '' }}" data-label="GST Registration">
-                <span class="sb-item__icon"><i class="fas fa-id-card" style="color: #fbbf24;"></i></span>
+                <span class="sb-item__icon"><i class="fas fa-id-card"></i></span>
                 GST Registration
             </a>
             
             <a href="{{ route('agent.applications.index', ['type' => 'gst-return-filing']) }}" class="sb-item {{ request()->query('type') === 'gst-return-filing' ? 'active' : '' }}" data-label="GST Return">
-                <span class="sb-item__icon"><i class="fas fa-file-invoice" style="color: #38bdf8;"></i></span>
+                <span class="sb-item__icon"><i class="fas fa-file-invoice"></i></span>
                 GST Return
             </a>
 
             <a href="{{ route('agent.applications.index', ['type' => 'other']) }}" class="sb-item {{ request()->query('type', 'other') === 'other' ? 'active' : '' }}" data-label="Other Apps">
-                <span class="sb-item__icon"><i class="fas fa-folder" style="color: var(--slate-muted);"></i></span>
+                <span class="sb-item__icon"><i class="fas fa-folder"></i></span>
                 Other Apps
             </a>
         </nav>

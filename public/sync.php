@@ -11,7 +11,7 @@ $app = require_once __DIR__.'/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 $kernel->handle(Illuminate\Http\Request::capture());
 
-// ✅ THEN declare use statements
+// ✅ THEN declare use statements 
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Application;

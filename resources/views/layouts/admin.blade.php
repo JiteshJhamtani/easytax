@@ -206,6 +206,7 @@
             @if(strtoupper(auth()->user()->role) === 'ADMIN')
                 <div class="sb-section">Core</div>
 
+            @if(in_array(request()->getHost(), ['uat.easytax.live']))
 
                 {{-- NATIVE PORTAL SWITCHER --}}
                 <div class="sb-has-submenu">
@@ -228,14 +229,13 @@
                             <i class="fas fa-external-link-alt text-info mr-2"></i> Marketing
                         </a>
 
-                        <a href="{{ route('admin.switch_server', ['target' => 'uat']) }}" class="sb-subitem">
-                            <i class="fas fa-external-link-alt text-info mr-2"></i> Uat
-                        </a>
+                       
                     </div>
                 </div>
                 {{-- END PORTAL SWITCHER --}}
+                @endif
                 
-                <a href="{{ url('admin/dashboard') }}" class="sb-item {{ request()->is('admin/dashboard*') ? 'active' : '' }}" data-label="Dashboard">
+                <a href="{{ url('admin/dashboard') }}" class="sb-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" data-label="Dashboard">
                     <span class="sb-item__icon"><i class="fas fa-chart-pie"></i></span>
                     Dashboard
                     @if(request()->is('admin/dashboard*'))<span class="sb-item__dot"></span>@endif
@@ -257,26 +257,31 @@
                
 
                 <a href="{{ route('admin.applications.index', ['type' => 'itr-filing']) }}" class="sb-item {{ request()->query('type') === 'itr-filing' ? 'active' : '' }}" data-label="ITR Filing">
-                    <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar" style="color: var(--green);"></i></span>
+                    <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar"></i></span>
                     ITR Filing
                 </a>
 
                 <a href="{{ route('admin.applications.index', ['type' => 'gst-registration']) }}" class="sb-item {{ request()->query('type') === 'gst-registration' ? 'active' : '' }}" data-label="GST Registration">
-                    <span class="sb-item__icon"><i class="fas fa-id-card" style="color: #fbbf24;"></i></span>
+                    <span class="sb-item__icon"><i class="fas fa-id-card"></i></span>
                     GST Registration
                 </a>
                  <a href="{{ route('admin.applications.index', ['type' => 'gst-return-filing']) }}" class="sb-item {{ request()->query('type') === 'gst-return-filing' ? 'active' : '' }}" data-label="GST Return">
-                    <span class="sb-item__icon"><i class="fas fa-file-invoice" style="color: #38bdf8;"></i></span>
+                    <span class="sb-item__icon"><i class="fas fa-file-invoice"></i></span>
                     GST Return
                 </a>
 
-                <a href="{{ route('admin.applications.index', ['type' => 'other']) }}" class="sb-item {{ request()->query('type', 'other') === 'other' ? 'active' : '' }}" data-label="Other Apps">
-                    <span class="sb-item__icon"><i class="fas fa-folder" style="color: var(--slate-muted);"></i></span>
-                    Other Apps
-                </a>
+                <a href="{{ route('admin.applications.index', ['type' => 'other']) }}" 
+   class="sb-item {{ request()->routeIs('admin.applications.index') && request()->query('type', 'other') === 'other' ? 'active' : '' }}" 
+   data-label="Other Apps">
+    <span class="sb-item__icon"><i class="fas fa-folder"></i></span>
+    Other Apps
+    @if(request()->routeIs('admin.applications.index') && request()->query('type', 'other') === 'other')
+        <span class="sb-item__dot"></span>
+    @endif
+</a>
                 
                 <a href="{{ route('admin.applications.index', ['type' => 'incomplete']) }}" class="sb-item {{ request()->query('type') === 'incomplete' ? 'active' : '' }}" data-label="Incomplete Apps">
-                    <span class="sb-item__icon"><i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i></span>
+                    <span class="sb-item__icon"><i class="fas fa-exclamation-triangle"></i></span>
                     Incomplete Apps
                 </a>
                 
@@ -289,32 +294,35 @@
        
 <div class="sb-section">System</div>
 
-                <div class="sb-has-submenu {{ request()->is('admin/gifts*') ? 'open' : '' }}">
-                    <div class="sb-submenu-toggle {{ request()->is('admin/gifts*') ? 'active' : '' }}" onclick="this.parentElement.classList.toggle('open')">
-                        <span class="sb-item__icon"><i class="fas fa-gift"></i></span>
-                        Gifts
-                        <i class="fas fa-chevron-down sb-submenu-arrow"></i>
-                    </div>
-                    <div class="sb-submenu">
-                        <a href="{{ url('admin/gifts') }}" class="sb-subitem {{ request()->routeIs('admin.gifts.index') ? 'active' : '' }}">All Gifts</a>
-                        <a href="{{ url('admin/gifts/eligibility') }}" class="sb-subitem {{ request()->routeIs('admin.gifts.eligibility*') ? 'active' : '' }}">Eligibility</a>
-                    </div>
-                </div>
-
+    <div class="sb-has-submenu {{ request()->is('admin/gifts*') ? 'open' : '' }}">
+        <div class="sb-submenu-toggle {{ request()->is('admin/gifts*') ? 'active' : '' }}" onclick="this.parentElement.classList.toggle('open')">
+            <span class="sb-item__icon"><i class="fas fa-gift"></i></span>
+            Gifts
+            <i class="fas fa-chevron-down sb-submenu-arrow"></i>
+        </div>
+        <div class="sb-submenu">
+            <a href="{{ url('admin/gifts') }}" class="sb-subitem {{ request()->routeIs('admin.gifts.index') ? 'active' : '' }}">All Gifts</a>
+            <a href="{{ url('admin/gifts/eligibility') }}" class="sb-subitem {{ request()->routeIs('admin.gifts.eligibility*') ? 'active' : '' }}">Eligibility</a>
+        </div>
+    </div>
                 
-              
+    <a href="{{ route('admin.coupons.index') }}" class="sb-item {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}" data-label="Promo Campaigns">
+        <span class="sb-item__icon"><i class="fas fa-ticket-alt"></i></span>
+        Coupons
+        @if(request()->routeIs('admin.coupons.*'))<span class="sb-item__dot"></span>@endif
+    </a>
 
-                <a href="{{ url('admin/pages') }}" class="sb-item {{ request()->is('admin/pages*') ? 'active' : '' }}" data-label="Pages">
-                    <span class="sb-item__icon"><i class="fas fa-file-alt"></i></span>
-                    Pages
-                    @if(request()->is('admin/pages*'))<span class="sb-item__dot"></span>@endif
-                </a>
+    <a href="{{ url('admin/pages') }}" class="sb-item {{ request()->is('admin/pages*') ? 'active' : '' }}" data-label="Pages">
+        <span class="sb-item__icon"><i class="fas fa-file-alt"></i></span>
+        Pages
+        @if(request()->is('admin/pages*'))<span class="sb-item__dot"></span>@endif
+    </a>
                 
 @endif
 
             @endif
 
-            {{-- ========================================== --}}
+            {{-- ==========================================  --}}
             {{-- CRM SECTION (Visible to Admin & Marketers) --}}
             {{-- ========================================== --}}
             <div class="sb-section">Marketing CRM</div>
@@ -322,7 +330,7 @@
             {{-- Only Admins can manage the actual Marketer accounts --}}
             @if(strtoupper(auth()->user()->role) === 'ADMIN')
                 <a href="{{ route('crm.marketers.index') }}" class="sb-item {{ request()->is('crm/marketers*') ? 'active' : '' }}" data-label="Marketers">
-                    <span class="sb-item__icon"><i class="fas fa-bullhorn" style="color: #f43f5e;"></i></span>
+                    <span class="sb-item__icon"><i class="fas fa-bullhorn"></i></span>
                     Marketers
                     @if(request()->is('crm/marketers*'))<span class="sb-item__dot"></span>@endif
                 </a>
@@ -330,7 +338,7 @@
 
             {{-- Both Admins and Marketers can access Leads --}}
             <a href="{{ route('crm.leads.index') }}" class="sb-item {{ request()->is('crm/leads*') ? 'active' : '' }}" data-label="Leads">
-                <span class="sb-item__icon"><i class="fas fa-magnet" style="color: #8b5cf6;"></i></span>
+                <span class="sb-item__icon"><i class="fas fa-magnet"></i></span>
                 Leads
                 @if(request()->is('crm/leads*'))<span class="sb-item__dot"></span>@endif
             </a>

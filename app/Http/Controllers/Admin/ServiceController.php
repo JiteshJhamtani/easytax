@@ -121,7 +121,7 @@ class ServiceController extends Controller
                 ->count(),
             'total_revenue' => $service->applications()
                 ->whereNotIn('status', ['draft', 'failed', 'canceled'])
-                ->sum('amount'),
+                ->sum(\Illuminate\Support\Facades\DB::raw('amount - commission_amount')),
         ];
 
         return view('admin.services.show', compact('service', 'formConfig', 'stats'));

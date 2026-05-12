@@ -24,52 +24,44 @@ class ApplicationController extends Controller
 
     |--------------------------------------------------------------------------
     */
-
-    public function store(
+public function store(
         Request $request,
         string $slug,
         FormValidator $validator,
         ApplicationDocumentService $applicationDocumentService
     ) {
-        Log::info("Application submission started for slug: {$slug}");
+        \Illuminate\Support\Facades\Log::info("Application submission started for slug: {$slug}");
 
-        // ==========================================
-        // THIS IS THE PART THAT ACCIDENTALLY GOT DELETED!
-        // We have to grab the Service and Validate the form first.
-        $service = Service::where('slug', $slug)
+        $service = \App\Models\Service::where('slug', $slug)
             ->where('active', true)
             ->firstOrFail();
 
         $validated = $validator->validate($service->slug, $request->all());
 
-// ==========================================
-        // 🚀 DYNAMIC REPEATER BYPASS (Fix for Missing Data)
-        // ==========================================
         foreach ($request->all() as $key => $value) {
-            // Accept both arrays AND flat numbered strings (like member_1_name)
             if (str_starts_with($key, 'director_') || str_starts_with($key, 'member_') || str_starts_with($key, 'partner_')) {
                 $validated[$key] = $value;
             }
         }
-        // ==========================================  
 
-        Log::info("Form validation passed.");
+        \Illuminate\Support\Facades\Log::info("Form validation passed.");
 
-// ==========================================
-        // DYNAMIC PRICING OVERRIDE ENGINE (ITR & GST)
+        // ==========================================
+        // DYNAMIC PRICING OVERRIDE ENGINE
         // ==========================================
         $finalPrice = $service->price;
-$commission = $service->calculateCommission((float) $service->price);
+        $commission = $service->calculateCommission((float) $service->price);
+
         if (in_array($service->slug, ['gst-return-filing', 'itr-filing', 'gst-annual-package'])) {
             
+            $rule = null;
+
             if ($service->slug === 'gst-return-filing') {
                 $col1 = $validated['gst_type'] ?? '';
                 $col2 = $validated['annual_turnover_range'] ?? '';
                 $col3 = $validated['frequency_of_return'] ?? '';
                 $col4 = $validated['plan'] ?? ''; 
 
-               
-                
                 $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
                     ->where(function($q) use ($col1) { $q->where('gst_type', $col1)->orWhereNull('gst_type')->orWhere('gst_type', 'Any'); })
                     ->where(function($q) use ($col2) { $q->where('turnover', $col2)->orWhereNull('turnover')->orWhere('turnover', 'Any'); })
@@ -78,7 +70,6 @@ $commission = $service->calculateCommission((float) $service->price);
                     ->orderByRaw("(plan = 'Any' OR plan IS NULL) ASC")->first();
 
             } elseif ($service->slug === 'gst-annual-package') {
-                // ✅ FIX 2: Added the specific database query for the new service
                 $turnoverVal = $validated['turnover'] ?? 'Any';
 
                 $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
@@ -87,16 +78,13 @@ $commission = $service->calculateCommission((float) $service->price);
                     })
                     ->orderByRaw("(turnover = 'Any' OR turnover IS NULL) ASC")
                     ->first();
-                    }
-                    else {
-                // 🛑 ITR TRUE DATABASE MAPPING 🛑
-                // No translators needed! The frontend keys match the database EXACTLY.
+            } else {
+                // ITR TRUE DATABASE MAPPING
                 $itrType     = $request->input('itr_type', 'Any'); 
                 $turnover    = $request->input('turnover', $request->input('business_turnover', 'Any')); 
                 $itrBusiness = $request->input('has_business', 'Any');      
                 $itrCapGains = $request->input('has_capital_gains', 'Any'); 
 
-                // Query the Matrix with our STRICT scoring system to prevent fall-through!
                 $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
                     ->where(function($q) use ($itrType) { 
                         $q->where('itr_type', $itrType)->orWhere('itr_type', strtolower($itrType))
@@ -114,7 +102,6 @@ $commission = $service->calculateCommission((float) $service->price);
                         $q->where('itr_capital_gains', $itrCapGains)->orWhere('itr_capital_gains', strtolower($itrCapGains))
                           ->orWhereNull('itr_capital_gains')->orWhereIn('itr_capital_gains', ['Any', 'any']); 
                     })
-                    // Calculate specificity score so the most exact match ALWAYS wins.
                     ->orderByRaw("
                         (CASE WHEN itr_capital_gains IS NOT NULL AND LOWER(itr_capital_gains) != 'any' THEN 1 ELSE 0 END) +
                         (CASE WHEN turnover IS NOT NULL AND LOWER(turnover) != 'any' THEN 1 ELSE 0 END) +
@@ -124,6 +111,7 @@ $commission = $service->calculateCommission((float) $service->price);
                     ->first();
             }
 
+            // IF A RULE WAS FOUND, OVERWRITE THE DEFAULTS (This is what got broken before)
             if ($rule) {
                 $finalPrice = $rule->base_price;
                 $commission = $rule->commission_amount;
@@ -132,27 +120,62 @@ $commission = $service->calculateCommission((float) $service->price);
             $commission = $service->calculateCommission((float) $service->price);
         }
 
-        // Amount to charge via Razorpay (Wholesale Agent Price)
+        // ==========================================
+        // 🎟️ COUPON MATH LOGIC 
+        // ==========================================
+        $couponId = null;
+        $couponBonus = 0;
+
+        $couponInput = $request->input('applied_coupon') ?? $request->input('coupon') ?? $request->input('coupon_code') ?? $request->input('code');
+        if (!empty($couponInput)) {
+            $couponCode = strtoupper(trim($couponInput));
+            $b2bDatabase = config('database.connections.master_connection.database', 'easytax_db');
+            $coupon = \Illuminate\Support\Facades\DB::table($b2bDatabase . '.coupons')
+                        ->where('code', $couponCode)
+                        ->where('is_active', true)
+                        ->first();
+            
+            if ($coupon) {
+                $couponId = $coupon->id;
+                $couponBonus = $coupon->bonus_amount;
+                
+                // Increase the agent's total commission by the bonus amount!
+                $commission += $couponBonus; 
+            }
+        }
+        // ==========================================
+
+        // Amount to charge via Razorpay
         $amountToPay = max(0, $finalPrice - $commission);
 
-        $application = Application::create([
+        $application = \App\Models\Application::create([
             'agent_id'          => auth()->id(),
             'service_id'        => $service->id,
             'form_data'         => $validated,
             'amount'            => $finalPrice, 
             'commission_amount' => $commission, 
-            'status'            => ApplicationStatus::DRAFT,
-            'payment_status'    => PaymentStatus::PENDING,
+            
+            // ── SAVE COUPON TO DATABASE ──
+            'coupon_id'         => $couponId,
+            'coupon_bonus'      => $couponBonus,
+            // ─────────────────────────────
+            
+            'status'            => \App\Enums\ApplicationStatus::DRAFT,
+            'payment_status'    => \App\Enums\PaymentStatus::PENDING,
         ]);
 
-        Log::info("Draft application created with ID: {$application->id}");
+        \Illuminate\Support\Facades\Log::info("Draft application created with ID: {$application->id}");
 
         $applicationDocumentService->handleUploads($application, $request, $service->slug);
-        ApplicationLogger::log($application->id, 'application_created');
+        
+        // Use your existing Logger
+        if (class_exists('\App\Helpers\ApplicationLogger')) {
+            \App\Helpers\ApplicationLogger::log($application->id, 'application_created');
+        }
 
         // Create Razorpay order
         $receiptId = 'APP_' . $application->id . '_' . time();
-        $razorpay  = new RazorpayService();
+        $razorpay  = new \App\Services\RazorpayService();
 
         $orderResponse = $razorpay->createOrder(
             $receiptId,
@@ -164,18 +187,17 @@ $commission = $service->calculateCommission((float) $service->price);
             ]
         );
 
-        Log::info("Razorpay order creation response for application {$application->id}", $orderResponse);
+        \Illuminate\Support\Facades\Log::info("Razorpay order creation response for application {$application->id}", $orderResponse);
 
         if (!$orderResponse['success']) {
             return back()->with('error', 'Payment initialization failed. Please try again.');
         }
 
-        // Store order_id as payment_reference
         $application->update([
             'payment_reference' => $orderResponse['order_id'],
         ]);
 
-        PaymentLog::create([
+        \App\Models\PaymentLog::create([
             'application_id' => $application->id,
             'transaction_id' => $receiptId,
             'event'          => 'order_created',
@@ -184,7 +206,6 @@ $commission = $service->calculateCommission((float) $service->price);
             'response'       => $orderResponse,
         ]);
 
-        // Return to the form page with order details for Razorpay checkout
         return back()->with('razorpay_order', [
             'order_id'       => $orderResponse['order_id'],
             'amount'         => $orderResponse['amount'],
@@ -199,7 +220,7 @@ $commission = $service->calculateCommission((float) $service->price);
     |--------------------------------------------------------------------------
     */
 
-    public function paymentSuccess(Request $request)
+   public function paymentSuccess(Request $request)
     {
         $validated = $request->validate([
             'razorpay_payment_id' => 'required|string',
@@ -237,29 +258,26 @@ $commission = $service->calculateCommission((float) $service->price);
             'response'       => $payment,
         ]);
 
-        // Update application
-        $application->update([
-            'payment_status' => PaymentStatus::PAID,
-            'status'         => ApplicationStatus::SUBMITTED,
-            'submitted_at'   => now(),
-        ]);
+        // 🛑 STRICT CHECK: Only process this if it hasn't been paid yet!
+        if ($application->payment_status !== PaymentStatus::PAID) {
+            
+            $application->update([
+                'payment_status' => PaymentStatus::PAID,
+                'status'         => ApplicationStatus::SUBMITTED,
+                'submitted_at'   => now(),
+            ]);
 
-        activity('application')
-            ->performedOn($application)
-            ->causedBy($application->agent)
-            ->log('Payment confirmed via Razorpay');
+            activity('application')
+                ->performedOn($application)
+                ->causedBy($application->agent)
+                ->log('Payment confirmed via Razorpay');
 
-        // Notify admins
-        $admins = \App\Models\User::where('role', 'ADMIN')
-            ->where('is_active', true)
-            ->get();
+            // Notify admins
+            $admins = \App\Models\User::where('role', 'ADMIN')->where('is_active', true)->get();
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationSubmittedNotification($application));
 
-        \Illuminate\Support\Facades\Notification::send(
-            $admins,
-            new \App\Notifications\ApplicationSubmittedNotification($application)
-        );
-
-        ApplicationLogger::log($application->id, 'payment_success');
+            ApplicationLogger::log($application->id, 'payment_success');
+        }
 
         return redirect()->route('payment.result', ['txn' => $application->payment_reference]);
     }
@@ -394,7 +412,7 @@ $commission = $service->calculateCommission((float) $service->price);
     |--------------------------------------------------------------------------
     */
 
-    public function webhook(Request $request)
+  public function webhook(Request $request)
     {
         $payload   = $request->getContent();
         $signature = $request->header('X-Razorpay-Signature');
@@ -424,16 +442,25 @@ $commission = $service->calculateCommission((float) $service->price);
 
             if (!$application) {
                 Log::warning('Webhook: application not found for order', ['order_id' => $orderId]);
-                return response()->json(['success' => true]); // Acknowledge anyway
+                return response()->json(['success' => true]); 
             }
 
-            // Only update if not already paid
+            // 🛑 STRICT CHECK: Only update if not already paid by the frontend
             if ($application->payment_status !== PaymentStatus::PAID) {
                 $application->update([
                     'payment_status' => PaymentStatus::PAID,
                     'status'         => ApplicationStatus::SUBMITTED,
                     'submitted_at'   => now(),
                 ]);
+
+                activity('application')
+                    ->performedOn($application)
+                    ->causedBy($application->agent)
+                    ->log('Payment confirmed via Razorpay (Webhook)');
+
+                // Notify admins
+                $admins = \App\Models\User::where('role', 'ADMIN')->where('is_active', true)->get();
+                \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationSubmittedNotification($application));
 
                 PaymentLog::create([
                     'application_id' => $application->id,
@@ -474,7 +501,6 @@ $commission = $service->calculateCommission((float) $service->price);
 
         return response()->json(['success' => true]);
     }
-
     public function checkStatus($transactionId)
     {
         // 1. Try finding application via Razorpay order_id
@@ -532,7 +558,7 @@ $commission = $service->calculateCommission((float) $service->price);
         // 2. Load the related data needed for the view
         $application->load(['service', 'agent']);
 
-        // 3. Send them to the public tracking view
+        // 3. Send them to the public tracking view 
         return view('front.pages.applications.track', compact('application'));
     }
 }   

@@ -13,27 +13,27 @@ $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 echo "<div style='font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;'>";
 
 try {
-    // 3. ULTRA-SAFE DELETION QUERY
-    // This locks strictly onto Agent ID 430 and only touches Draft/Failed statuses.
+    // 3. RAW DATABASE DELETION
+    // Because we use DB::table() instead of Eloquent models, 
+    // Laravel's automatic file-deletion system is completely bypassed!
     $deletedCount = \Illuminate\Support\Facades\DB::table('applications')
-        ->where('agent_id', 430) // <--- STRICT LOCK ON RAHUL SHARMA'S ID
-        ->whereIn('status', ['DRAFT', 'FAILED', 'draft', 'failed'])
-        ->delete();
+        ->where('agent_id', 430) // Locks onto Rahul Sharma
+        ->delete();              // Deletes ALL applications, ignoring status
 
     // 4. Print the Success Message
-    echo "<h2 style='color: #1e9c5d;'>✅ Cleanup Successful</h2>";
+    echo "<h2 style='color: #1e9c5d;'>✅ Applications Deleted (Files Saved)</h2>";
     echo "<p>System securely connected to Agent ID: <strong>430</strong> (AGT-000002 | rahulg7725@gmail.com).</p>";
     
     if ($deletedCount > 0) {
-        echo "<p>Successfully and permanently deleted <strong>{$deletedCount}</strong> Draft/Failed applications exclusively for this agent.</p>";
-        echo "<p><em>Note: All Completed, Pending, or In Progress applications were kept safe.</em></p>";
+        echo "<p>Successfully deleted <strong>{$deletedCount}</strong> application records from the database.</p>";
+        echo "<p style='color: #b06000;'><em>Note: As requested, the physical documents (PDFs, Images) were bypassed and have been left safely on your server's hard drive.</em></p>";
     } else {
-        echo "<p>No Draft or Failed applications were found for this agent. Nothing was deleted.</p>";
+        echo "<p>No applications were found for this agent. Nothing was deleted.</p>";
     }
     
     echo "<br><div style='background: #fff3f3; border: 1px solid #fce8e6; padding: 15px; color: #c5221f; border-radius: 8px;'>";
     echo "<strong>🚨 CRITICAL SECURITY STEP:</strong><br>";
-    echo "You must now delete this <code>cleanup-agent.php</code> file from your server's public folder to prevent unauthorized access.";
+    echo "You must now delete this <code>cleanup-agent.php</code> file from your server's public folder.";
     echo "</div>";
 
 } catch (\Exception $e) {
@@ -43,3 +43,5 @@ try {
 }
 
 echo "</div>";
+
+//https://uat.easytax.live/cleanup-agent.php?token=superadmin123  the sync function we were talking 
