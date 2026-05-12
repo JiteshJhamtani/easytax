@@ -20,7 +20,6 @@ echo "<div style='font-family: sans-serif; padding: 20px; background:#f4f4f9; bo
 echo "<h1>🔄 EasyTax Master Data Sync</h1><ul>";
 
 $childDbs = [
-    'uat' => 'db_uat',
      'marketing' => 'db_marketing',
      'upwest'=> 'db_upwest',
 ];

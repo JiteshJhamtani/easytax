@@ -237,8 +237,8 @@
                 $companyServices = [
                     'fpo-registration', 
                     'section-8-company', 
-                    'llp-registation', 
-                    'opc-registation', 
+                    'llp-registration', 
+                    'opc-registration', 
                     'private-limited-company-registration'
                 ];
                 

@@ -7,14 +7,16 @@ use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+ use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-      // ── KPI Cards ──
+      // ── KPI Cards ──  
         $kpis = [
-            // 1. Total Active (Excludes Drafts, Cancelled, and Failed)
+            // 1. Total Active (Excludes Drafts, Cancelled, and Failed)  
             'total_applications' => Application::query()
                 ->whereNotIn('status', ['DRAFT', 'CANCELLED'])
                 ->where('payment_status', '!=', 'FAILED')
@@ -32,14 +34,21 @@ class DashboardController extends Controller
             'processed_applications' => Application::query()
                 ->where(function ($query) {
                     $query->whereIn('status', ['DRAFT', 'CANCELLED'])
-                          ->orWhere('payment_status', 'FAILED');
+                          ->orWhere('payment_status', 'FAILED',);
                 })
                 ->count(),
             
-            // 4. Financials & Agents
-            'total_revenue' => Application::query()->where('payment_status', 'SUCCESS')->sum('amount'),
             
-            'total_commission' => Application::query()->where('status', 'COMPLETED')->sum('commission_amount'),
+            // 4. Financials & Agents (Now perfectly synced with the tables & charts)
+            'total_revenue' => Application::query()
+                ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
+                ->where('payment_status', '!=', 'FAILED')
+                ->sum('amount'),
+            
+            'total_commission' => Application::query()
+                ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
+                ->where('payment_status', '!=', 'FAILED')
+                ->sum('commission_amount'),
             
            'total_agents' => User::query()
                 ->where('role', 'AGENT')
@@ -134,5 +143,66 @@ class DashboardController extends Controller
             'topServices',
             'recentApplications'
         ));
+    }
+
+public function switchServer($target)
+{
+    // 1. Define your destination URLs
+    $destinations = [
+        'upwest' => 'https://upwest.easytax.live',
+        'b2b' => 'https://b2b.easytax.live',
+        'marketing' => 'https://marketing.easytax.live',
+        'uat' => 'https://uat.easytax.live'     
+    ];
+
+    if (!array_key_exists($target, $destinations)) {
+        abort(404, 'Server destination not found.');
+    }
+
+    // 2. Create a payload with the user's email and a 60-second expiration timestamp
+    $payload = json_encode([
+        'email' => auth()->user()->email,
+        'expires_at' => now()->addSeconds(60)->timestamp
+    ]);
+
+    // 3. Encrypt the payload using your custom shared secret
+    $encrypter = new \Illuminate\Encryption\Encrypter(env('CROSS_SERVER_SECRET'), config('app.cipher'));
+    $token = $encrypter->encryptString($payload);
+
+    // 4. Redirect them to the auto-login route on the other server
+    return redirect()->away($destinations[$target] . '/auto-login?token=' . urlencode($token));
+}
+
+    public function fetchRemoteKpis(\Illuminate\Http\Request $request)
+    {
+        $server = $request->query('server');
+        
+        // Define your server API URLs here
+        $servers = [
+            'upwest' => 'https://upwest.easytax.live',
+            'b2b' => 'https://b2b.easytax.live',
+            'marketing' => 'https://marketing.easytax.live',
+            'uat' => 'https://uat.easytax.live'     
+        ];
+
+        if (!array_key_exists($server, $servers)) {
+            return response()->json(['error' => 'Server not found'], 404);
+        }
+
+        try {
+            // Securely fetch the KPIs from the target server
+            $response = Http::withToken(env('CROSS_SERVER_SECRET'))
+                ->timeout(5) // Don't hang forever if the server is offline
+                ->get($servers[$server] . '/api/dashboard-kpis');
+
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+            
+            return response()->json(['error' => 'Failed to fetch data from remote server. HTTP Status: ' . $response->status()], 500);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Server unreachable'], 500);
+        }
     }
 }

@@ -168,14 +168,28 @@
 
     {{-- ═══════ KPI FUNNEL CARDS (4 Top, 3 Bottom) ═══════ --}}
     <div class="funnel-container">
-        <h2 class="funnel-container-title">Application Funnels</h2>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="funnel-container-title mb-0">Application Funnels</h2>
+            
+            @if(in_array(request()->getHost(), ['b2b.easytax.live', 'uat.easytax.live']))
+            <div class="form-group mb-0" style="width: 250px;">
+                <select id="serverSelector" class="form-control font-weight-bold border-primary shadow-sm">
+                    <option value="local" selected>📍 Local Data (This Server)</option>
+                    <option value="uat">☁️ UAT Server</option>
+                    <option value="b2b">☁️ B2B Server</option>
+                    <option value="upwest">☁️ Upwest Server</option>
+                    <option value="marketing">☁️ Marketing Server</option>
+                </select>
+            </div>
+            @endif
+        </div>
         
         <div class="row mb-4">
             <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-file-alt"></i></div>
                     <div class="funnel-label">Total Applications</div>
-                    <div class="funnel-value">{{ $kpis['total_applications'] }}</div>
+                    <div class="funnel-value" id="kpi-total_applications">{{ $kpis['total_applications'] }}</div>
                 </div>
             </div>
 
@@ -183,7 +197,7 @@
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-check-circle"></i></div>
                     <div class="funnel-label">Completed Apps</div>
-                    <div class="funnel-value">{{ $kpis['completed_applications'] }}</div>
+                    <div class="funnel-value" id="kpi-completed_applications">{{ $kpis['completed_applications'] }}</div>
                 </div>
             </div>
 
@@ -191,7 +205,7 @@
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-clock"></i></div>
                     <div class="funnel-label">Pending Apps</div>
-                    <div class="funnel-value">{{ $kpis['pending_applications'] }}</div>
+                    <div class="funnel-value" id="kpi-pending_applications">{{ $kpis['pending_applications'] }}</div>
                 </div>
             </div>
 
@@ -199,7 +213,7 @@
                 <div class="funnel-card">
                     <div class="funnel-icon orange"><i class="fas fa-archive"></i></div>
                     <div class="funnel-label">Processed (Draft/Fail)</div>
-                    <div class="funnel-value">{{ $kpis['processed_applications'] ?? 0 }}</div>
+                    <div class="funnel-value" id="kpi-processed_applications">{{ $kpis['processed_applications'] ?? 0 }}</div>
                 </div>
             </div>
         </div>
@@ -209,14 +223,14 @@
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-users"></i></div>
                     <div class="funnel-label">Total Agents</div>
-                    <div class="funnel-value">{{ $kpis['total_agents'] }}</div>
+                    <div class="funnel-value" id="kpi-total_agents">{{ $kpis['total_agents'] }}</div>
                 </div>
             </div>
             <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-rupee-sign"></i></div>
                     <div class="funnel-label">Total Revenue</div>
-                    <div class="funnel-value">₹{{ number_format($kpis['total_revenue'], 2) }}</div>
+                    <div class="funnel-value" id="kpi-total_revenue">₹{{ number_format($kpis['total_revenue'], 2) }}</div>
                 </div>
             </div>
 
@@ -224,7 +238,7 @@
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-coins"></i></div>
                     <div class="funnel-label">Commission Generated</div>
-                    <div class="funnel-value">₹{{ number_format($kpis['total_commission'], 2) }}</div>
+                    <div class="funnel-value" id="kpi-total_commission">₹{{ number_format($kpis['total_commission'], 2) }}</div>
                 </div>
             </div>
 
@@ -234,7 +248,7 @@
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-users"></i></div>
                     <div class="funnel-label">Total Marketers</div>
-                    <div class="funnel-value">{{ $kpis['total_marketers'] }}</div>
+                    <div class="funnel-value" id="kpi-total_marketers">{{ $kpis['total_marketers'] }}</div>
                 </div>
             </div>
         </div>
@@ -460,5 +474,51 @@
             }
         }
     });
+</script>
+<script>
+let serverSelector = document.getElementById('serverSelector');
+if (serverSelector) {
+    serverSelector.addEventListener('change', function() {
+        let server = this.value;
+        let funnelCards = document.querySelectorAll('.funnel-value');
+        
+        if (server === 'local') {
+            window.location.reload(); // Quickest way to reset to local data
+            return;
+        }
+    
+        // Add a fast loading spinner visually!
+        funnelCards.forEach(card => {
+            card.innerHTML = '<i class="fas fa-spinner fa-spin text-muted" style="font-size: 1.2rem;"></i>';
+        });
+    
+        // Fetch the remote data via our proxy
+        fetch(`/admin/fetch-remote-kpis?server=${server}`)
+            .then(response => response.json())
+            .then(data => {
+                if(data.error) {
+                    alert('Could not load data: ' + data.error);
+                    window.location.reload(); 
+                    return;
+                }
+                
+                document.getElementById('kpi-total_applications').innerText = data.total_applications;
+                document.getElementById('kpi-completed_applications').innerText = data.completed_applications;
+                document.getElementById('kpi-pending_applications').innerText = data.pending_applications;
+                document.getElementById('kpi-processed_applications').innerText = data.processed_applications;
+                document.getElementById('kpi-total_agents').innerText = data.total_agents;
+                document.getElementById('kpi-total_marketers').innerText = data.total_marketers;
+                
+                // Auto-format Indian Rupee currency with commas and 2 decimals
+                document.getElementById('kpi-total_revenue').innerText = '₹' + parseFloat(data.total_revenue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('kpi-total_commission').innerText = '₹' + parseFloat(data.total_commission).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            })
+            .catch(error => {
+                alert('Failed to connect to the server.');
+                console.error(error);
+                window.location.reload();
+            });
+    });
+}
 </script>
 @endsection

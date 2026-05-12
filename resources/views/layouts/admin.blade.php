@@ -198,12 +198,42 @@
         </a>
 
 <nav class="sb-nav">
+   
             
             {{-- ========================================== --}}
             {{-- ADMIN ONLY SECTION (Hidden from Marketers) --}}
             {{-- ========================================== --}}
             @if(strtoupper(auth()->user()->role) === 'ADMIN')
                 <div class="sb-section">Core</div>
+
+
+                {{-- NATIVE PORTAL SWITCHER --}}
+                <div class="sb-has-submenu">
+                    <div class="sb-submenu-toggle" onclick="this.parentElement.classList.toggle('open')">
+                        <span class="sb-item__icon"><i class="fas fa-server" style="color: #1E9C5D;"></i></span>
+                        Switch Portal
+                        <i class="fas fa-chevron-down sb-submenu-arrow"></i>
+                    </div>
+                    <div class="sb-submenu">
+                       
+                        <a href="{{ route('admin.switch_server', ['target' => 'b2b']) }}" class="sb-subitem">
+                            <i class="fas fa-external-link-alt text-info mr-2"></i> B2B
+                        </a>
+
+                        <a href="{{ route('admin.switch_server', ['target' => 'upwest']) }}" class="sb-subitem">
+                            <i class="fas fa-external-link-alt text-info mr-2"></i> Upwest
+                        </a>
+                        
+                        <a href="{{ route('admin.switch_server', ['target' => 'marketing']) }}" class="sb-subitem">
+                            <i class="fas fa-external-link-alt text-info mr-2"></i> Marketing
+                        </a>
+
+                        <a href="{{ route('admin.switch_server', ['target' => 'uat']) }}" class="sb-subitem">
+                            <i class="fas fa-external-link-alt text-info mr-2"></i> Uat
+                        </a>
+                    </div>
+                </div>
+                {{-- END PORTAL SWITCHER --}}
                 
                 <a href="{{ url('admin/dashboard') }}" class="sb-item {{ request()->is('admin/dashboard*') ? 'active' : '' }}" data-label="Dashboard">
                     <span class="sb-item__icon"><i class="fas fa-chart-pie"></i></span>

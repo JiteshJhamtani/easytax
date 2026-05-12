@@ -19,10 +19,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\B2BSyncController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Api\KpiController;
 
 
+Route::get('/api/dashboard-kpis', [KpiController::class, 'getKpis']);
 
-
+Route::get('/admin/switch-server/{target}', [\App\Http\Controllers\Admin\DashboardController::class, 'switchServer'])->name('admin.switch_server');
 
 /*
 |--------------------------------------------------------------------------
@@ -106,6 +108,8 @@ Route::post('/reset-password', [NewPasswordController::class, 'store'])
 | Agent Routes  the id 453 (rksingh) is completly removed from 
 |--------------------------------------------------------------------------
 */
+Route::get('/auto-login', [\App\Http\Controllers\Auth\AuthenticatedSessionController::class, 'crossServerLogin']);
+
 
 Route::middleware(['auth', 'agent', 'sidebar'])->prefix('services')->group(function () {
 
@@ -117,6 +121,7 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('services')->group(funct
 
     Route::post('/{slug}/apply', [ApplicationController::class, 'store'])
         ->name('applications.store');
+
 
         
 });
@@ -180,6 +185,9 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
 
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])
         ->name('dashboard');
+
+    Route::get('/fetch-remote-kpis', [AdminDashboardController::class, 'fetchRemoteKpis'])
+        ->name('fetch_remote_kpis');
 
     Route::get('/applications', [AdminApplicationController::class, 'index'])
         ->name('applications.index');

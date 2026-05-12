@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Models\User;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -62,4 +63,44 @@ class AuthenticatedSessionController extends Controller
 
         return redirect('/');
     }
+
+   
+
+public function crossServerLogin(Request $request)
+{
+    if (!$request->has('token')) {
+        return redirect()->route('login')->with('error', 'No authentication token provided.');
+    }
+
+    try {
+        // 1. Decrypt the token using the shared secret
+        $encrypter = new \Illuminate\Encryption\Encrypter(env('CROSS_SERVER_SECRET'), config('app.cipher'));
+        $decrypted = $encrypter->decryptString($request->token);
+        $payload = json_decode($decrypted, true);
+
+        // 2. Security Check: Has the 60-second link expired?
+        if (now()->timestamp > $payload['expires_at']) {
+            return redirect()->route('login')->with('error', 'Login link expired for security. Please try again.');
+        }
+
+        // 3. Find the matching Admin user on THIS server
+        $user = User::where('email', $payload['email'])
+                    ->whereIn('role', ['SUPER_ADMIN', 'ADMIN']) // Ensure only admins can do this
+                    ->first();
+
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Admin account not found on this server.');
+        }
+
+        // 4. Log the user in and bounce them straight to the dashboard!
+        Auth::login($user);
+        
+        return redirect()->route('admin.dashboard')->with('success', 'Successfully switched portals!');
+
+    } catch (\Exception $e) {
+        return redirect()->route('login')->with('error', 'Invalid security token.');
+    }
+}
+
+
 }
