@@ -129,11 +129,13 @@ public function store(
         $couponInput = $request->input('applied_coupon') ?? $request->input('coupon') ?? $request->input('coupon_code') ?? $request->input('code');
         if (!empty($couponInput)) {
             $couponCode = strtoupper(trim($couponInput));
-            $b2bDatabase = config('database.connections.master_connection.database', 'easytax_db');
-            $coupon = \Illuminate\Support\Facades\DB::table($b2bDatabase . '.coupons')
-                        ->where('code', $couponCode)
-                        ->where('is_active', true)
-                        ->first();
+            
+            $connectionName = config()->has('database.connections.master_connection') ? 'master_connection' : config('database.default');
+            try {
+                $coupon = \Illuminate\Support\Facades\DB::connection($connectionName)->table('coupons')->where('code', $couponCode)->where('is_active', true)->first();
+            } catch (\Exception $e) {
+                $coupon = \Illuminate\Support\Facades\DB::table('coupons')->where('code', $couponCode)->where('is_active', true)->first();
+            }
             
             if ($coupon) {
                 $couponId = $coupon->id;
@@ -141,6 +143,13 @@ public function store(
                 
                 // Increase the agent's total commission by the bonus amount!
                 $commission += $couponBonus; 
+
+                // Synchronize the usage count back to the master database
+                try {
+                    \Illuminate\Support\Facades\DB::connection($connectionName)->table('coupons')->where('id', $couponId)->increment('total_used');
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\DB::table('coupons')->where('id', $couponId)->increment('total_used');
+                }
             }
         }
         // ==========================================

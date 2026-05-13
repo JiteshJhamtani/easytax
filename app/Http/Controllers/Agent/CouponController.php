@@ -15,9 +15,14 @@ class CouponController extends Controller
         $code = strtoupper(trim($request->input('code')));
         $serviceSlug = $request->input('service_slug');
 
-        // 2. Search for the coupon in the database
-        $b2bDatabase = config('database.connections.master_connection.database', 'easytax_db');
-        $coupon = DB::table($b2bDatabase . '.coupons')->where('code', $code)->first();
+        // 2. Search for the coupon in the MASTER database
+        $connectionName = config()->has('database.connections.master_connection') ? 'master_connection' : config('database.default');
+        
+        try {
+            $coupon = DB::connection($connectionName)->table('coupons')->where('code', $code)->first();
+        } catch (\Exception $e) {
+            $coupon = DB::table('coupons')->where('code', $code)->first();
+        }
 
         // SCENARIO 1: Code doesn't exist
         if (!$coupon) {
@@ -42,9 +47,46 @@ class CouponController extends Controller
             }
         }
 
-        // 🚀 NEW SCENARIO 5: Code is locked to a SPECIFIC Agent
-        if ($coupon->agent_id && $coupon->agent_id != Auth::id()) {
-            return response()->json(['valid' => false, 'message' => 'This promo code is not assigned to your account.']);
+        // SCENARIO 5: Global max uses reached
+        if ($coupon->global_max_uses && $coupon->total_used >= $coupon->global_max_uses) {
+            return response()->json(['valid' => false, 'message' => 'This promo code has reached its maximum usage limit.']);
+        }
+
+        // SCENARIO 6: Max uses per agent reached
+        $usedCount = DB::table('applications')
+            ->where('agent_id', Auth::id())
+            ->where('coupon_id', $coupon->id)
+            ->whereNotIn('status', ['DRAFT', 'CANCELLED'])
+            ->count();
+            
+        if ($coupon->max_uses_per_agent && $usedCount >= $coupon->max_uses_per_agent) {
+            return response()->json(['valid' => false, 'message' => 'You have already used this promo code the maximum allowed times.']);
+        }
+
+        // 🚀 SCENARIO 7: Code is locked to a SPECIFIC Agent (Cross-Server Check)
+        if (!empty($coupon->target_agents)) {
+            $allowedAgents = json_decode($coupon->target_agents, true);
+
+            // Look up the agent's ID on the Master server by email so they can use it here
+            $masterAgentId = Auth::id();
+            try {
+                $masterAgent = DB::connection($connectionName)->table('users')->where('email', Auth::user()->email)->first();
+                if ($masterAgent) { $masterAgentId = $masterAgent->id; }
+            } catch (\Exception $e) {}
+
+            if (is_array($allowedAgents) && count($allowedAgents) > 0 && !in_array($masterAgentId, $allowedAgents) && !in_array(Auth::id(), $allowedAgents)) {
+                return response()->json(['valid' => false, 'message' => 'This promo code is not assigned to your account.']);
+            }
+        } elseif (!empty($coupon->agent_id)) {
+            $masterAgentId = Auth::id();
+            try {
+                $masterAgent = DB::connection($connectionName)->table('users')->where('email', Auth::user()->email)->first();
+                if ($masterAgent) { $masterAgentId = $masterAgent->id; }
+            } catch (\Exception $e) {}
+
+            if ($coupon->agent_id != $masterAgentId && $coupon->agent_id != Auth::id()) {
+                return response()->json(['valid' => false, 'message' => 'This promo code is not assigned to your account.']);
+            }
         }
 
         
