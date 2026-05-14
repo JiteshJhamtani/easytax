@@ -67,28 +67,39 @@ class ApplicationController extends Controller
         
         // -----------------------------
 
+        $teamMembers = \App\Models\User::whereIn('role', ['TEAM', 'team', 'ADMIN', 'admin'])->where('is_active', true)->get();
+
         return view('admin.applications.index', compact(
-            'services', 'agents', 'stats', 'type', 'pageTitle'
+            'services', 'agents', 'stats', 'type', 'pageTitle', 'teamMembers'
         ));
     }
 
   public function data(Request $request)
     {
-        
-      // 2. FORM DATA EXPORTS 
-       $query = Application::with(['service', 'agent', 'media']);
+        // 2. FORM DATA EXPORTS 
+        $query = Application::with(['service', 'agent', 'media']);
 
         $type = $request->type ?? 'other';
 
-       if ($type === 'incomplete') {
-           $query->where(function ($q) {
-               $q->whereIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
-                 ->orWhereIn('payment_status', ['FAILED', 'PENDING']);
-           })->whereNotIn('status', ['SUBMITTED', 'IN_PROGRESS', 'E_FILING', 'OTP_VERIFICATION', 'COMPLETED']);
-       } else {
-           $query->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
-                 ->where('payment_status', '!=', 'FAILED');
-       }
+        // ==========================================
+        // 🚨 BUG FIX: THE BLACK HOLE FILTER
+        // ==========================================
+        if ($type === 'incomplete') {
+            // "Incomplete" means it is either explicitly marked as Draft/Cancelled/Failed
+            // OR (it is NOT completed AND its payment is Pending/Failed)
+            $query->where(function ($q) {
+                $q->whereIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+                  ->orWhere(function ($subQ) {
+                      $subQ->whereIn('payment_status', ['FAILED', 'PENDING'])
+                           ->where('status', '!=', 'COMPLETED'); // If it is COMPLETED, do NOT put it in Incomplete!
+                  });
+            });
+        } else {
+            // For all standard service tabs (ITR, GST, etc) AND the Completed tab:
+            // Just show it as long as it isn't explicitly a Draft/Cancelled/Failed.
+            // We NO LONGER hide Pending payments here if the Admin forced it to Completed!
+            $query->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED']);
+        }
 
         $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
 
@@ -111,6 +122,8 @@ class ApplicationController extends Controller
         if ($request->date_from) { $query->whereDate('created_at', '>=', $request->date_from); }
         if ($request->date_to) { $query->whereDate('created_at', '<=', $request->date_to); }
 
+        $teamMembers = \App\Models\User::whereIn('role', ['TEAM', 'team', 'ADMIN', 'admin'])->where('is_active', true)->get();
+
         return datatables()->of($query)
             ->filterColumn('agent', function($query, $keyword) {
                 $query->whereHas('agent', function($q) use ($keyword) {
@@ -123,7 +136,7 @@ class ApplicationController extends Controller
                 });
             })
             ->addColumn('dynamic_data', function($a) {
-                $targetField = $a->service->primary_data_field;
+                $targetField = $a->service->primary_data_field ?? null;
                 if (!$targetField || empty($a->form_data)) {
                     return '<span class="text-muted text-xs font-italic">N/A</span>';
                 }
@@ -132,7 +145,7 @@ class ApplicationController extends Controller
                 if (!$value) return '<span class="text-muted text-xs font-italic">N/A</span>';
                 $displayVal = is_array($value) ? implode(', ', $value) : (string) $value;
                 return '<span class="font-weight-bold text-dark">' . $displayVal . '</span>';
-            })  
+            })
             // 1. ACK NUMBER COLUMN
             ->addColumn('ack_no', function($a) {
                 if ($a->service->slug !== 'itr-filing') return '-';
@@ -207,13 +220,22 @@ class ApplicationController extends Controller
             ->addColumn('payment', fn($a) => '<span class="badge badge-success">' . ($a->payment_status->value ?? $a->payment_status) . '</span>')
             ->addColumn('amount', fn($a) => '₹' . number_format($a->amount, 2))
             ->addColumn('date', fn($a) => $a->created_at->format('d M Y'))
+            ->addColumn('assign_to', function ($a) use ($teamMembers) {
+                $html = '<select class="form-select form-select-sm d-inline-block w-auto assign-team-select" data-app-id="' . $a->id . '" style="border-radius: 6px; font-size: 0.85rem; height: 31px; border: 1px solid #cbd5e1; outline: none;">';
+                $html .= '<option value="">Unassigned</option>';
+                foreach($teamMembers as $member) {
+                    $selected = $a->assigned_to == $member->id ? 'selected' : '';
+                    $html .= '<option value="' . $member->id . '" ' . $selected . '>' . $member->name . '</option>';
+                }
+                $html .= '</select>';
+                return $html;
+            })
             ->addColumn('actions', function ($a) {
                 return '<a href="' . route('admin.applications.show', $a) . '" class="btn btn-sm btn-primary">View</a>';
             })
-            ->rawColumns(['checkbox', 'dynamic_data', 'status', 'payment','ack_no','computation','balance_sheet', 'actions'])
+            ->rawColumns(['checkbox', 'dynamic_data', 'status', 'payment','ack_no','computation','balance_sheet', 'assign_to', 'actions'])
             ->make(true);
     }
-
 
 
    public function export(Request $request)
@@ -711,5 +733,21 @@ class ApplicationController extends Controller
         // ----------------------------------
 
         return $pdf->stream($fileName);
+    }
+
+   
+    public function assignTeam(Request $request, $id)
+    {
+        $application = \App\Models\Application::findOrFail($id);
+        
+        $application->update([
+            // If they select "Unassigned" it sends null, otherwise it saves the User ID
+            'assigned_to' => $request->team_id ? $request->team_id : null 
+        ]);
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Application assigned successfully!'
+        ]);
     }
 }

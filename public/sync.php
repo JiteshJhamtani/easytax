@@ -50,7 +50,7 @@ foreach ($childDbs as $name => $connectionName) {
     foreach ($uatUsers as $old_user) {
         if (empty($old_user->email)) continue;
 
-        // ✅ FIX: Guarantee agent_code is unique on this destination server
+        // ✅ FIX: Guarantee agent_code is unique on this destination server  
         // If the code from source is already taken by a DIFFERENT user, generate a new one
         $agentCode = $old_user->agent_code ?? null;
 

@@ -13,7 +13,7 @@ $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 echo "<div style='font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;'>";
 
 try {
-    // 3. RAW DATABASE DELETION
+    // 3. RAW DATABASE DELETION new task : 
     // Targeting Agent IDs 430 AND 462, and ONLY deleting Draft or Failed applications
     $deletedCount = \Illuminate\Support\Facades\DB::table('applications')
         ->whereIn('agent_id', [430, 462]) 

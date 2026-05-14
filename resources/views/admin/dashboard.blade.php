@@ -159,10 +159,19 @@
 
 @section('content')
     <div class="page-header">
-        <h1 class="page-title">Analytics Dashboard</h1>
-        <div class="header-date">
-            <i class="far fa-calendar-alt text-primary"></i>
-            {{ now()->format('d M Y, h:i A') }}
+        <div>
+            <h1 class="page-title">Analytics Dashboard</h1>
+        </div>
+        <div class="d-flex align-items-center" style="gap: 1rem;">
+            <div>
+                <span class="custom-badge badge-info-soft" style="font-size: 0.8rem; text-transform: none; letter-spacing: normal; padding: 0.5rem 1rem;">
+                    <i class="fas fa-headset mr-1"></i> Support Helpline: +91 77259 81022
+                </span>
+            </div>
+            <div class="header-date m-0">
+                <i class="far fa-calendar-alt text-primary"></i>
+                {{ now()->timezone('Asia/Kolkata')->format('d M Y, h:i A') }}
+            </div>
         </div>
     </div>
 

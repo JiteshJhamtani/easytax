@@ -177,16 +177,61 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
   
 });
 
+
+// ==========================================
+//  INTERNAL TEAM DASHBOARD ROUTES
+// ==========================================
+Route::middleware(['auth', 'team'])->prefix('team')->name('team.')->group(function () {
+    
+    // Core Dashboard & Task View
+    Route::get('/dashboard', [\App\Http\Controllers\Team\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/applications/{id}', [\App\Http\Controllers\Team\DashboardController::class, 'show'])->name('applications.show');
+    Route::post('/applications/{id}/status', [\App\Http\Controllers\Team\DashboardController::class, 'updateStatus'])->name('applications.status');
+
+    // Document Management (For Operators)
+    Route::post('/applications/{id}/document', [\App\Http\Controllers\Team\DashboardController::class, 'uploadDocument'])->name('applications.uploadDocument');
+    Route::delete('/documents/{id}', [\App\Http\Controllers\Team\DashboardController::class, 'deleteDocument'])->name('applications.deleteDocument');
+    Route::get('/documents/{id}/view', [\App\Http\Controllers\Team\DashboardController::class, 'viewDocument'])->name('documents.view');
+    Route::get('/documents/{id}/download', [\App\Http\Controllers\Team\DashboardController::class, 'downloadDocument'])->name('documents.download');
+
+    // Balance Sheet Generation (For Operators)
+    Route::get('/applications/{id}/balance-sheet', [\App\Http\Controllers\Team\DashboardController::class, 'balanceSheet'])->name('applications.balance-sheet');
+    Route::post('/applications/{id}/balance-sheet', [\App\Http\Controllers\Team\DashboardController::class, 'generateBalanceSheet'])->name('applications.balance-sheet.generate');
+    
+});
+
 /*
 |--------------------------------------------------------------------------
 | Admin Routes
 |--------------------------------------------------------------------------
 */
+//
+
+
  
 Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')->group(function () {
 
+    Route::post('/applications/{id}/assign', [\App\Http\Controllers\Admin\ApplicationController::class, 'assignTeam'])->name('applications.assign');
+
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])
         ->name('dashboard');
+
+    // ==========================================
+    // ADMIN: TEAM / OPERATOR MANAGEMENT
+    // ==========================================
+    Route::get('/team', [\App\Http\Controllers\Admin\TeamController::class, 'index'])->name('team.index');
+    
+    
+    Route::get('/team/create', [\App\Http\Controllers\Admin\TeamController::class, 'create'])->name('team.create'); 
+    Route::get('/team/{id}/edit', [\App\Http\Controllers\Admin\TeamController::class, 'edit'])->name('team.edit'); 
+    
+    Route::post('/team', [\App\Http\Controllers\Admin\TeamController::class, 'store'])->name('team.store');
+    Route::put('/team/{id}', [\App\Http\Controllers\Admin\TeamController::class, 'update'])->name('team.update');
+    
+    
+    Route::patch('/team/{id}/toggle-status', [\App\Http\Controllers\Admin\TeamController::class, 'toggleStatus'])->name('team.toggle-status'); 
+    
+    Route::delete('/team/{id}', [\App\Http\Controllers\Admin\TeamController::class, 'destroy'])->name('team.destroy');
 
     Route::get('/fetch-remote-kpis', [AdminDashboardController::class, 'fetchRemoteKpis'])
         ->name('fetch_remote_kpis');
@@ -355,6 +400,8 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
         ->name('documents.download');
 });
 
+ Route::post('/admin/applications/{id}/assign', [\App\Http\Controllers\Admin\ApplicationController::class, 'assignTeam'])->name('admin.applications.assign');
+
 // Promo & Coupon Management
 Route::get('/admin/coupons', [\App\Http\Controllers\Admin\CouponController::class, 'index'])->name('admin.coupons.index');
 Route::post('/admin/coupons', [\App\Http\Controllers\Admin\CouponController::class, 'store'])->name('admin.coupons.store');
@@ -363,7 +410,7 @@ Route::delete('/admin/coupons/{id}', [\App\Http\Controllers\Admin\CouponControll
 
 /*
 |--------------------------------------------------------------------------
-| CRM & Marketing Routes (Shared by Admin & Marketers)
+| CRM & Marketing Routes (Shared by Admin & Marketers) 
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'sidebar'])->prefix('crm')->name('crm.')->group(function () {
@@ -371,11 +418,16 @@ Route::middleware(['auth', 'sidebar'])->prefix('crm')->name('crm.')->group(funct
     // --- Marketers UI ---
     Route::get('/marketers', [\App\Http\Controllers\Admin\MarketerController::class, 'index'])->name('marketers.index');
     Route::get('/marketers/datatable', [\App\Http\Controllers\Admin\MarketerController::class, 'datatable'])->name('marketers.datatable');
-    
+
     // CRITICAL: create route moved ABOVE wildcard routes
     Route::get('/marketers/create', [\App\Http\Controllers\Admin\MarketerController::class, 'create'])->name('marketers.create'); 
     
     Route::post('/marketers', [\App\Http\Controllers\Admin\MarketerController::class, 'store'])->name('marketers.store');
+
+    Route::get('/marketers/{id}/edit', [\App\Http\Controllers\Admin\MarketerController::class, 'edit'])->name('marketers.edit');
+    Route::put('/marketers/{id}', [\App\Http\Controllers\Admin\MarketerController::class, 'update'])->name('marketers.update');
+    Route::delete('/marketers/{id}', [\App\Http\Controllers\Admin\MarketerController::class, 'destroy'])->name('marketers.destroy');
+
     Route::patch('/marketers/{user}/toggle-status', [\App\Http\Controllers\Admin\MarketerController::class, 'toggleStatus'])->name('marketers.toggle-status');
 
 

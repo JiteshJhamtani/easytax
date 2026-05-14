@@ -1,8 +1,6 @@
-@extends('layouts.admin')
+<?php $__env->startSection('title', 'Generate Balance Sheet'); ?>
 
-@section('title', 'Generate Balance Sheet')
-
-@section('css')
+<?php $__env->startSection('css'); ?>
 <style>
     /* Clean layout styles  */ 
     .bs-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e8ecf0; margin-bottom: 1rem; overflow: hidden; }
@@ -31,16 +29,16 @@
     /* Disables clicking the Balance Sheet tab until P&L is done */
     .nav-link.disabled-tab { pointer-events: none; opacity: 0.6; }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="font-weight-bold mb-1">Balance Sheet Generator</h2>
-            <p class="text-muted mb-0">Application ID: #{{ $application->id }} | Target Net Profit: <strong class="text-dark">₹{{ number_format($netProfit) }}</strong></p>
+            <p class="text-muted mb-0">Application ID: #<?php echo e($application->id); ?> | Target Net Profit: <strong class="text-dark">₹<?php echo e(number_format($netProfit)); ?></strong></p>
         </div>
-        <a href="{{ url('admin/applications?type=itr-filing') }}" class="btn btn-outline-secondary rounded-pill">
+        <a href="<?php echo e(url('admin/applications?type=itr-filing')); ?>" class="btn btn-outline-secondary rounded-pill">
             <i class="fas fa-arrow-left mr-2"></i> Back to ITRs
         </a>
     </div>
@@ -54,9 +52,9 @@
         </li>
     </ul>
 
-    <form id="pdfGenerateForm" action="{{ route('admin.applications.balance-sheet.generate', $application->id) }}" method="POST">
-        @csrf
-        <input type="hidden" id="val-target-np" value="{{ $netProfit }}">
+    <form id="pdfGenerateForm" action="<?php echo e(route('admin.applications.balance-sheet.generate', $application->id)); ?>" method="POST">
+        <?php echo csrf_field(); ?>
+        <input type="hidden" id="val-target-np" value="<?php echo e($netProfit); ?>">
 
         <div class="tab-content" id="bsTabsContent">
             
@@ -80,10 +78,10 @@
                         </div>
                         <div class="col-md-6">
                             <div class="bs-col-header"><span>Income</span><span>Amount</span></div>
-                            <div class="bs-row"><span>Sales <small class="text-muted">(Auto)</small></span> <input type="number" class="bs-input calc-trigger" name="sales" value="{{ $sales }}" readonly></div>
-                            <div class="bs-row"><span>Closing Stock</span> <input type="number" class="bs-input calc-trigger" name="closing_stock" value="{{ $extractedData['closing_stock'] ?? '' }}" placeholder="0"></div>
+                            <div class="bs-row"><span>Sales <small class="text-muted">(Auto)</small></span> <input type="number" class="bs-input calc-trigger" name="sales" value="<?php echo e($sales); ?>" readonly></div>
+                            <div class="bs-row"><span>Closing Stock</span> <input type="number" class="bs-input calc-trigger" name="closing_stock" value="<?php echo e($extractedData['closing_stock'] ?? ''); ?>" placeholder="0"></div>
                             <div class="bs-row"><span>Interest Income</span> <input type="number" class="bs-input calc-trigger" name="interest_income" placeholder="0"></div>
-                            <div class="bs-row"><span>Other Income <small class="text-muted">(Auto)</small></span> <input type="number" class="bs-input calc-trigger" name="other_income" value="{{ $otherIncome }}" readonly></div>
+                            <div class="bs-row"><span>Other Income <small class="text-muted">(Auto)</small></span> <input type="number" class="bs-input calc-trigger" name="other_income" value="<?php echo e($otherIncome); ?>" readonly></div>
                         </div>
                     </div>
                 </div>
@@ -105,7 +103,7 @@
                             <div class="bs-row py-1"><span>Other Loans</span> <input type="number" class="bs-input calc-trigger" name="other_loans" placeholder="0"></div>
                             
                             <h6 class="font-weight-bold mt-3 mx-3 text-dark">Current Liabilities</h6>
-                            <div class="bs-row py-1"><span>Sundry Creditors</span> <input type="number" class="bs-input calc-trigger" name="sundry_creditors" value="{{ $extractedData['sundry_creditors'] ?? '' }}" placeholder="0"></div>
+                            <div class="bs-row py-1"><span>Sundry Creditors</span> <input type="number" class="bs-input calc-trigger" name="sundry_creditors" value="<?php echo e($extractedData['sundry_creditors'] ?? ''); ?>" placeholder="0"></div>
                             <div class="bs-row py-1"><span>Other Current Liabilities</span> <input type="number" class="bs-input calc-trigger" name="other_current_liabilities" placeholder="0"></div>
                             <div class="bs-total-row mt-2"><span>Total</span><span id="disp-tot-liab">₹0</span></div>
                         </div>
@@ -122,8 +120,8 @@
                             <div class="bs-row py-1"><span>Total Investments</span> <input type="number" class="bs-input calc-trigger" name="total_investments" placeholder="0"></div>
                             
                             <h6 class="font-weight-bold mt-3 mx-3 text-dark">Current Assets</h6>
-                            <div class="bs-row py-1"><span>Sundry Debtors</span> <input type="number" class="bs-input calc-trigger" name="sundry_debtors" value="{{ $extractedData['sundry_debtors'] ?? '' }}" placeholder="0"></div>
-                            <div class="bs-row py-1"><span>Cash in hand</span> <input type="number" class="bs-input calc-trigger" name="cash_in_hand" value="{{ $extractedData['cash_in_hand'] ?? '' }}" placeholder="0"></div>
+                            <div class="bs-row py-1"><span>Sundry Debtors</span> <input type="number" class="bs-input calc-trigger" name="sundry_debtors" value="<?php echo e($extractedData['sundry_debtors'] ?? ''); ?>" placeholder="0"></div>
+                            <div class="bs-row py-1"><span>Cash in hand</span> <input type="number" class="bs-input calc-trigger" name="cash_in_hand" value="<?php echo e($extractedData['cash_in_hand'] ?? ''); ?>" placeholder="0"></div>
                             <div class="bs-row py-1"><span>Bank Balance</span> <input type="number" class="bs-input calc-trigger" name="bank_balance" placeholder="0"></div>
                             <div class="bs-row py-1"><span>Closing Stock <small class="text-muted">(Synced)</small></span> <input type="number" class="bs-input" id="slave-closing-stock" readonly placeholder="0"></div>
                             <div class="bs-row py-1"><span>TDS</span> <input type="number" class="bs-input calc-trigger" name="tds" placeholder="0"></div>
@@ -161,9 +159,9 @@
     </div>
 
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('js')
+<?php $__env->startSection('js'); ?>
 <script>
 $(document).ready(function() {
     const val = (name) => parseFloat($(`input[name="${name}"]`).val()) || 0;
@@ -252,4 +250,5 @@ $(document).ready(function() {
     calculateAll();
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/uat.easytax.live/resources/views/admin/applications/balance_sheet.blade.php ENDPATH**/ ?>

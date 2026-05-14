@@ -19,7 +19,7 @@
     /* Totals and New Inline Status Box */
     .bs-total-row { background: #EDF7F4; padding: 12px 20px; font-weight: 800; font-size: 1.1rem; color: #1E9C5D; display: flex; justify-content: space-between; }
     
-    /* INLINE FOOTER BOX (Replaces the fixed tally bar) */
+    /* INLINE FOOTER BOX */
     .bs-status-box { background: #2e3d4e; border-radius: 8px; border: 1px solid #e8ecf0; padding: 20px 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 30px; }
     .tally-status { font-size: 1.1rem; font-weight: 700; }
     .tally-match { color: #10b981; } .tally-error { color: #f43f5e; }
@@ -27,8 +27,6 @@
     /* Tab Styling */
     .nav-pills .nav-link { border-radius: 50px; padding: 8px 24px; font-weight: 600; color: #475569; background: #f1f5f9; margin-right: 10px; border: 1px solid transparent; cursor: pointer; }
     .nav-pills .nav-link.active { background: #1E9C5D; color: #fff; box-shadow: 0 4px 10px rgba(30, 156, 93, 0.3); }
-    
-    /* Disables clicking the Balance Sheet tab until P&L is done */
     .nav-link.disabled-tab { pointer-events: none; opacity: 0.6; }
 </style>
 @endsection
@@ -40,8 +38,8 @@
             <h2 class="font-weight-bold mb-1">Balance Sheet Generator</h2>
             <p class="text-muted mb-0">Application ID: #{{ $application->id }} | Target Net Profit: <strong class="text-dark">₹{{ number_format($netProfit) }}</strong></p>
         </div>
-        <a href="{{ url('admin/applications?type=itr-filing') }}" class="btn btn-outline-secondary rounded-pill">
-            <i class="fas fa-arrow-left mr-2"></i> Back to ITRs
+        <a href="{{ route('team.applications.show', $application->id) }}" class="btn btn-outline-secondary rounded-pill">
+            <i class="fas fa-arrow-left mr-2"></i> Back to Task
         </a>
     </div>
 
@@ -54,7 +52,7 @@
         </li>
     </ul>
 
-    <form id="pdfGenerateForm" action="{{ route('admin.applications.balance-sheet.generate', $application->id) }}" method="POST">
+    <form id="pdfGenerateForm" action="{{ route('team.applications.balance-sheet.generate', $application->id) }}" method="POST">
         @csrf
         <input type="hidden" id="val-target-np" value="{{ $netProfit }}">
 
@@ -183,7 +181,6 @@ $(document).ready(function() {
     $('#btn-continue').click(function() {
         $('#bs-tab').tab('show'); // Switches to the second tab
     });
-    // ---------------------------
 
     function calculateAll() {
         // Sync Closing Stock

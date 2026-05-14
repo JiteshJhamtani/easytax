@@ -199,6 +199,18 @@
 
 <nav class="sb-nav">
    
+         {{-- ==========================================  --}}
+            {{-- TEAM MEMBER SECTION (ONLY FOR OPERATORS) --}}
+            {{-- ========================================== --}}
+            @if(strtoupper(auth()->user()->role) === 'TEAM')
+                <div class="sb-section">Internal Workflow</div>
+                
+                <a href="{{ route('team.dashboard') }}" class="sb-item {{ request()->routeIs('team.*') ? 'active' : '' }}" data-label="Assigned Tasks">
+                    <span class="sb-item__icon"><i class="fas fa-clipboard-list text-info"></i></span>
+                    Assigned Apps
+                    @if(request()->routeIs('team.*'))<span class="sb-item__dot"></span>@endif
+                </a>
+            @endif
             
             {{-- ========================================== --}}
             {{-- ADMIN ONLY SECTION (Hidden from Marketers) --}}
@@ -290,9 +302,15 @@
                     Agents
                     @if(request()->is('admin/agents*'))<span class="sb-item__dot"></span>@endif
                 </a>
+                {{-- TEAM / OPERATORS MANAGEMENT --}}
+                <a href="{{ route('admin.team.index') }}" class="sb-item {{ request()->routeIs('admin.team.*') ? 'active' : '' }}" data-label="Team Members">
+                    <span class="sb-item__icon"><i class="fas fa-user-shield"></i></span>
+                    Team 
+                    @if(request()->routeIs('admin.team.*'))<span class="sb-item__dot"></span>@endif
+                </a>
 @if(request()->getHost() == 'b2b.easytax.live' || request()->getHost() == 'uat.easytax.live')       
        
-<div class="sb-section">System</div>
+                <div class="sb-section">System</div>
 
     <div class="sb-has-submenu {{ request()->is('admin/gifts*') ? 'open' : '' }}">
         <div class="sb-submenu-toggle {{ request()->is('admin/gifts*') ? 'active' : '' }}" onclick="this.parentElement.classList.toggle('open')">
@@ -322,9 +340,10 @@
 
             @endif
 
-            {{-- ==========================================  --}}
+            {{-- ========================================== --}}
             {{-- CRM SECTION (Visible to Admin & Marketers) --}}
             {{-- ========================================== --}}
+            @if(strtoupper(auth()->user()->role) !== 'TEAM')
             <div class="sb-section">Marketing CRM</div>
 
             {{-- Only Admins can manage the actual Marketer accounts --}}
@@ -342,6 +361,7 @@
                 Leads
                 @if(request()->is('crm/leads*'))<span class="sb-item__dot"></span>@endif
             </a>
+            @endif
 
         </nav>
 
@@ -377,8 +397,8 @@
                     </div>
                     
                     <a href="{{ route('profile.edit') }}" class="user-pill__info">
-                        <span class="user-pill__name">{{ Auth::user()->name ?? 'Super Admin' }}</span>
-                        <span class="user-pill__role">Super Admin</span>
+                        <span class="user-pill__name">{{ Auth::user()->name ?? 'User' }}</span>
+                        <span class="user-pill__role">{{ ucfirst(strtolower(Auth::user()->role ?? 'Admin')) }}</span>
                     </a>
                     
                     <div class="user-pill__divider"></div>

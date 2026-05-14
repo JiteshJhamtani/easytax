@@ -1,46 +1,38 @@
-@extends('layouts.admin')
+<?php $__env->startSection('title', 'Generate Balance Sheet'); ?>
 
-@section('title', 'Generate Balance Sheet')
-
-@section('css')
+<?php $__env->startSection('css'); ?>
 <style>
-    /* Clean layout styles  */ 
     .bs-card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e8ecf0; margin-bottom: 1rem; overflow: hidden; }
     .bs-header { background: #f8f9fa; padding: 12px 20px; border-bottom: 1px solid #e8ecf0; font-weight: 700; font-size: 1.05rem; color: #2E3D4E; }
     .bs-col-header { background: #EDF7F4; color: #1E9C5D; padding: 10px 20px; font-weight: 700; display: flex; justify-content: space-between; font-size: 0.9rem; text-transform: uppercase; }
     
-    /* Compact Row sizing */
     .bs-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 20px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; }
     .bs-row:last-child { border-bottom: none; }
     .bs-input { text-align: right; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 10px; width: 130px; transition: border-color 0.2s; font-size: 0.95rem; }
     .bs-input:focus { border-color: #1E9C5D; outline: none; box-shadow: 0 0 0 2px rgba(30, 156, 93, 0.15); }
     .bs-input[readonly] { background: #f1f5f9; color: #475569; border-color: transparent; font-weight: 600; }
     
-    /* Totals and New Inline Status Box */
     .bs-total-row { background: #EDF7F4; padding: 12px 20px; font-weight: 800; font-size: 1.1rem; color: #1E9C5D; display: flex; justify-content: space-between; }
     
-    /* INLINE FOOTER BOX (Replaces the fixed tally bar) */
-    .bs-status-box { background: #2e3d4e; border-radius: 8px; border: 1px solid #e8ecf0; padding: 20px 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 30px; }
+    .bs-status-box { background:#2e3d4e; border-radius: 8px; border: 1px solid #e8ecf0; padding: 20px 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 30px; }
     .tally-status { font-size: 1.1rem; font-weight: 700; }
     .tally-match { color: #10b981; } .tally-error { color: #f43f5e; }
 
-    /* Tab Styling */
     .nav-pills .nav-link { border-radius: 50px; padding: 8px 24px; font-weight: 600; color: #475569; background: #f1f5f9; margin-right: 10px; border: 1px solid transparent; cursor: pointer; }
     .nav-pills .nav-link.active { background: #1E9C5D; color: #fff; box-shadow: 0 4px 10px rgba(30, 156, 93, 0.3); }
     
-    /* Disables clicking the Balance Sheet tab until P&L is done */
     .nav-link.disabled-tab { pointer-events: none; opacity: 0.6; }
 </style>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="font-weight-bold mb-1">Balance Sheet Generator</h2>
-            <p class="text-muted mb-0">Application ID: #{{ $application->id }} | Target Net Profit: <strong class="text-dark">₹{{ number_format($netProfit) }}</strong></p>
+            <p class="text-muted mb-0">Application ID: #<?php echo e($application->id); ?> | Target Net Profit: <strong class="text-dark">₹<?php echo e(number_format($netProfit)); ?></strong></p>
         </div>
-        <a href="{{ url('admin/applications?type=itr-filing') }}" class="btn btn-outline-secondary rounded-pill">
+        <a href="<?php echo e(url('agent/applications?type=itr-filing')); ?>" class="btn btn-outline-secondary rounded-pill">
             <i class="fas fa-arrow-left mr-2"></i> Back to ITRs
         </a>
     </div>
@@ -54,9 +46,9 @@
         </li>
     </ul>
 
-    <form id="pdfGenerateForm" action="{{ route('admin.applications.balance-sheet.generate', $application->id) }}" method="POST">
-        @csrf
-        <input type="hidden" id="val-target-np" value="{{ $netProfit }}">
+    <form id="pdfGenerateForm" action="<?php echo e(route('agent.applications.balance-sheet.generate', $application->id)); ?>" method="POST">
+        <?php echo csrf_field(); ?>
+        <input type="hidden" id="val-target-np" value="<?php echo e($netProfit); ?>">
 
         <div class="tab-content" id="bsTabsContent">
             
@@ -80,10 +72,10 @@
                         </div>
                         <div class="col-md-6">
                             <div class="bs-col-header"><span>Income</span><span>Amount</span></div>
-                            <div class="bs-row"><span>Sales <small class="text-muted">(Auto)</small></span> <input type="number" class="bs-input calc-trigger" name="sales" value="{{ $sales }}" readonly></div>
-                            <div class="bs-row"><span>Closing Stock</span> <input type="number" class="bs-input calc-trigger" name="closing_stock" value="{{ $extractedData['closing_stock'] ?? '' }}" placeholder="0"></div>
+                            <div class="bs-row"><span>Sales <small class="text-muted">(Auto)</small></span> <input type="number" class="bs-input calc-trigger" name="sales" value="<?php echo e($sales); ?>" readonly></div>
+                            <div class="bs-row"><span>Closing Stock</span> <input type="number" class="bs-input calc-trigger" name="closing_stock" value="<?php echo e($extractedData['closing_stock'] ?? ''); ?>" placeholder="0"></div>
                             <div class="bs-row"><span>Interest Income</span> <input type="number" class="bs-input calc-trigger" name="interest_income" placeholder="0"></div>
-                            <div class="bs-row"><span>Other Income <small class="text-muted">(Auto)</small></span> <input type="number" class="bs-input calc-trigger" name="other_income" value="{{ $otherIncome }}" readonly></div>
+                            <div class="bs-row"><span>Other Income <small class="text-muted">(Auto)</small></span> <input type="number" class="bs-input calc-trigger" name="other_income" value="<?php echo e($otherIncome); ?>" readonly></div>
                         </div>
                     </div>
                 </div>
@@ -105,7 +97,7 @@
                             <div class="bs-row py-1"><span>Other Loans</span> <input type="number" class="bs-input calc-trigger" name="other_loans" placeholder="0"></div>
                             
                             <h6 class="font-weight-bold mt-3 mx-3 text-dark">Current Liabilities</h6>
-                            <div class="bs-row py-1"><span>Sundry Creditors</span> <input type="number" class="bs-input calc-trigger" name="sundry_creditors" value="{{ $extractedData['sundry_creditors'] ?? '' }}" placeholder="0"></div>
+                            <div class="bs-row py-1"><span>Sundry Creditors</span> <input type="number" class="bs-input calc-trigger" name="sundry_creditors" value="<?php echo e($extractedData['sundry_creditors'] ?? ''); ?>" placeholder="0"></div>
                             <div class="bs-row py-1"><span>Other Current Liabilities</span> <input type="number" class="bs-input calc-trigger" name="other_current_liabilities" placeholder="0"></div>
                             <div class="bs-total-row mt-2"><span>Total</span><span id="disp-tot-liab">₹0</span></div>
                         </div>
@@ -122,8 +114,8 @@
                             <div class="bs-row py-1"><span>Total Investments</span> <input type="number" class="bs-input calc-trigger" name="total_investments" placeholder="0"></div>
                             
                             <h6 class="font-weight-bold mt-3 mx-3 text-dark">Current Assets</h6>
-                            <div class="bs-row py-1"><span>Sundry Debtors</span> <input type="number" class="bs-input calc-trigger" name="sundry_debtors" value="{{ $extractedData['sundry_debtors'] ?? '' }}" placeholder="0"></div>
-                            <div class="bs-row py-1"><span>Cash in hand</span> <input type="number" class="bs-input calc-trigger" name="cash_in_hand" value="{{ $extractedData['cash_in_hand'] ?? '' }}" placeholder="0"></div>
+                            <div class="bs-row py-1"><span>Sundry Debtors</span> <input type="number" class="bs-input calc-trigger" name="sundry_debtors" value="<?php echo e($extractedData['sundry_debtors'] ?? ''); ?>" placeholder="0"></div>
+                            <div class="bs-row py-1"><span>Cash in hand</span> <input type="number" class="bs-input calc-trigger" name="cash_in_hand" value="<?php echo e($extractedData['cash_in_hand'] ?? ''); ?>" placeholder="0"></div>
                             <div class="bs-row py-1"><span>Bank Balance</span> <input type="number" class="bs-input calc-trigger" name="bank_balance" placeholder="0"></div>
                             <div class="bs-row py-1"><span>Closing Stock <small class="text-muted">(Synced)</small></span> <input type="number" class="bs-input" id="slave-closing-stock" readonly placeholder="0"></div>
                             <div class="bs-row py-1"><span>TDS</span> <input type="number" class="bs-input calc-trigger" name="tds" placeholder="0"></div>
@@ -147,30 +139,26 @@
                 <h4 class="mb-0 font-weight-bold text-danger" id="disp-diff">₹0</h4>
             </div>
             <div class="col-md-4 text-right">
-                
                 <button type="button" class="btn btn-secondary btn-lg font-weight-bold px-4 shadow-sm" id="btn-continue" disabled>
                     Continue to Balance Sheet <i class="fas fa-arrow-right ml-2"></i>
                 </button>
-
                 <button type="submit" form="pdfGenerateForm" class="btn btn-dark btn-lg font-weight-bold px-4 shadow-sm d-none" id="btn-submit" disabled>
                     <i class="fas fa-file-pdf mr-2"></i> Save & Generate PDF
                 </button>
-
             </div>
         </div>
     </div>
 
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@section('js')
+<?php $__env->startSection('js'); ?>
 <script>
 $(document).ready(function() {
     const val = (name) => parseFloat($(`input[name="${name}"]`).val()) || 0;
 
-    // --- Tab Switching Logic ---
     $('a[data-toggle="pill"]').on('shown.bs.tab', function (e) {
-        let target = $(e.target).attr("href"); // Activated tab
+        let target = $(e.target).attr("href"); 
         if (target === '#pnl') {
             $('#btn-continue').removeClass('d-none');
             $('#btn-submit').addClass('d-none');
@@ -181,16 +169,13 @@ $(document).ready(function() {
     });
 
     $('#btn-continue').click(function() {
-        $('#bs-tab').tab('show'); // Switches to the second tab
+        $('#bs-tab').tab('show'); 
     });
-    // ---------------------------
 
     function calculateAll() {
-        // Sync Closing Stock
         const closingStock = val('closing_stock');
         $('#slave-closing-stock').val(closingStock > 0 ? closingStock : '');
 
-        // P&L Math
         const sales = val('sales');
         const otherInc = val('other_income');
         const targetNP = parseFloat($('#val-target-np').val()) || 0;
@@ -207,19 +192,16 @@ $(document).ready(function() {
             $('#status-np').removeClass('tally-error').addClass('tally-match').html('<i class="fas fa-check-circle mr-1"></i> Net Profit Matched');
             $('#disp-live-np').removeClass('text-danger').addClass('text-success');
             
-            // Unlock Tab 2 and Continue Button
             $('#bs-tab').removeClass('disabled-tab');
             $('#btn-continue').prop('disabled', false).removeClass('btn-secondary').addClass('btn-primary');
         } else {
             $('#status-np').removeClass('tally-match').addClass('tally-error').html('<i class="fas fa-times-circle mr-1"></i> Net Profit Mismatch');
             $('#disp-live-np').removeClass('text-success').addClass('text-danger');
             
-            // Lock Tab 2 and Continue Button
             $('#bs-tab').addClass('disabled-tab');
             $('#btn-continue').prop('disabled', true).removeClass('btn-primary').addClass('btn-secondary');
         }
 
-        // Balance Sheet Math
         const closingCap = val('opening_capital') + np - val('drawings');
         $('#disp-closing-cap').text('₹' + closingCap.toLocaleString('en-IN'));
 
@@ -240,7 +222,6 @@ $(document).ready(function() {
             $('#disp-diff').removeClass('text-success').addClass('text-danger');
         }
 
-        // Unlock Final Generate Button
         if (isNpValid && isTallyValid) {
             $('#btn-submit').prop('disabled', false).removeClass('btn-dark').addClass('btn-success');
         } else {
@@ -252,4 +233,5 @@ $(document).ready(function() {
     calculateAll();
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.agent', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /var/www/uat.easytax.live/resources/views/agent/applications/balance_sheet.blade.php ENDPATH**/ ?>

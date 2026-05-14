@@ -30,9 +30,10 @@ $(document).ready(function () {
 
     // 4. Add the final columns that go at the end
     tableColumns.push({ data: "date", name: "created_at" });
+    tableColumns.push({ data: "assign_to", name: "assign_to", orderable: false, searchable: false });
     tableColumns.push({ data: "actions", name: "actions", orderable: false, searchable: false, className: "text-right text-nowrap" });
 
-    // 5. Initialize DataTable
+
    // 5. Initialize DataTable
     table = $("#applicationsTable").DataTable({
         

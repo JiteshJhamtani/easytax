@@ -199,6 +199,18 @@
 
 <nav class="sb-nav">
    
+         
+            
+            
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(strtoupper(auth()->user()->role) === 'TEAM'): ?>
+                <div class="sb-section">Internal Workflow</div>
+                
+                <a href="<?php echo e(route('team.dashboard')); ?>" class="sb-item <?php echo e(request()->routeIs('team.*') ? 'active' : ''); ?>" data-label="Assigned Tasks">
+                    <span class="sb-item__icon"><i class="fas fa-clipboard-list text-info"></i></span>
+                    Assigned Apps
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->routeIs('team.*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </a>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             
             
             
@@ -290,9 +302,15 @@
                     Agents
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->is('admin/agents*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </a>
+                
+                <a href="<?php echo e(route('admin.team.index')); ?>" class="sb-item <?php echo e(request()->routeIs('admin.team.*') ? 'active' : ''); ?>" data-label="Team Members">
+                    <span class="sb-item__icon"><i class="fas fa-user-shield"></i></span>
+                    Team 
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->routeIs('admin.team.*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </a>
 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->getHost() == 'b2b.easytax.live' || request()->getHost() == 'uat.easytax.live'): ?>       
        
-<div class="sb-section">System</div>
+                <div class="sb-section">System</div>
 
     <div class="sb-has-submenu <?php echo e(request()->is('admin/gifts*') ? 'open' : ''); ?>">
         <div class="sb-submenu-toggle <?php echo e(request()->is('admin/gifts*') ? 'active' : ''); ?>" onclick="this.parentElement.classList.toggle('open')">
@@ -325,6 +343,7 @@
             
             
             
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(strtoupper(auth()->user()->role) !== 'TEAM'): ?>
             <div class="sb-section">Marketing CRM</div>
 
             
@@ -342,6 +361,7 @@
                 Leads
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->is('crm/leads*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </a>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
         </nav>
 
@@ -378,8 +398,8 @@
                     </div>
                     
                     <a href="<?php echo e(route('profile.edit')); ?>" class="user-pill__info">
-                        <span class="user-pill__name"><?php echo e(Auth::user()->name ?? 'Super Admin'); ?></span>
-                        <span class="user-pill__role">Super Admin</span>
+                        <span class="user-pill__name"><?php echo e(Auth::user()->name ?? 'User'); ?></span>
+                        <span class="user-pill__role"><?php echo e(ucfirst(strtolower(Auth::user()->role ?? 'Admin'))); ?></span>
                     </a>
                     
                     <div class="user-pill__divider"></div>

@@ -1,5 +1,5 @@
 @extends('layouts.admin')
-@section('title', 'Add Marketer | EasyTax')
+@section('title', 'Edit Marketer | EasyTax')
 
 @section('css')
 <style>
@@ -35,12 +35,12 @@
 
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <form action="{{ route('crm.marketers.store') }}" method="POST">
-                @csrf
+            <form action="{{ route('crm.marketers.update', $marketer->id) }}" method="POST">
+                @csrf @method('PUT')
                 <div class="form-card">
                     <div class="form-header">
-                        <i class="fas fa-bullhorn text-primary" style="font-size: 1.25rem;"></i>
-                        <h5 class="mb-0 font-weight-bold text-dark">Marketer Account Details</h5>
+                        <i class="fas fa-user-edit text-primary" style="font-size: 1.25rem;"></i>
+                        <h5 class="mb-0 font-weight-bold text-dark">Edit Marketer: {{ $marketer->name }}</h5>
                     </div>
 
                     <div class="form-body">
@@ -49,21 +49,21 @@
                                 <label class="form-label">Full Name <span class="required-asterisk">*</span></label>
                                 <div class="custom-input-group">
                                     <div class="custom-input-icon"><i class="fas fa-user"></i></div>
-                                    <input type="text" name="name" class="custom-input" value="{{ old('name') }}" required placeholder="e.g. John Doe">
+                                    <input type="text" name="name" class="custom-input" value="{{ old('name', $marketer->name) }}" required>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-4">
                                 <label class="form-label">Email Address <span class="required-asterisk">*</span></label>
                                 <div class="custom-input-group">
                                     <div class="custom-input-icon"><i class="fas fa-envelope"></i></div>
-                                    <input type="email" name="email" class="custom-input" value="{{ old('email') }}" required placeholder="marketer@easytax.live">
+                                    <input type="email" name="email" class="custom-input" value="{{ old('email', $marketer->email) }}" required>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-4">
-                                <label class="form-label">Temporary Password <span class="required-asterisk">*</span></label>
+                                <label class="form-label">Change Password</label>
                                 <div class="custom-input-group">
-                                    <div class="custom-input-icon"><i class="fas fa-lock"></i></div>
-                                    <input type="password" name="password" class="custom-input" required minlength="8" placeholder="Create a strong password">
+                                    <div class="custom-input-icon"><i class="fas fa-key"></i></div>
+                                    <input type="password" name="password" class="custom-input" placeholder="Leave blank to keep existing">
                                 </div>
                             </div>
                         </div>
@@ -71,8 +71,8 @@
 
                     <div class="form-footer">
                         <a href="{{ route('crm.marketers.index') }}" class="btn btn-light" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 600;">Cancel</a>
-                        <button type="submit" class="btn btn-primary shadow-sm" style="border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 700;">
-                            <i class="fas fa-user-plus mr-1"></i> Save Marketer
+                        <button type="submit" class="btn btn-success shadow-sm" style="border-radius: 8px; padding: 0.5rem 1.5rem; font-weight: 700;">
+                            <i class="fas fa-save mr-1"></i> Update Marketer
                         </button>
                     </div>
                 </div>

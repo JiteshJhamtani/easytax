@@ -33,7 +33,7 @@ class CouponController extends Controller
             'code' => strtoupper(trim($request->code)),
             'bonus_amount' => $request->bonus_amount,
             
-            // Convert the array of selected agent IDs (e.g. [1, 5, 12]) into a JSON string
+            // Convert the array of selected agent IDs (e.g. [1, 5, 12]) into a JSON string  
             'target_agents' => $request->target_agents ? json_encode($request->target_agents) : null,
             
             'global_max_uses' => $request->global_max_uses,

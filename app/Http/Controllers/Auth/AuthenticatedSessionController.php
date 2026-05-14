@@ -43,7 +43,10 @@ class AuthenticatedSessionController extends Controller
         } 
         // 2. Marketers go strictly to their Leads page
         elseif ($role === 'MARKETER') {
-        return redirect()->route('marketer.dashboard'); // <--- ADDED THIS    
+        return redirect()->route('marketer.dashboard'); 
+    }
+        elseif ($role === 'TEAM') {
+        return redirect()->route('team.dashboard'); 
     }
 
         // 3. Agents go to the agent dashboard

@@ -280,6 +280,7 @@
                         <th>BALANCE SHEET</th>
                     @endif
                     <th>Date Submitted</th>
+                    <th>Assign To</th>
                     <th class="text-right">Actions</th>
                 </tr>
             </thead>
@@ -439,4 +440,36 @@
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
     <script src="{{ asset('assets/js/admin-applications.js') }}?v={{ time() }}"></script>
+
+    <script>
+        // Handle Team Member Assignment 
+        $(document).on('change', '.assign-team-select', function() {
+            let select = $(this);
+            let appId = select.data('app-id');
+            let teamId = select.val();
+            let originalBg = select.css('background-color');
+
+            // Disable while loading
+            select.prop('disabled', true).css('background-color', '#f1f5f9');
+
+            $.ajax({
+                // Hits the /team/admin/applications/{id}/assign route directly
+                url: '/admin/applications/' + appId + '/assign',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    team_id: teamId
+                },
+                success: function(res) {
+                    select.prop('disabled', false).css('background-color', '#dcfce7'); // Flash success green
+                    setTimeout(() => select.css('background-color', originalBg), 1000);
+                },
+                error: function(err) {
+                    select.prop('disabled', false).css('background-color', '#fee2e2'); // Flash error red
+                    setTimeout(() => select.css('background-color', originalBg), 1000);
+                    alert('Failed to assign team member.');
+                }
+            });
+        });
+    </script>
 @endsection
