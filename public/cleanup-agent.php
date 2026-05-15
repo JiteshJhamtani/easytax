@@ -13,15 +13,10 @@ $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 echo "<div style='font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;'>";
 
 try {
-    // 3. RAW DATABASE DELETION new task : 
-    // Targeting Agent IDs 430 AND 462, and ONLY deleting Draft or Failed applications
+    // 3. RAW DATABASE DELETION: 
+    // Targeting Agent IDs 430 AND 462, and deleting ALL their applications
     $deletedCount = \Illuminate\Support\Facades\DB::table('applications')
         ->whereIn('agent_id', [430, 462]) 
-        ->where(function ($query) {
-            // Checks for both lowercase and uppercase to be safe with Enums
-            $query->whereIn('status', ['draft', 'DRAFT'])
-                  ->orWhereIn('payment_status', ['failed', 'FAILED']);
-        })
         ->delete();              
 
     // 4. Print the Success Message
@@ -29,15 +24,15 @@ try {
     echo "<p>System securely connected to Agent IDs: <strong>430</strong> and <strong>462</strong>.</p>";
     
     if ($deletedCount > 0) {
-        echo "<p>Successfully deleted <strong>{$deletedCount}</strong> Draft/Failed application records from the database.</p>";
-        echo "<p style='color: #b06000;'><em>Note: Paid or Submitted applications were protected. Physical documents were safely left on your server's hard drive.</em></p>";
+        echo "<p>Successfully deleted <strong>{$deletedCount}</strong> application records from the database.</p>";
+        echo "<p style='color: #b06000;'><em>Note: ALL applications for these agents were removed. Physical documents were safely left on your server's hard drive.</em></p>";
     } else {
-        echo "<p>No Draft or Failed applications were found for these agents. Nothing was deleted.</p>";
+        echo "<p>No applications were found for these agents. Nothing was deleted.</p>";
     }
     
     echo "<br><div style='background: #fff3f3; border: 1px solid #fce8e6; padding: 15px; color: #c5221f; border-radius: 8px;'>";
     echo "<strong>🚨 CRITICAL SECURITY STEP:</strong><br>";
-    echo "You must now delete this <code>cleanup-agent.php</code> file from your server's public folder.";
+    echo "You must now delete this file from your server's public folder.";
     echo "</div>";
 
 } catch (\Exception $e) {

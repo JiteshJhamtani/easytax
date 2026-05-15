@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class DashboardController extends Controller
 {
@@ -18,9 +19,24 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('team.dashboard', compact('applications'));
-    }
+        // NEW: Calculate Financial Summary for the Operator
+        $totalEarned = \App\Models\Application::where('assigned_to', Auth::id())
+            ->where('status', 'COMPLETED')
+            ->join('operator_service_rates', function($join) {
+                $join->on('applications.service_id', '=', 'operator_service_rates.service_id')
+                     ->where('operator_service_rates.operator_id', '=', Auth::id());
+            })
+            ->sum('operator_service_rates.price');
 
+        $totalPaid = \Illuminate\Support\Facades\DB::table('operator_payouts')
+                        ->where('operator_id', Auth::id())
+                        ->sum('amount');
+
+        $balanceDue = $totalEarned - $totalPaid;
+
+        return view('team.dashboard', compact('applications', 'totalEarned', 'totalPaid', 'balanceDue'));
+    }
+   
     // 2. The Detailed View Page (Privacy Enforced!)
     public function show($id)
     {
@@ -33,24 +49,73 @@ class DashboardController extends Controller
         return view('team.applications.show', compact('application'));
     }
 
-    // 3. Update Status 
+   // 3. Update Status (Now handles pending_reason AND sends emails!) 
     public function updateStatus(Request $request, $id)
     {
-        $application = Application::where('id', $id)
+        $application = Application::with('service')->where('id', $id)
             ->where('assigned_to', Auth::id())
             ->firstOrFail();
 
+        // Force the status to uppercase BEFORE validation runs so it doesn't get rejected!
+        if ($request->has('status')) {
+            $request->merge(['status' => strtoupper($request->status)]);
+        }
+
         $request->validate([
-            'status' => 'required|string'
+            'status' => 'required|string|in:IN_PROGRESS,E_FILING,OTP_VERIFICATION,COMPLETED',
+            'pending_reason' => 'nullable|string|max:1000'
         ]);
 
+        $status = $request->status;
+
+        // 1. Save the new status and note
         $application->update([
-            'status' => $request->status
+            'status' => $status,
+            'pending_reason' => $request->pending_reason
         ]);
 
-        return back()->with('success', 'Application status updated successfully! The Admin and Agent can now see this update.');
-    }
+        if ($status === 'COMPLETED') {
+            $application->update(['completed_at' => now()]);
 
+            $emailKey = $application->service->applicant_email_field ?? null; 
+            
+            if (!empty($application->form_data)) {
+                $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
+                
+                // SMART FALLBACK: If emailKey is missing in DB, try common email fields
+                $clientEmail = (!empty($emailKey) && isset($formData[$emailKey])) 
+                    ? $formData[$emailKey] 
+                    : ($formData['email'] ?? $formData['email_id'] ?? $formData['applicant_email'] ?? null);
+
+                $clientName = $formData['applicant_name'] ?? $formData['name'] ?? $formData['full_name'] ?? $formData['company_name'] ?? $formData['firm_name'] ?? 'Valued Client';
+                $trackingUrl = \Illuminate\Support\Facades\URL::signedRoute('tracking.show', ['application' => $application->id]);
+
+                if ($clientEmail && filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
+                    try {
+                        Mail::send('emails.application_completed', [
+                            'application' => $application,
+                            'clientName'  => $clientName,
+                            'trackingUrl' => $trackingUrl
+                        ], function($message) use ($clientEmail, $application) {
+                            $serviceName = $application->service->name ?? 'Service';
+                            $message->to($clientEmail)
+                                    ->subject("Completed: Your {$serviceName} Application");
+                        });
+                        \Log::info("Completion email sent to {$clientEmail} for App #{$application->id} by Operator");
+                    } catch (\Exception $e) {
+                        \Log::error("Email failed for App #{$application->id}: " . $e->getMessage());
+                    }
+                }
+            }
+        }
+
+        activity('application')
+            ->performedOn($application)
+            ->causedBy(Auth::user())
+            ->log('Status updated to ' . $status);
+
+        return back()->with('success', 'Application status and notes updated successfully!');
+    }
     // ==========================================
     // DOCUMENT MANAGEMENT
     // ==========================================

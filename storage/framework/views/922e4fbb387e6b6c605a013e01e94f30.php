@@ -4,7 +4,7 @@
 <div class="container-fluid px-4 py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h3 class="font-weight-bold text-dark mb-0">🛡️ Internal Team & Operators</h3>
+            <h3 class="font-weight-bold text-dark mb-0">🛡️ Internal Team & Operators</h3> 
             <p class="text-muted mb-0">Manage your internal staff who process the applications.</p>
         </div>
         <a href="<?php echo e(route('admin.team.create')); ?>" class="btn btn-primary font-weight-bold shadow-sm" style="border-radius: 8px;">
@@ -22,6 +22,7 @@
             </ul>
         </div>
     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
 
     <div class="card border-0 shadow-sm" style="border-radius: 12px;">
         <div class="card-body p-0">
@@ -65,6 +66,10 @@
                                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             </td>
                             <td class="text-right pr-4">
+
+                                <a href="<?php echo e(route('admin.team.show', $member->id)); ?>" class="btn btn-sm btn-info text-white mr-2 shadow-sm font-weight-bold" title="View Profile & Financials">
+                                    <i class="fas fa-user-circle mr-1"></i> Profile
+                                </a>
                                 
                                 <form action="<?php echo e(route('admin.team.toggle-status', $member->id)); ?>" method="POST" class="d-inline">
                                     <?php echo csrf_field(); ?> <?php echo method_field('PATCH'); ?>
@@ -83,6 +88,10 @@
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
+
+                               
+
+
 
                             </td>
                         </tr>

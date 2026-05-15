@@ -28,6 +28,7 @@ class Application extends Model implements HasMedia
         'payment_status',
         'payment_reference',
         'status',
+        'pending_reason',
         'started_at',
         'submitted_at',
         'completed_at',

@@ -13,7 +13,7 @@
             height: 100vh; text-align: center;
         }
         .error-container { max-width: 500px; padding: 2rem; }
-        .error-code { font-size: 7rem; font-weight: 800; color: #DC2626; margin: 0; line-height: 1; } /* Red color for warning */
+        .error-code { font-size: 7rem; font-weight: 800; color: #DC2626; margin: 0; line-height: 1; }
         .error-title { font-size: 1.8rem; font-weight: 800; color: #2E3D4E; margin: 1rem 0; }
         .error-desc { color: #7a8799; line-height: 1.6; margin-bottom: 2.5rem; font-size: 1.1rem; }
         .btn-home {
@@ -36,6 +36,12 @@
         <h2 class="error-title">Access Denied!</h2>
         <p class="error-desc">You do not have the required permissions to view this page. It might be restricted to a different account type (like Agents or Admins).</p>
         
-<a href="{{ route('login') }}" class="btn-home">Take Me to Login</a>    </div>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="btn-home" style="border: none; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;">
+                Log Out & Return to Login
+            </button>
+        </form>
+    </div>
 </body>
 </html>

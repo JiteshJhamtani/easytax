@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class LoadSidebarMenu  
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next): Response 
     {
         if (auth()->check()) {
 

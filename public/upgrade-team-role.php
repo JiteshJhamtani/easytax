@@ -15,35 +15,62 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 
 echo "<div style='font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;'>";
-echo "<h2>🚀 Unified Database Upgrade...</h2>";
+echo "<h2>🚀 Operator Payment System Upgrade...</h2>";
 
 try {
-    // --- STEP 1: Add 'assigned_to' to applications ---
+    // --- STEP 1: Add 'pending_reason' to applications --- 
     echo "<h3>Step 1: Applications Table</h3>";
-    if (!Schema::hasColumn('applications', 'assigned_to')) {
+    if (!Schema::hasColumn('applications', 'pending_reason')) {
         Schema::table('applications', function (Blueprint $table) {
-            $table->unsignedBigInteger('assigned_to')->nullable()->after('agent_id');
+            $table->text('pending_reason')->nullable()->after('status');
         });
-        echo "<p style='color: green;'>✅ Successfully added 'assigned_to' column to applications table.</p>";
+        echo "<p style='color: green;'>✅ Successfully added 'pending_reason' column.</p>";
     } else {
-        echo "<p style='color: #0056b3;'>ℹ️ 'assigned_to' column already exists.</p>";
+        echo "<p style='color: #0056b3;'>ℹ️ 'pending_reason' column already exists.</p>";
     }
 
-    // --- STEP 2: Fix 'role' ENUM in users ---
-    echo "<h3>Step 2: Users Table (Role Security Fix)</h3>";
-    // We change this from an ENUM to a standard VARCHAR so it accepts ANY new roles you create in the future!
-    DB::statement("ALTER TABLE users MODIFY COLUMN role VARCHAR(50) NOT NULL DEFAULT 'AGENT'");
-    echo "<p style='color: green;'>✅ Successfully updated 'role' column to safely accept 'team' operators.</p>";
+    // --- STEP 2: Create 'operator_service_rates' table ---
+    echo "<h3>Step 2: Operator Service Rates Table</h3>";
+    if (!Schema::hasTable('operator_service_rates')) {
+        Schema::create('operator_service_rates', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('operator_id');
+            $table->unsignedBigInteger('service_id');
+            $table->decimal('price', 10, 2)->default(0.00);
+            $table->timestamps();
+
+            $table->unique(['operator_id', 'service_id']);
+        });
+        echo "<p style='color: green;'>✅ Successfully created 'operator_service_rates' table.</p>";
+    } else {
+        echo "<p style='color: #0056b3;'>ℹ️ 'operator_service_rates' table already exists.</p>";
+    }
+
+    // --- STEP 3: Create 'operator_payouts' table ---
+    echo "<h3>Step 3: Operator Payouts Table</h3>";
+    if (!Schema::hasTable('operator_payouts')) {
+        Schema::create('operator_payouts', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('operator_id');
+            $table->decimal('amount', 10, 2);
+            $table->text('payment_note')->nullable();
+            $table->timestamp('paid_at')->useCurrent();
+            $table->timestamps();
+        });
+        echo "<p style='color: green;'>✅ Successfully created 'operator_payouts' table.</p>";
+    } else {
+        echo "<p style='color: #0056b3;'>ℹ️ 'operator_payouts' table already exists.</p>";
+    }
 
     // --- SUCCESS MESSAGE ---
     echo "<br><div style='background: #e6f4ea; border: 1px solid #ceead6; padding: 15px; color: #137333; border-radius: 8px;'>";
-    echo "<strong>🎉 All Database Upgrades Complete!</strong><br>";
-    echo "You can now assign applications AND create Team Operators without any database errors.";
+    echo "<strong>🎉 Database Upgrade Complete!</strong><br>";
+    echo "The database is now ready for the new Operator Payment System.";
     echo "</div>";
 
     echo "<br><div style='background: #fff3f3; border: 1px solid #fce8e6; padding: 15px; color: #c5221f; border-radius: 8px;'>";
     echo "<strong>🚨 CRITICAL SECURITY STEP:</strong><br>";
-    echo "Please delete this <code>upgrade-team-role.php</code> file from your server after running it.";
+    echo "Please delete this file from your server after running it.";
     echo "</div>";
 
 } catch (\Exception $e) {

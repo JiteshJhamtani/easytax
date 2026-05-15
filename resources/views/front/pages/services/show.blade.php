@@ -654,7 +654,7 @@
                             $('#hidden-coupon-input').val(data.code);
                         }
 
-                        // Lock the UI
+                        // Lock the UI now 
                         $('#promo-code-input').prop('disabled', true);
                         $msg.removeClass('text-muted text-danger').addClass('text-success font-weight-bold').html('<i class="fas fa-check-circle"></i> Promo applied successfully!');
                     } else {

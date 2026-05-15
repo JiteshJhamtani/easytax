@@ -233,6 +233,11 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
     
     Route::delete('/team/{id}', [\App\Http\Controllers\Admin\TeamController::class, 'destroy'])->name('team.destroy');
 
+    Route::get('/team/{id}/profile', [\App\Http\Controllers\Admin\TeamController::class, 'show'])->name('team.show');
+    Route::post('/team/{id}/rates', [\App\Http\Controllers\Admin\TeamController::class, 'saveRates'])->name('team.save-rates');
+    Route::get('/team/{id}/payout/create', [\App\Http\Controllers\Admin\TeamController::class, 'createPayout'])->name('team.create-payout');
+    Route::post('/team/{id}/payout', [\App\Http\Controllers\Admin\TeamController::class, 'addPayout'])->name('team.add-payout');
+
     Route::get('/fetch-remote-kpis', [AdminDashboardController::class, 'fetchRemoteKpis'])
         ->name('fetch_remote_kpis');
 
@@ -554,3 +559,12 @@ Route::get('/run-crm-update', function() {
 
 Route::get('/b2b/export-applications', [\App\Http\Controllers\Api\B2BSyncController::class, 'export']);
 Route::get('/b2b/export-agents', [\App\Http\Controllers\Api\B2BSyncController::class, 'exportAgents']);
+
+/*
+|--------------------------------------------------------------------------
+| Global Fallback Route (Catches all 404 Route Errors)
+|--------------------------------------------------------------------------
+*/
+Route::fallback(function () {
+    return redirect()->route('login');
+});

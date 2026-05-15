@@ -6,7 +6,7 @@
 <div class="container-fluid px-4 py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h3 class="font-weight-bold text-dark mb-0">🛡️ Internal Team & Operators</h3>
+            <h3 class="font-weight-bold text-dark mb-0">🛡️ Internal Team & Operators</h3> 
             <p class="text-muted mb-0">Manage your internal staff who process the applications.</p>
         </div>
         <a href="{{ route('admin.team.create') }}" class="btn btn-primary font-weight-bold shadow-sm" style="border-radius: 8px;">
@@ -24,6 +24,7 @@
             </ul>
         </div>
     @endif
+
 
     <div class="card border-0 shadow-sm" style="border-radius: 12px;">
         <div class="card-body p-0">
@@ -67,6 +68,10 @@
                                 @endif
                             </td>
                             <td class="text-right pr-4">
+
+                                <a href="{{ route('admin.team.show', $member->id) }}" class="btn btn-sm btn-info text-white mr-2 shadow-sm font-weight-bold" title="View Profile & Financials">
+                                    <i class="fas fa-user-circle mr-1"></i> Profile
+                                </a>
                                 
                                 <form action="{{ route('admin.team.toggle-status', $member->id) }}" method="POST" class="d-inline">
                                     @csrf @method('PATCH')
@@ -85,6 +90,10 @@
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
+
+                               
+
+
 
                             </td>
                         </tr>

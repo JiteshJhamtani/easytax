@@ -375,12 +375,16 @@ class ApplicationController extends Controller
         if ($request->status === 'COMPLETED') {
             $application->update(['completed_at' => now()]);
 
-            // --- DYNAMIC EMAIL AUTOMATION ---
+            // --- DYNAMIC EMAIL AUTOMATION --- 
             $emailKey = $application->service->applicant_email_field; 
             
-            if (!empty($emailKey) && !empty($application->form_data)) {
+            if (!empty($application->form_data)) {
                 $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
-                $clientEmail = $formData[$emailKey] ?? null;
+                
+                // SMART FALLBACK: If emailKey is missing in DB, try common email fields
+                $clientEmail = (!empty($emailKey) && isset($formData[$emailKey])) 
+                    ? $formData[$emailKey] 
+                    : ($formData['email'] ?? $formData['email_id'] ?? $formData['applicant_email'] ?? null);
 
                 $clientName = $formData['applicant_name'] ?? $formData['name'] ?? $formData['full_name'] ?? $formData['company_name'] ?? $formData['firm_name'] ?? 'Valued Client';
                 $trackingUrl = \Illuminate\Support\Facades\URL::signedRoute('tracking.show', ['application' => $application->id]);

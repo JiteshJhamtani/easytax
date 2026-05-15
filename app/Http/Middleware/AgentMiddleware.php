@@ -10,7 +10,7 @@ class AgentMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || auth()->user()->role !== 'AGENT') {
+        if (!auth()->check() || strtoupper(auth()->user()->role) !== 'AGENT') {
             abort(403);
         }
 

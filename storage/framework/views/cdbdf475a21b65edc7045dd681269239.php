@@ -159,7 +159,7 @@
         
         <div class="col-lg-4">
 
-            
+          
             <div class="card border-0 shadow-sm mb-4 rounded-lg elegant-border">
                 <div class="card-header bg-white py-3 border-bottom text-center">
                     <h3 class="card-title font-weight-bold text-dark w-100 float-none mb-0">
@@ -167,8 +167,38 @@
                     </h3>
                 </div>
                 <div class="card-body p-4">
+                    
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('success')): ?>
+                        <div class="alert alert-success font-weight-bold shadow-sm" style="border-radius: 8px; font-size: 0.85rem;">
+                            <i class="fas fa-check-circle mr-1"></i> <?php echo e(session('success')); ?>
+
+                        </div>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($errors->any()): ?>
+                        <div class="alert alert-danger font-weight-bold shadow-sm" style="border-radius: 8px; font-size: 0.85rem;">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> <?php echo e($errors->first()); ?>
+
+                        </div>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     <form method="POST" action="<?php echo e(route('team.applications.status', $application->id)); ?>">
                         <?php echo csrf_field(); ?>
+                        
+                        <div class="form-group mb-3 text-left">
+                            <label class="text-xs font-weight-bold text-muted text-uppercase mb-2">
+                                <i class="fas fa-comment-dots text-primary mr-1"></i> Status Note / Pending Reason
+                            </label>
+                            <textarea name="pending_reason" class="form-control" rows="2" placeholder="e.g. Waiting for OTP, Missing Aadhar Card..." style="border-radius: 8px; font-size: 0.9rem; resize: none;"><?php echo e($application->pending_reason); ?></textarea>
+                            <small class="text-muted text-xs mt-1 d-block">This note will be visible to the Admin.</small>
+                        </div>
+                        
+                        <button type="submit" name="status" value="<?php echo e(is_object($application->status) ? $application->status->value : $application->status); ?>" 
+                            class="btn btn-dark btn-block mb-4 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
+                            <i class="fas fa-save mr-2"></i> Save Note
+                        </button>
+                        
+                        <hr class="border-light my-3">
+                        <label class="text-xs font-weight-bold text-muted text-uppercase mb-2 d-block text-center">Change Application Status</label>
                         
                         <button type="submit" name="status" value="IN_PROGRESS"
                             class="btn btn-warning btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
@@ -191,6 +221,7 @@
                             <i class="fas fa-check-circle mr-2"></i> Mark Completed
                         </button>
                     </form>
+
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($application->service->slug === 'itr-filing'): ?>
                         <hr class="border-light my-3">
                         <a href="<?php echo e(route('team.applications.balance-sheet', $application->id)); ?>" class="btn btn-outline-dark btn-block shadow-sm font-weight-bold py-2 mb-2">

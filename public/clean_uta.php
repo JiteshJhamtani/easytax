@@ -17,7 +17,6 @@ try {
     // Wipe applications
     $pdo->exec("TRUNCATE TABLE applications;");
 
-    // ✅ Delete ONLY agents/marketers — keeps your ADMIN account safe
     $pdo->exec("DELETE FROM users WHERE role IN ('AGENT', 'agent', 'MARKETER', 'marketer');");
 
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");

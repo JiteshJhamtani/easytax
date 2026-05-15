@@ -15,7 +15,7 @@ class AdminMiddleware
      */
     public function handle($request, Closure $next)
     {
-        if (!auth()->check() || !auth()->user()->isAdmin()) {
+        if (!auth()->check() || !in_array(strtoupper(auth()->user()->role), ['ADMIN', 'SUPER_ADMIN'])) {
             abort(403);
         }
 
