@@ -301,14 +301,6 @@ return [
                 ],
             ],
             [
-                'name' => 'form_26as',
-                'label' => 'Form 26AS / AIS',
-                'required' => false,
-                'mimes' => [
-                    'pdf',
-                ],
-            ],
-            [
                 'name' => 'bank_statement',
                 'label' => 'Bank Statement',
                 'required' => false,
@@ -349,6 +341,26 @@ return [
             [
                 'name' => 'broker_statement',
                 'label' => 'Upload Broker Statement',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'pan',
+                'label' => 'PAN Card',
+                'required' => false,
+                'mimes' => [
+                    'pdf',
+                    'jpg',
+                    'png',
+                ],
+            ],
+            [
+                'name' => 'aadhaar',
+                'label' => 'Aadhaar  Card',
                 'required' => false,
                 'mimes' => [
                     'pdf',

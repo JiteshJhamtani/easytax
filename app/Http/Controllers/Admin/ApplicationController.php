@@ -221,7 +221,7 @@ class ApplicationController extends Controller
             ->addColumn('amount', fn($a) => '₹' . number_format($a->amount, 2))
             ->addColumn('date', fn($a) => $a->created_at->format('d M Y'))
             ->addColumn('assign_to', function ($a) use ($teamMembers) {
-                $html = '<select class="form-select form-select-sm d-inline-block w-auto assign-team-select" data-app-id="' . $a->id . '" style="border-radius: 6px; font-size: 0.85rem; height: 31px; border: 1px solid #cbd5e1; outline: none;">';
+                $html = '<select class="form-select form-select-sm d-inline-block w-auto assign-team-select"  data-app-id="' . $a->id . '" style="border-radius: 6px; font-size: 0.85rem; height: 31px; border: 1px solid #cbd5e1; outline: none;">';
                 $html .= '<option value="">Unassigned</option>';
                 foreach($teamMembers as $member) {
                     $selected = $a->assigned_to == $member->id ? 'selected' : '';

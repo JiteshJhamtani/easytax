@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ asset('assets/css/form.css') }}">
     
     <style>
-        /* ── PAGE RESET ── */
+        /* ── PAGE RESET ──   */  
         .content-body { padding: 0 !important; background-color: #F8F9FA; }
         
         .service-view-wrapper {
@@ -74,59 +74,66 @@
             margin-bottom: 2rem; padding: 2.5rem;
         }
 
-        /* ── PREMIUM FORM LAYOUT (Sticky Side-by-Side) ── */
+        /* ── PREMIUM FORM LAYOUT (Top-Stacked & Compact) ── */
         .form-body form {
             display: block; 
             margin-top: 1rem;
         }
 
         .form-section {
-            display: flex;
-            flex-wrap: wrap;
-            padding-top: 2.5rem;
+            display: block; /* Removed flex side-by-side */
+            padding-top: 2rem;
             padding-bottom: 2.5rem;
             border-bottom: 1px solid var(--border-light);
         }
-        .form-section:last-of-type { border-bottom: none; }
+        .form-section:last-of-type { border-bottom: none; padding-bottom: 0; }
 
+        /* Moved Section Title to Top */
         .form-section > h3 {
-            width: 25%;
-            padding-right: 2rem;
-            font-size: 1.15rem;
+            width: 100%;
+            font-size: 1.2rem;
             font-weight: 800;
             color: #111827;
-            margin: 0;
+            margin: 0 0 1.25rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px dashed var(--brand-mint); /* Added subtle separator line */
         }
 
+        /* 6-Column Grid Engine */
         .form-grid {
-            width: 75%;
+            width: 100%;
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.25rem 1.5rem;
+            grid-template-columns: repeat(6, 1fr); /* 6 total columns */
+            gap: 1.1rem 1.25rem; /* Tighter gaps for less scrolling */
+        }
+
+        .form-group {
+            grid-column: span 2; /* Default fields take 2 cols = 3 fields per row */
+            margin-bottom: 0; /* Overrides Bootstrap's default margin */
         }
 
         .form-group label {
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.8rem; /* Slightly smaller for compactness */
             color: #374151;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             display: block;
         }
         .form-group label .required { color: #ef4444; margin-left: 0.2rem; }
 
         .form-control {
             width: 100%; 
-            padding: 0.75rem 1rem !important; 
+            padding: 0.6rem 0.8rem !important; /* Tighter padding */
             border-radius: 8px; 
             border: 1px solid #d1d5db; 
             font-family: inherit; 
-            font-size: 0.95rem; 
+            font-size: 0.9rem; 
             color: #111827; 
             background: #ffffff; 
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); 
             transition: all 0.2s;
             height: auto !important; 
-            min-height: 46px;
+            min-height: 42px; /* Tighter height */
             appearance: none; 
         }
         
@@ -144,15 +151,15 @@
             padding-right: 2.5rem !important;
         }
 
-        .form-group:has(textarea) { grid-column: span 2; }
-        textarea.form-control { min-height: 100px; resize: vertical; }
+        .form-group:has(textarea) { grid-column: span 6; } /* Textareas span all 6 = 1 per row */
+        textarea.form-control { min-height: 80px; resize: vertical; } /* Less tall */
 
-        .form-group:has(input[type="file"]) { grid-column: span 2; }
+        .form-group:has(input[type="file"]) { grid-column: span 3; } /* Files span 3 = 2 per row */
         .file-input-wrapper { position: relative; }
         
         input[type="file"].form-control {
             border: 1.5px dashed #d1d5db;
-            padding: 1.25rem 1rem !important;
+            padding: 0.8rem 1rem !important; /* Tighter padding */
             background: #f9fafb;
             border-radius: 10px;
             width: 100%;
@@ -167,11 +174,11 @@
         input[type="file"]::file-selector-button {
             background: #ffffff;
             border: 1px solid #d1d5db;
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.8rem;
             border-radius: 6px;
             color: #374151;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             margin-right: 1rem;
             cursor: pointer;
             transition: background 0.2s;
@@ -179,9 +186,9 @@
         input[type="file"]::file-selector-button:hover { background: #f3f4f6; }
 
         .file-help {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #9ca3af;
-            margin-top: 0.5rem;
+            margin-top: 0.4rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -225,18 +232,25 @@
         .btn-submit:hover { background-color: #000000; transform: translateY(-1px); }
         .btn-submit svg { width: 16px; height: 16px; }
 
+        /* ── RESPONSIVE TWEAKS ── */
         @media (max-width: 991px) {
-            .form-section { flex-direction: column; padding-top: 1.5rem; padding-bottom: 1.5rem; }
-            .form-section > h3 { width: 100%; margin-bottom: 1.5rem; padding-right: 0; position: static; }
-            .form-grid { width: 100%; }
+            /* Tablet: 2 standard fields per row, 2 files per row, 1 textarea per row */
+            .form-grid { grid-template-columns: repeat(2, 1fr); }
+            .form-group { grid-column: span 1; }
+            .form-group:has(input[type="file"]) { grid-column: span 1; }
+            .form-group:has(textarea) { grid-column: span 2; }
         }
+        
         @media (max-width: 768px) {
             .sv-hero { padding: 2rem 1.5rem 5rem; }
             .sv-main-container { margin-top: -3rem; }
             .sv-card { padding: 1.5rem; }
             .sv-title-block h1 { font-size: 1.6rem; }
+            
+            /* Mobile: Everything 1 field per row */
             .form-grid { grid-template-columns: 1fr; gap: 1rem; }
-            .form-group:has(textarea), .form-group:has(input[type="file"]) { grid-column: span 1; }
+            .form-group, .form-group:has(input[type="file"]), .form-group:has(textarea) { grid-column: span 1; }
+            
             .actions-inner { flex-direction: column-reverse; }
             .btn-outline-secondary, .btn-submit { width: 100%; text-align: center; justify-content: center; }
         }
@@ -283,6 +297,7 @@
             @endif
         </div>
     </header>
+    
     {{-- ── MAIN CONTENT ── --}}
     <div class="sv-main-container">
         
@@ -292,24 +307,19 @@
         {{-- ── Application Form ── --}}
         <div class="sv-card">
             <div class="form-section-layout">
-                <div class="form-section-header">
+                <div class="form-section-header" style="margin-bottom: 1.5rem;">
                     <h2>Application Data</h2>
-                    <p>Please enter the client's information. Verify all details carefully before submitting to avoid processing delays.</p>
+                    <p style="color: var(--text-muted);">Please enter the client's information. Verify all details carefully before submitting to avoid processing delays.</p>
                 </div>
                 
-               
-           <div class="form-section-body form-body">
+                <div class="form-section-body form-body">
                     {!! $form->render() !!}
                 </div>
-
-
-</div>
-<br>
+            </div>
+            <br>
         
 
-    
-
-{{-- LIVE PRICE PREVIEW BOX WITH COUPON SYSTEM --}}
+    {{-- LIVE PRICE PREVIEW BOX WITH COUPON SYSTEM --}}
                     @if(in_array($service->slug, ['gst-return-filing', 'itr-filing','gst-annual-package']))
                         <div class="card border-success mb-4 shadow-sm mt-4">
                             <div class="card-body bg-success-soft">
@@ -347,10 +357,8 @@
                             </div>
                         </div>
                     @endif
-
- 
-</div>
-</div>
+        </div>
+    </div>
  </div>
 {{-- INJECTING THE PAYMENT MODAL COMPONENT --}}
 <x-payment-modal 
@@ -360,6 +368,7 @@
 />
 
 @endsection
+
 @section('js')
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -465,7 +474,6 @@
                     $('select[name="plan"] option[value="yearly_4"]').show();
                     $('select[name="plan"] option[value="yearly_12"]').hide();
                 } 
-                // 👇 FIX #1: Added annual_gstr9 to this condition! 👇
                 else if (frequency === 'annual' || frequency === 'annual_gstr4' || frequency === 'annual_gstr9') {
                     planWrapper.hide(); monthWrapper.hide(); quarterWrapper.hide();
                     $('select[name="plan"]').val('');
@@ -474,8 +482,6 @@
                 }
             }
 
-       
-          
            // ── GLOBAL PROMO VARIABLES ──
             let appliedPromoBonus = 0;
             let appliedPromoCode = '';

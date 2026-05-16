@@ -11,7 +11,7 @@ class Lead extends Model
 
     protected $fillable = [
         'name', 'email', 'phone', 'service_interested', 
-        'source', 'status', 'notes', 'marketer_id'
+        'source', 'status', 'notes', 'marketer_id','amount'
     ];
 
     // A lead belongs to the marketer who generated it

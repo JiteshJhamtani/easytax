@@ -121,16 +121,19 @@
         line-height: 1;
     }
 
-    /* ── MINI TABLES (Top Agents/Services/Recent) ── */
+    /* ── MINI TABLES (DESKTOP FIT) ── */
     .mini-table { width: 100%; border-collapse: collapse; }
     .mini-table thead th {
         background: #f8fafc; color: var(--text-muted); font-size: 0.7rem;
         text-transform: uppercase; letter-spacing: 0.05em; padding: 0.75rem 1rem;
         font-weight: 700; border-bottom: 1px solid var(--border);
+        white-space: nowrap;
     }
     .mini-table tbody td {
         padding: 0.85rem 1rem; vertical-align: middle; color: var(--text);
         font-size: 0.85rem; border-bottom: 1px solid var(--ink-100);
+        white-space: normal !important; /* Allows text to wrap */
+        word-break: break-word !important;
     }
     .mini-table tbody tr:last-child td { border-bottom: none; }
     .mini-table tbody tr:hover { background: #f8fafc; }
@@ -152,6 +155,122 @@
         border-radius: 4px; font-family: 'Courier New', Courier, monospace;
         font-size: 0.75rem; font-weight: 700; border: 1px solid var(--border);
     }
+
+    /* 🔥 MOBILE RESPONSIVE FIXES 🔥 */
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .header-badges-wrapper {
+            flex-direction: column;
+            width: 100%;
+            gap: 0.5rem !important;
+        }
+        .header-badges-wrapper > div {
+            width: 100%;
+        }
+        .custom-badge, .header-date {
+            width: 100%;
+            justify-content: center;
+        }
+        .funnel-header-wrapper {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+        }
+        .server-dropdown-wrapper {
+            width: 100% !important; 
+        }
+        .funnel-container {
+            padding: 1rem;
+        }
+        .dash-panel-body {
+            padding: 1rem; /* slightly tighter padding on mobile for charts */
+        }
+    }
+
+    /* ==========================================================================
+       🔥 MORPH MINI-TABLES INTO CARDS ON MOBILE & TABLET (Max 1024px) 🔥
+       ========================================================================== */
+    @media screen and (max-width: 1024px) {
+        
+        .dash-panel-body.no-padding { padding: 1rem !important; }
+        .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
+        
+        .mini-table, 
+        .mini-table tbody, 
+        .mini-table tr, 
+        .mini-table td {
+            display: block !important;
+            width: 100% !important;
+            min-width: 0 !important; 
+            white-space: normal !important; 
+        }
+
+        .mini-table thead {
+            display: none !important;
+        }
+
+        .mini-table tbody tr {
+            margin-bottom: 1rem !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 12px !important;
+            padding: 1rem !important;
+            background: var(--surface) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+        }
+
+        .mini-table tbody td {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 0.5rem 0 !important;
+            border-bottom: 1px dashed var(--ink-100) !important;
+            text-align: right !important; 
+            border-top: none !important;
+        }
+        
+        .mini-table tbody td:last-child {
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
+            margin-top: 0.25rem;
+            justify-content: flex-end !important;
+        }
+
+        .mini-table tbody td::before {
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            text-align: left;
+            margin-right: 1rem;
+        }
+
+        /* --- COLUMN MAP FOR TOP AGENTS --- */
+        .agents-table tbody td:nth-child(1)::before { content: "#"; }
+        .agents-table tbody td:nth-child(2)::before { content: "Agent"; }
+        .agents-table tbody td:nth-child(3)::before { content: "Apps"; }
+        .agents-table tbody td:nth-child(4)::before { content: "Revenue"; }
+        .agents-table tbody td:nth-child(5)::before { content: "Commission"; }
+
+        /* --- COLUMN MAP FOR TOP SERVICES --- */
+        .services-table tbody td:nth-child(1)::before { content: "#"; }
+        .services-table tbody td:nth-child(2)::before { content: "Service"; }
+        .services-table tbody td:nth-child(3)::before { content: "Apps"; }
+        .services-table tbody td:nth-child(4)::before { content: "Revenue"; }
+
+        /* --- COLUMN MAP FOR RECENT APPLICATIONS --- */
+        .recent-table tbody td:nth-child(1)::before { content: "ID"; }
+        .recent-table tbody td:nth-child(2)::before { content: "Agent"; }
+        .recent-table tbody td:nth-child(3)::before { content: "Service"; }
+        .recent-table tbody td:nth-child(4)::before { content: "Amount"; }
+        .recent-table tbody td:nth-child(5)::before { content: "Status"; }
+        .recent-table tbody td:nth-child(6)::before { content: "Submitted"; }
+    }
 </style>
 <?php $__env->stopSection(); ?>
 
@@ -160,7 +279,7 @@
         <div>
             <h1 class="page-title">Analytics Dashboard</h1>
         </div>
-        <div class="d-flex align-items-center" style="gap: 1rem;">
+        <div class="d-flex align-items-center header-badges-wrapper" style="gap: 1rem;">
             <div>
                 <span class="custom-badge badge-info-soft" style="font-size: 0.8rem; text-transform: none; letter-spacing: normal; padding: 0.5rem 1rem;">
                     <i class="fas fa-headset mr-1"></i> Support Helpline: +91 77259 81022
@@ -176,11 +295,11 @@
 
     
     <div class="funnel-container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 funnel-header-wrapper">
             <h2 class="funnel-container-title mb-0">Application Funnels</h2>
             
             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(in_array(request()->getHost(), ['b2b.easytax.live', 'uat.easytax.live'])): ?>
-            <div class="form-group mb-0" style="width: 250px;">
+            <div class="form-group mb-0 server-dropdown-wrapper" style="width: 250px;">
                 <select id="serverSelector" class="form-control font-weight-bold border-primary shadow-sm">
                     <option value="local" selected>📍 Local Data (This Server)</option>
                     <option value="b2b">☁️ B2B Server</option>
@@ -192,7 +311,7 @@
         </div>
         
         <div class="row mb-4">
-            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
+            <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-file-alt"></i></div>
                     <div class="funnel-label">Total Applications</div>
@@ -200,7 +319,7 @@
                 </div>
             </div>
 
-            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
+            <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-check-circle"></i></div>
                     <div class="funnel-label">Completed Apps</div>
@@ -208,7 +327,7 @@
                 </div>
             </div>
 
-            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
+            <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-clock"></i></div>
                     <div class="funnel-label">Pending Apps</div>
@@ -216,7 +335,7 @@
                 </div>
             </div>
 
-            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
+            <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon orange"><i class="fas fa-archive"></i></div>
                     <div class="funnel-label">Processed (Draft/Fail)</div>
@@ -226,14 +345,14 @@
         </div>
 
         <div class="row">
-            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
+            <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-users"></i></div>
                     <div class="funnel-label">Total Agents</div>
                     <div class="funnel-value" id="kpi-total_agents"><?php echo e($kpis['total_agents']); ?></div>
                 </div>
             </div>
-            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
+            <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-rupee-sign"></i></div>
                     <div class="funnel-label">Total Revenue</div>
@@ -241,7 +360,7 @@
                 </div>
             </div>
 
-            <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
+            <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-coins"></i></div>
                     <div class="funnel-label">Commission Generated</div>
@@ -249,9 +368,7 @@
                 </div>
             </div>
 
-            
-
-           <div class="col-xl-3 col-lg-6 col-md-6 mb-3 mb-xl-0">
+            <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-users"></i></div>
                     <div class="funnel-label">Total Marketers</div>
@@ -297,7 +414,7 @@
                 </div>
                 <div class="dash-panel-body no-padding">
                     <div class="table-responsive">
-                        <table class="mini-table">
+                        <table class="mini-table agents-table">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -338,7 +455,7 @@
                 </div>
                 <div class="dash-panel-body no-padding">
                     <div class="table-responsive">
-                        <table class="mini-table">
+                        <table class="mini-table services-table">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -377,7 +494,7 @@
                 </div>
                 <div class="dash-panel-body no-padding">
                     <div class="table-responsive">
-                        <table class="mini-table">
+                        <table class="mini-table recent-table">
                             <thead>
                                 <tr>
                                     <th class="pl-4">ID</th>

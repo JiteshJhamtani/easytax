@@ -2,31 +2,34 @@
 
 <?php $__env->startSection('css'); ?>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
+   <?php $__env->startSection('css'); ?>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
     <style>
 
         /* Typeform Balance Sheet Modal Styles */
-.tf-step {
-    display: none;
-    animation: tfSlideUp 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
-    padding: 2rem;
-}
-.tf-step.active { display: block; }
-@keyframes tfSlideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.tf-input {
-    border: none; border-bottom: 2px solid #e2e8f0; border-radius: 0;
-    background: transparent; font-size: 1.5rem; font-weight: 700; color: #1e293b;
-    padding: 8px 0; box-shadow: none !important; transition: border-color 0.2s;
-}
-.tf-input:focus { border-bottom-color: var(--green); outline: none; }
-.tf-input::placeholder { color: #cbd5e1; font-weight: 400; font-size: 1.2rem; }
-.tally-bar {
-    background: #1e293b; color: white; padding: 15px 20px; border-radius: 12px;
-    display: flex; justify-content: space-between; align-items: center; margin-top: 20px;
-}
-.tally-match { background: var(--green); }
+        .tf-step {
+            display: none;
+            animation: tfSlideUp 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+            padding: 2rem;
+        }
+        .tf-step.active { display: block; }
+        @keyframes tfSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tf-input {
+            border: none; border-bottom: 2px solid #e2e8f0; border-radius: 0;
+            background: transparent; font-size: 1.5rem; font-weight: 700; color: #1e293b;
+            padding: 8px 0; box-shadow: none !important; transition: border-color 0.2s;
+        }
+        .tf-input:focus { border-bottom-color: var(--green); outline: none; }
+        .tf-input::placeholder { color: #cbd5e1; font-weight: 400; font-size: 1.2rem; }
+        .tally-bar {
+            background: #1e293b; color: white; padding: 15px 20px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center; margin-top: 20px;
+        }
+        .tally-match { background: var(--green); }
+        
         /* ── PAGE HEADER ── */
         .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .page-title { font-size: 1.5rem; font-weight: 800; color: var(--slate-dark); margin: 0 0 0.25rem 0; letter-spacing: -0.02em; }
@@ -83,47 +86,132 @@
         /* ── DATA TABLE CARD ── */
         .table-card { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
         .dataTables_wrapper { padding: 1.5rem; }
-        table.dataTable { border-collapse: collapse !important; width: 100% !important; margin-bottom: 1rem !important; border-bottom: 1px solid var(--border); }
-        table.dataTable thead th { background: #f8fafc; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--border) !important; border-top: none !important; padding: 1rem; white-space: nowrap; }
-        table.dataTable tbody td { padding: 1rem; vertical-align: middle; color: var(--text); font-size: 0.9rem; border-bottom: 1px solid var(--ink-100); }
+        /* ── DATA TABLE CARD (DESKTOP FIT) ── */
+        .table-card { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .dataTables_wrapper { padding: 1.5rem; }
+        
+        table.dataTable { 
+            min-width: 100% !important; /* Removed the 1400px limit */
+            width: 100% !important; 
+            border-collapse: collapse !important; 
+            margin-bottom: 1rem !important; 
+            border-bottom: 1px solid var(--border); 
+        }
+        
+        table.dataTable thead th { 
+            background: #f8fafc; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; 
+            text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--border) !important; 
+            border-top: none !important; padding: 0.75rem 0.5rem; /* Reduced padding slightly */
+            white-space: nowrap; 
+        }
+        
+        table.dataTable tbody td { 
+            white-space: normal !important; /* Allows text to wrap instead of stretching the screen */
+            word-break: break-word !important; /* Prevents long unbroken words from breaking the layout */
+            padding: 0.75rem 0.5rem !important; /* Reduced padding to fit more columns */
+            vertical-align: middle; 
+            color: var(--text); 
+            font-size: 0.85rem !important; /* Slightly smaller font to help things fit */
+            border-bottom: 1px solid var(--ink-100); 
+        }
+        
+        /* Keep the actions column pushed to the right so buttons don't get crushed */
+        table.dataTable th:last-child,
+        table.dataTable td:last-child {
+            min-width: 100px;
+            white-space: nowrap !important;
+        }
+        
+        table.dataTable tbody tr:hover { background: #f8fafc; }
         table.dataTable tbody tr:hover { background: #f8fafc; }
         
         .dataTables_info { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
         .page-item.active .page-link { background: var(--slate-dark); border-color: var(--slate-dark); color: #fff; border-radius: 6px; }
         .page-link { color: var(--slate); border: 1px solid var(--border); border-radius: 6px; margin: 0 2px; font-size: 0.85rem; font-weight: 600; }
 
-        /* ── ULTRA-COMPACT TABLE (NO SCROLLING) ── */
-        .table-card { overflow: visible !important; }
-        
-        .compact-table {
-            width: 100% !important;
-            table-layout: auto !important;
-        }
-        
-        /* Shrink text and padding to the absolute minimum */
-        .compact-table th, 
-        .compact-table td {
-            padding: 6px 4px !important; 
-            font-size: 0.75rem !important; 
-            white-space: normal !important; /* Allows text to wrap to a new line instead of stretching horizontally */
-            vertical-align: middle !important;
-            word-break: break-word;
-        }
+        /* ==========================================================================
+           🔥 MORPH TABLE INTO CARDS ON MOBILE & TABLET (Max 1024px) 🔥
+           ========================================================================== */
+        @media screen and (max-width: 1024px) {
+            
+            .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
+            .table-card { overflow: visible !important; }
+            
+            table.dataTable, 
+            table.dataTable tbody, 
+            table.dataTable tr, 
+            table.dataTable td {
+                display: block !important;
+                width: 100% !important;
+                min-width: 0 !important; 
+                white-space: normal !important; 
+            }
 
-        /* Shrink the Generate, Download, and View buttons */
-        .compact-table .btn {
-            padding: 3px 6px !important;
-            font-size: 0.7rem !important;
-            line-height: 1.2;
-        }
+            table.dataTable thead {
+                display: none !important;
+            }
 
-        /* Prevent the action column from getting crushed */
-        .compact-table th:last-child,
-        .compact-table td:last-child {
-            min-width: 60px;
-            text-align: right;
+            table.dataTable tbody tr {
+                margin-bottom: 1.25rem !important;
+                border: 1px solid var(--border) !important;
+                border-radius: 12px !important;
+                padding: 1rem !important;
+                background: var(--surface) !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+            }
+
+            table.dataTable tbody td {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 0.6rem 0 !important;
+                border-bottom: 1px dashed var(--ink-100) !important;
+                text-align: right !important; 
+                border-top: none !important;
+            }
+            
+            table.dataTable tbody td:last-child {
+                border-bottom: none !important;
+                padding-bottom: 0 !important;
+                margin-top: 0.5rem;
+                justify-content: flex-end !important;
+            }
+
+            table.dataTable tbody td::before {
+                font-weight: 700;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+                text-align: left;
+                margin-right: 1rem;
+            }
+
+            /* --- BASE COLUMNS (Always Present) --- */
+            table.dataTable tbody td:nth-child(1)::before { content: "App ID"; }
+            table.dataTable tbody td:nth-child(2)::before { content: "Agent"; }
+            table.dataTable tbody td:nth-child(3)::before { content: "Service Type"; }
+            table.dataTable tbody td:nth-child(4)::before { content: "Primary Data"; }
+            table.dataTable tbody td:nth-child(5)::before { content: "Status"; }
+            table.dataTable tbody td:nth-child(6)::before { content: "Payment"; }
+            table.dataTable tbody td:nth-child(7)::before { content: "Amount"; }
+
+            /* --- SCENARIO A: STANDARD TABLE (NO ITR COLUMNS) --- */
+            table.dataTable:not(.is-itr) tbody td:nth-child(8)::before { content: "Date Submitted"; }
+            table.dataTable:not(.is-itr) tbody td:nth-child(9)::before { content: "Assign To"; }
+            table.dataTable:not(.is-itr) tbody td:nth-child(10)::before { content: "Action"; display: none; }
+
+            /* --- SCENARIO B: ITR FILING TABLE (+3 COLUMNS) --- */
+            table.dataTable.is-itr tbody td:nth-child(8)::before { content: "ACK NO"; }
+            table.dataTable.is-itr tbody td:nth-child(9)::before { content: "COMPUTATION"; }
+            table.dataTable.is-itr tbody td:nth-child(10)::before { content: "BALANCE SHEET"; }
+            table.dataTable.is-itr tbody td:nth-child(11)::before { content: "Date Submitted"; }
+            table.dataTable.is-itr tbody td:nth-child(12)::before { content: "Assign To"; }
+            table.dataTable.is-itr tbody td:nth-child(13)::before { content: "Action"; display: none; }
         }
     </style>
+    <link rel="stylesheet" href="<?php echo e(asset('assets/css/applications.css')); ?>">
+<?php $__env->stopSection(); ?>
     <link rel="stylesheet" href="<?php echo e(asset('assets/css/applications.css')); ?>">
 <?php $__env->stopSection(); ?>
 
@@ -261,29 +349,29 @@
     </div>
 
 
-    <div class="table-card">
-        <table id="applicationsTable" class="table w-100 compact-table">
-           <thead>
-                <tr>
-                    <th>App ID</th>
-                    <th>Agent</th>
-                    <th>Service Type</th>
-                    <th>Primary Data</th> 
-                    <th>Status</th>
-                    <th>Payment</th>
-                    <th>Amount</th>
-                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($type === 'itr-filing'): ?>
-                        <th>ACK NO</th>
-                        <th>COMPUTATION</th>
-                        <th>BALANCE SHEET</th>
-                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                    <th>Date Submitted</th>
-                    <th>Assign To</th>
-                    <th class="text-right">Actions</th>
-                </tr>
-            </thead>
-        </table>
-    </div>
+<div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+    <table id="applicationsTable" class="table w-100 <?php if($type === 'itr-filing'): ?> is-itr <?php endif; ?>">
+        <thead>
+            <tr>
+                <th>App ID</th>
+                <th>Agent</th>
+                <th>Service Type</th>
+                <th>Primary Data</th> 
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Amount</th>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($type === 'itr-filing'): ?>
+                    <th>ACK NO</th>
+                    <th>COMPUTATION</th>
+                    <th>BALANCE SHEET</th>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                <th>Date Submitted</th>
+                <th>Assign To</th>
+                <th class="text-right">Actions</th>
+            </tr>
+        </thead>
+    </table>
+</div>
 <?php $__env->stopSection(); ?>
 
 <div class="modal fade" id="balanceSheetModal" tabindex="-1" data-backdrop="static">

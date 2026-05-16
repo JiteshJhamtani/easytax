@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'EasyTax Admin')</title>
 
@@ -59,7 +60,10 @@
             margin: 0; padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 14px; background: var(--bg); color: var(--text); height: 100%;
+            overflow-x: hidden;
         }
+
+       
 
         .shell { display: flex; min-height: 100vh; }
 
@@ -125,9 +129,8 @@
          .sb-illustration { text-align: center; width: 100%; display: flex; align-items: center; justify-content: center; }
         .sb-illustration svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
 
-
-        /* ── MAIN ── */
-        .main { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-width: 0; transition: margin-left .28s cubic-bezier(.4,0,.2,1); }
+        /* ── MAIN ──  */
+        .main { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-width: 0; transition: margin-left .28s cubic-bezier(.4,0,.2,1); overflow-x: hidden; }
 
         .topbar {
             height: var(--topbar-h); background: var(--surface);
@@ -174,11 +177,22 @@
             .topbar { padding: 0 1.5rem; }
             .topbar__toggle { display: flex; align-items: center; justify-content: center; }
             .content-body { padding: 1rem; }
-            .sb-overlay { display: none; position: fixed; inset: 0; background: rgba(46,61,78,.6); z-index: 999; backdrop-filter: blur(2px); }
             .sb-overlay.open { display: block; }
             .user-pill__info { display: none; } 
             .namaste-text { font-size: 1.1rem; }
         }
+
+        /* ── EXTRA SMALL MOBILE TWEAKS (Phones < 576px) ── */
+        @media (max-width: 575px) {
+            .topbar { padding: 0 1rem; gap: 0.5rem; }
+            .namaste-text { font-size: 0.95rem; }
+            .user-pill { padding: 0.2rem 0.2rem 0.2rem 0.5rem; }
+            .user-pill__avatar { width: 32px; height: 32px; font-size: 0.8rem; margin-right: 0.5rem; }
+            .user-pill__logout { width: 32px; height: 32px; }
+            .user-pill__divider { margin: 0 0.3rem; }
+            .content-body { padding: 0.75rem; }
+        }
+
         .shell.sidebar-mini .sidebar { width: var(--sidebar-mini); }
         .shell.sidebar-mini .sb-brand { margin: 1rem 0.5rem; justify-content: center; padding: 0.5rem; }
         .shell.sidebar-mini .sb-brand img { max-height: 24px; }
@@ -377,7 +391,7 @@
 
     <div class="main" id="main">
         <header class="topbar">
-            <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; min-width: 0; overflow: hidden;">
                 <button class="topbar__toggle" id="sb-toggle">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </button>
@@ -430,7 +444,9 @@
     overlay&&overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('open');});
     if(localStorage.getItem('et_sb_mini')==='1')shell.classList.add('sidebar-mini');
 })();
+
 </script>
 @yield('js')
 </body>
 </html>
+

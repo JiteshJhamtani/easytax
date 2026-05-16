@@ -54,7 +54,7 @@
         /* ── DATATABLES OVERRIDES ── */
         .dataTables_wrapper .row { align-items: center; }
         
-        .dataTables_filter label { font-weight: 600; color: var(--text-muted); font-size: 0.85rem; }
+        .dataTables_filter label { font-weight: 600; color: var(--text-muted); font-size: 0.85rem; width: 100%; }
         .dataTables_filter input {
             border: 1px solid var(--border); border-radius: 8px;
             padding: 0.4rem 0.75rem; margin-left: 0.5rem; outline: none; transition: all 0.2s;
@@ -68,9 +68,21 @@
         }
 
         table.dataTable {
-            border-collapse: collapse !important; margin-top: 1rem !important;
-            margin-bottom: 1.5rem !important; width: 100% !important; border-bottom: 1px solid var(--border);
-        }
+    border-collapse: collapse !important; 
+    margin-top: 1rem !important;
+    margin-bottom: 1.5rem !important; 
+    width: 100% !important; 
+    min-width: 1000px !important; 
+    border-bottom: 1px solid var(--border);
+}
+        
+        table.dataTable thead th,
+        table.dataTable tbody td {
+    white-space: nowrap !important;
+    word-wrap: normal !important; 
+    word-break: keep-all !important; 
+}
+        
         table.dataTable thead th {
             background: #f8fafc; color: var(--text-muted); font-size: 0.75rem;
             text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--border) !important;
@@ -105,7 +117,112 @@
             background: var(--ink-100); color: var(--slate); padding: 0.3rem 0.6rem;
             border-radius: 6px; font-family: 'Courier New', Courier, monospace;
             font-size: 0.85rem; font-weight: 700; border: 1px solid var(--border);
+            white-space: nowrap !important;
+            display: inline-block !important;
         }
+
+        /* 🔥 BULLETPROOF MOBILE OVERRIDES 🔥 */
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+            .btn-premium {
+                width: 100% !important;
+                justify-content: center !important;
+                margin-top: 15px !important;
+            }
+            .table-card {
+                padding: 1rem !important;
+            }
+            
+            /* Overriding DataTables specific mobile grid */
+            div.dataTables_wrapper div.dataTables_length,
+            div.dataTables_wrapper div.dataTables_filter,
+            div.dataTables_wrapper div.dataTables_info,
+            div.dataTables_wrapper div.dataTables_paginate {
+                text-align: left !important;
+            }
+            
+            div.dataTables_wrapper div.dataTables_filter input {
+                width: 100% !important;
+                margin-left: 0 !important;
+                margin-top: 8px !important;
+                display: block !important;
+            }
+            
+            .dataTables_wrapper .row > div {
+                margin-bottom: 15px !important;
+            }
+        
+
+
+        /* 🔥 MORPH TABLE INTO CARDS ON MOBILE 🔥 */
+          /* 1. Force the table to behave like standard blocks instead of a rigid grid */
+        table.dataTable, 
+        table.dataTable tbody, 
+        table.dataTable tr, 
+        table.dataTable td {
+            display: block !important;
+            width: 100% !important;
+            min-width: 0 !important; /* Removes our previous scroll fix */
+            white-space: normal !important; 
+        }
+
+        /* 2. Hide the original top headers completely */
+        table.dataTable thead {
+            display: none !important;
+        }
+
+        /* 3. Style every Row as a beautiful Card */
+        table.dataTable tbody tr {
+            margin-bottom: 1.25rem !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 12px !important;
+            padding: 1rem !important;
+            background: var(--surface) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+        }
+
+        /* 4. Style the Cells inside the card (Flexbox for Label + Value) */
+        table.dataTable tbody td {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 0.6rem 0 !important;
+            border-bottom: 1px dashed var(--ink-100) !important;
+            text-align: right !important; /* Forces values to the right */
+        }
+        
+        /* Remove the dashed line from the last item (Actions) */
+        table.dataTable tbody td:last-child {
+            border-bottom: none !important;
+            padding-bottom: 0 !important;
+            margin-top: 0.5rem;
+            justify-content: flex-end !important; /* Push buttons to the right */
+        }
+
+        /* 5. Inject the Column Labels using CSS pseudo-elements! */
+        table.dataTable tbody td::before {
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            text-align: left;
+        }
+
+        /* Map each column to its name based on the order in your DataTables JS */
+        table.dataTable tbody td:nth-child(1)::before { content: "ID"; }
+        table.dataTable tbody td:nth-child(2)::before { content: "Name"; }
+        table.dataTable tbody td:nth-child(3)::before { content: "Slug"; }
+        table.dataTable tbody td:nth-child(4)::before { content: "Price"; }
+        table.dataTable tbody td:nth-child(5)::before { content: "Commission"; }
+        table.dataTable tbody td:nth-child(6)::before { content: "Apps"; }
+        table.dataTable tbody td:nth-child(7)::before { content: "Status"; }
+        table.dataTable tbody td:nth-child(8)::before { content: "Action"; display: none; /* Hides the word 'Action' so just buttons show */ }
+}
+      
     </style>
 <?php $__env->stopSection(); ?>
 
@@ -146,11 +263,12 @@
         });
 
         $('#servicesTable').DataTable({
+            scrollX: true,
             processing: true,
             serverSide: true,
             ajax: '<?php echo e(route('admin.services.datatable')); ?>',
             language: {
-                search: "_INPUT_",
+                search: "",
                 searchPlaceholder: "Search services..."
             },
             columns: [
@@ -171,13 +289,13 @@
                 { 
                     data: 'commission_display', 
                     className: 'text-center font-weight-bold', 
-                    searchable: false, // <-- THE FIX: Stop frontend from searching this column
+                    searchable: false, 
                     render: function(data){ return `<span style="color: var(--slate);">${data}</span>`; } 
                 },
                 { 
                     data: 'applications_count', 
                     className: 'text-center',
-                    searchable: false, // <-- THE FIX: Stop frontend from searching this column 
+                    searchable: false,  
                     render: function(data) { 
                         return data ? `<span class="custom-badge badge-info-soft">${data}</span>` : '<span class="text-muted">-</span>'; 
                     }
@@ -185,7 +303,7 @@
                 { 
                     data: 'active', 
                     className: 'text-center',
-                    searchable: false, // <-- Good practice to not text-search booleans either
+                    searchable: false, 
                     render: function(data) { 
                         if (data) { return '<span class="custom-badge badge-success-soft"><i class="fas fa-check-circle mr-1"></i> Active</span>'; }
                         return '<span class="custom-badge badge-danger-soft"><i class="fas fa-ban mr-1"></i> Inactive</span>'; 

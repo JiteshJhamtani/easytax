@@ -436,7 +436,11 @@ Route::middleware(['auth', 'sidebar'])->prefix('crm')->name('crm.')->group(funct
     Route::patch('/marketers/{user}/toggle-status', [\App\Http\Controllers\Admin\MarketerController::class, 'toggleStatus'])->name('marketers.toggle-status');
 
 
-    // --- Leads UI ---
+    // --- Leads UI ---  
+    Route::get('/leads/vle', [\App\Http\Controllers\Admin\LeadController::class, 'indexVle'])->name('leads.vle.index');
+    Route::get('/leads/vle/data', [\App\Http\Controllers\Admin\LeadController::class, 'vleDatatable'])->name('leads.vle.data');
+    Route::get('/leads/vle/create', [\App\Http\Controllers\Admin\LeadController::class, 'createVle'])->name('leads.vle.create');
+    Route::post('/leads/vle', [\App\Http\Controllers\Admin\LeadController::class, 'storeVle'])->name('leads.vle.store');
     Route::get('/leads/{lead}/edit', [\App\Http\Controllers\Admin\LeadController::class, 'edit'])->name('leads.edit');
     Route::get('/leads', [\App\Http\Controllers\Admin\LeadController::class, 'index'])->name('leads.index');
     Route::get('/leads/datatable', [\App\Http\Controllers\Admin\LeadController::class, 'datatable'])->name('leads.datatable');
@@ -459,6 +463,8 @@ Route::middleware(['auth', 'sidebar'])->prefix('crm')->name('crm.')->group(funct
 */
 Route::middleware(['auth', 'sidebar'])->group(function () {
     Route::get('/marketer/dashboard', [\App\Http\Controllers\Admin\LeadController::class, 'dashboard'])->name('marketer.dashboard');
+    Route::get('/marketer/vle/create', [\App\Http\Controllers\Admin\LeadController::class, 'createVle'])->name('marketer.vle.create');
+    Route::post('/marketer/vle', [\App\Http\Controllers\Admin\LeadController::class, 'storeVle'])->name('marketer.vle.store');
 });
 /*
 |--------------------------------------------------------------------------

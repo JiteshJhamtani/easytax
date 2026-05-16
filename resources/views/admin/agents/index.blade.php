@@ -89,14 +89,13 @@
             outline: none;
         }
 
-        /* The Table Itself */
+        /* ── DATA TABLE (DESKTOP FIT) ── */
         table.dataTable {
             border-collapse: collapse !important;
             margin-top: 1rem !important;
             margin-bottom: 1.5rem !important;
-            width: 100% !important;
+            width: 100% !important; /* Forces table to fit screen */
             border-bottom: 1px solid var(--border);
-           
         }
         table.dataTable thead th {
             background: #f8fafc;
@@ -106,17 +105,28 @@
             letter-spacing: 0.05em;
             border-bottom: 2px solid var(--border) !important;
             border-top: none !important;
-            padding: 1rem 0.75rem;
+            padding: 0.75rem 0.5rem;
             vertical-align: middle;
             font-weight: 700;
+            white-space: nowrap;
         }
         table.dataTable tbody td {
-            padding: 1rem 0.75rem;
+            white-space: normal !important; /* Allows long text (like emails) to wrap */
+            word-break: break-word !important; 
+            padding: 0.75rem 0.5rem !important;
             vertical-align: middle;
             color: var(--text);
-            font-size: 0.9rem;
+            font-size: 0.85rem !important; /* Slightly smaller to fit rows better */
             border-bottom: 1px solid var(--ink-100);
         }
+        
+        /* Protect the Action Column on Desktop so buttons don't get crushed */
+        table.dataTable th:last-child,
+        table.dataTable td:last-child {
+            min-width: 80px;
+            white-space: nowrap !important;
+        }
+
         table.dataTable tbody tr { transition: background 0.2s; }
         table.dataTable tbody tr:hover { background: #f8fafc; }
 
@@ -153,18 +163,9 @@
             letter-spacing: 0.05em;
             text-transform: uppercase;
         }
-        .badge-success-soft {
-            background-color: var(--green-light);
-            color: var(--green-dark);
-        }
-        .badge-danger-soft {
-            background-color: #FEE2E2;
-            color: #DC2626;
-        }
-        .badge-info-soft {
-            background-color: #DBEAFE;
-            color: #1E40AF;
-        }
+        .badge-success-soft { background-color: var(--green-light); color: var(--green-dark); }
+        .badge-danger-soft { background-color: #FEE2E2; color: #DC2626; }
+        .badge-info-soft { background-color: #DBEAFE; color: #1E40AF; }
         
         .agent-code-tag {
             background: var(--ink-100);
@@ -175,6 +176,76 @@
             font-size: 0.85rem;
             font-weight: 700;
             border: 1px solid var(--border);
+        }
+
+        /* ==========================================================================
+           🔥 MORPH TABLE INTO CARDS ON MOBILE & TABLET (Max 1024px) 🔥
+           ========================================================================== */
+        @media screen and (max-width: 1024px) {
+            
+            .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
+            .table-card { overflow: visible !important; }
+            
+            table.dataTable, 
+            table.dataTable tbody, 
+            table.dataTable tr, 
+            table.dataTable td {
+                display: block !important;
+                width: 100% !important;
+                min-width: 0 !important; 
+                white-space: normal !important; 
+            }
+
+            table.dataTable thead {
+                display: none !important;
+            }
+
+            table.dataTable tbody tr {
+                margin-bottom: 1.25rem !important;
+                border: 1px solid var(--border) !important;
+                border-radius: 12px !important;
+                padding: 1rem !important;
+                background: var(--surface) !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+            }
+
+            table.dataTable tbody td {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 0.6rem 0 !important;
+                border-bottom: 1px dashed var(--ink-100) !important;
+                text-align: right !important; 
+                border-top: none !important;
+            }
+            
+            table.dataTable tbody td:last-child {
+                border-bottom: none !important;
+                padding-bottom: 0 !important;
+                margin-top: 0.5rem;
+                justify-content: flex-end !important;
+            }
+
+            table.dataTable tbody td::before {
+                font-weight: 700;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+                text-align: left;
+                margin-right: 1rem;
+            }
+
+            /* --- COLUMN MAP FOR AGENTS TABLE --- */
+            table.dataTable tbody td:nth-child(1)::before { content: "ID"; }
+            table.dataTable tbody td:nth-child(2)::before { content: "Agent Code"; }
+            table.dataTable tbody td:nth-child(3)::before { content: "Name"; }
+            table.dataTable tbody td:nth-child(4)::before { content: "Email"; }
+            table.dataTable tbody td:nth-child(5)::before { content: "Apps"; }
+            table.dataTable tbody td:nth-child(6)::before { content: "Commission"; }
+            table.dataTable tbody td:nth-child(7)::before { content: "Payouts"; }
+            table.dataTable tbody td:nth-child(8)::before { content: "Status"; }
+            table.dataTable tbody td:nth-child(9)::before { content: "Action"; display: none; }
         }
     </style>
 @endsection
@@ -188,23 +259,27 @@
     </div>
 
     <div class="table-card">
-        <table id="agentsTable" class="table w-100">
-            <thead>
-                <tr>
-                    <th class="pl-3">ID</th>
-                    <th>Agent Code</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th class="text-center">Apps</th>
-                    <th class="text-right">Commission</th>
-                    <th class="text-right">Payouts</th>
-                    <th class="text-center">Status</th>
-                    <th class="text-center pr-3">Action</th>
-                </tr>
-            </thead>
-        </table>
+        {{-- I added a table-responsive wrapper here as best practice for Bootstrap --}}
+        <div class="table-responsive">
+            <table id="agentsTable" class="table w-100">
+                <thead>
+                    <tr>
+                        <th class="pl-3">ID</th>
+                        <th>Agent Code</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th class="text-center">Apps</th>
+                        <th class="text-right">Commission</th>
+                        <th class="text-right">Payouts</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center pr-3">Action</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
     </div>
 @endsection
+
 
 @section('js')
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>

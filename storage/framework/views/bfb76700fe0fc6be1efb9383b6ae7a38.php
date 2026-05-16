@@ -195,6 +195,17 @@
             .namaste-text { font-size: 1.1rem; }
         }
 
+        /* ── EXTRA SMALL MOBILE TWEAKS (Phones < 576px) ── */
+        @media (max-width: 575px) {
+            .topbar { padding: 0 1rem; gap: 0.5rem; }
+            .namaste-text { font-size: 0.95rem; }
+            .user-pill { padding: 0.2rem 0.2rem 0.2rem 0.5rem; }
+            .user-pill__avatar { width: 32px; height: 32px; font-size: 0.8rem; margin-right: 0.5rem; }
+            .user-pill__logout { width: 32px; height: 32px; }
+            .user-pill__divider { margin: 0 0.3rem; }
+            .content-body { padding: 0.75rem; }
+        }
+
         /* ── MINI MODE ── */
         .shell.sidebar-mini .sidebar { width: var(--sidebar-mini); }
         .shell.sidebar-mini .sb-brand { margin: 1rem 0.5rem; justify-content: center; padding: 0.5rem; }
@@ -227,12 +238,20 @@
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->routeIs('marketer.dashboard')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </a>
             
-            <a href="<?php echo e(route('crm.leads.index')); ?>" class="sb-item <?php echo e(request()->routeIs('crm.leads.*') ? 'active' : ''); ?>" data-label="My Leads">
+            <a href="<?php echo e(route('crm.leads.index')); ?>" class="sb-item <?php echo e(request()->routeIs('crm.leads.*') && !request()->routeIs('crm.leads.vle.*') ? 'active' : ''); ?>" data-label="My Leads">
                 <span class="sb-item__icon"><i class="fas fa-magnet"></i></span>
                 My Leads
-                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->routeIs('crm.leads.*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->routeIs('crm.leads.*') && !request()->routeIs('crm.leads.vle.*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </a>
-        </nav>
+
+
+            <a href="<?php echo e(route('crm.leads.vle.index')); ?>" class="sb-item <?php echo e(request()->routeIs('crm.leads.vle.*') ? 'active' : ''); ?>" data-label="Add VLE Customer">
+                <span class="sb-item__icon"><i class="fas fa-handshake"></i></span>
+                Add VLE Customer
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(request()->routeIs('crm.leads.vle.*')): ?><span class="sb-item__dot"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            </a>
+
+        </nav> 
 
         <div class="sb-bottom">
             <div class="sb-illustration">

@@ -7,6 +7,119 @@
             border-radius: 8px;
             border: 1px solid #ced4da;
         }
+
+        /* ── DESKTOP TABLE STYLES ── */
+        .table-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        
+        .promo-table {
+            border-collapse: collapse !important;
+            width: 100% !important; /* Forces table to fit screen */
+            margin-bottom: 0 !important;
+        }
+        
+        .promo-table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #e2e8f0 !important;
+            border-top: none !important;
+            padding: 1rem 0.75rem;
+            vertical-align: middle;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        
+        .promo-table tbody td {
+            white-space: normal !important; 
+            word-break: break-word !important; 
+            padding: 1rem 0.75rem !important;
+            vertical-align: middle;
+            font-size: 0.9rem !important;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        /* Protect the Action Column on Desktop */
+        .promo-table th:last-child,
+        .promo-table td:last-child {
+            min-width: 100px;
+            white-space: nowrap !important;
+        }
+
+        /* ==========================================================================
+           🔥 MORPH TABLE INTO CARDS ON MOBILE & TABLET (Max 1024px) 🔥
+           ========================================================================== */
+        @media screen and (max-width: 1024px) {
+            
+            .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
+            .table-card { overflow: visible !important; border: none !important; background: transparent !important; box-shadow: none !important; }
+            
+            .promo-table, 
+            .promo-table tbody, 
+            .promo-table tr, 
+            .promo-table td {
+                display: block !important;
+                width: 100% !important;
+                min-width: 0 !important; 
+                white-space: normal !important; 
+            }
+
+            .promo-table thead {
+                display: none !important;
+            }
+
+            .promo-table tbody tr {
+                margin-bottom: 1.25rem !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 12px !important;
+                padding: 1rem !important;
+                background: #ffffff !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+            }
+
+            .promo-table tbody td {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 0.6rem 0 !important;
+                border-bottom: 1px dashed #e2e8f0 !important;
+                text-align: right !important; 
+                border-top: none !important;
+            }
+            
+            /* Action Buttons Row */
+            .promo-table tbody td:last-child {
+                border-bottom: none !important;
+                padding-bottom: 0 !important;
+                margin-top: 0.5rem;
+                justify-content: flex-end !important;
+            }
+
+            .promo-table tbody td::before {
+                font-weight: 700;
+                color: #64748b;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+                text-align: left;
+                margin-right: 1rem;
+            }
+
+            /* --- COLUMN MAP FOR PROMO TABLE --- */
+            .promo-table tbody td:nth-child(1)::before { content: "Promo Code"; }
+            .promo-table tbody td:nth-child(2)::before { content: "Bonus (₹)"; }
+            .promo-table tbody td:nth-child(3)::before { content: "Target Agent"; }
+            .promo-table tbody td:nth-child(4)::before { content: "Usage Limit"; }
+            .promo-table tbody td:nth-child(5)::before { content: "Status"; }
+            .promo-table tbody td:nth-child(6)::before { content: "Actions"; display: none; }
+        }
     </style>
 <?php $__env->stopSection(); ?>
 
@@ -39,17 +152,18 @@
         </div>
     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-    <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+    <div class="table-card">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="bg-light text-uppercase text-muted" style="font-size: 0.8rem; letter-spacing: 0.05em;">
+                <table class="table table-hover mb-0 promo-table">
+                    <thead>
                         <tr>
-                            <th class="border-0 pl-4">Promo Code</th>
-                            <th class="border-0">Bonus (₹)</th>
-                            <th class="border-0">Target Agent</th>
-                            <th class="border-0">Usage Limit</th> <th class="border-0">Status</th>
-                            <th class="border-0 text-right pr-4">Actions</th>
+                            <th class="pl-4">Promo Code</th>
+                            <th>Bonus (₹)</th>
+                            <th>Target Agent</th>
+                            <th>Usage Limit</th> 
+                            <th>Status</th>
+                            <th class="text-right pr-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -58,21 +172,23 @@
                             <td class="pl-4 font-weight-bold text-primary"><?php echo e($coupon->code); ?></td>
                             <td class="font-weight-bold text-success">+ ₹<?php echo e(number_format($coupon->bonus_amount, 2)); ?></td>
                             <td>
-                                <?php
-                                    $targets = $coupon->target_agents ? json_decode($coupon->target_agents, true) : [];
-                                ?>
-                                
-                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(is_array($targets) && count($targets) > 0): ?>
-                                    <span class="badge badge-dark mb-1" style="border-radius: 6px;">
-                                        <?php echo e(count($targets)); ?> Agent(s) Targeted
-                                    </span>
-                                    <div class="text-xs text-muted" style="max-width: 150px; word-wrap: break-word;">
-                                        IDs: <?php echo e(implode(', ', $targets)); ?>
+                                <div>
+                                    <?php
+                                        $targets = $coupon->target_agents ? json_decode($coupon->target_agents, true) : [];
+                                    ?>
+                                    
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(is_array($targets) && count($targets) > 0): ?>
+                                        <span class="badge badge-dark mb-1" style="border-radius: 6px;">
+                                            <?php echo e(count($targets)); ?> Agent(s) Targeted
+                                        </span>
+                                        <div class="text-xs text-muted" style="max-width: 150px; word-wrap: break-word;">
+                                            IDs: <?php echo e(implode(', ', $targets)); ?>
 
-                                    </div>
-                                <?php else: ?>
-                                    <span class="badge badge-light border text-muted">All Agents</span>
-                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="badge badge-light border text-muted">All Agents</span>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </div>
                             </td>
                             <td>
                                 <div class="small">
@@ -91,19 +207,21 @@
                                     </span>
                                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                             </td>
-                            <td class="text-right pr-4">
-                                <form action="<?php echo e(route('admin.coupons.toggle', $coupon->id)); ?>" method="POST" class="d-inline">
-                                    <?php echo csrf_field(); ?>
-                                    <button type="submit" class="btn btn-sm <?php echo e($coupon->is_active ? 'btn-outline-danger' : 'btn-outline-success'); ?>" title="Toggle Status">
-                                        <i class="fas <?php echo e($coupon->is_active ? 'fa-ban' : 'fa-check'); ?>"></i>
-                                    </button>
-                                </form>
-                                <form action="<?php echo e(route('admin.coupons.destroy', $coupon->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Delete this promo permanently?');">
-                                    <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                            <td class="pr-4">
+                                <div class="d-flex justify-content-end align-items-center">
+                                    <form action="<?php echo e(route('admin.coupons.toggle', $coupon->id)); ?>" method="POST" class="d-inline mr-1">
+                                        <?php echo csrf_field(); ?>
+                                        <button type="submit" class="btn btn-sm <?php echo e($coupon->is_active ? 'btn-outline-danger' : 'btn-outline-success'); ?>" title="Toggle Status">
+                                            <i class="fas <?php echo e($coupon->is_active ? 'fa-ban' : 'fa-check'); ?>"></i>
+                                        </button>
+                                    </form>
+                                    <form action="<?php echo e(route('admin.coupons.destroy', $coupon->id)); ?>" method="POST" class="d-inline" onsubmit="return confirm('Delete this promo permanently?');">
+                                        <?php echo csrf_field(); ?> <?php echo method_field('DELETE'); ?>
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>

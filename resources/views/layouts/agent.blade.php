@@ -181,6 +181,28 @@
             100% { opacity: 1; transform: translateY(0); }
         }
 
+        /* ── GLOBAL RESPONSIVE DATA-TABLES ── */
+        table.modern-responsive-table {
+            border-collapse: collapse !important;
+            width: 100% !important; 
+            margin-bottom: 0 !important;
+        }
+        table.modern-responsive-table thead th {
+            white-space: nowrap;
+        }
+        table.modern-responsive-table tbody td {
+            white-space: normal !important; 
+            word-break: break-word !important; 
+            padding: 1rem 0.75rem !important;
+            vertical-align: middle;
+        }
+        /* Protect the Action Column on Desktop */
+        table.modern-responsive-table th:last-child,
+        table.modern-responsive-table td:last-child {
+            min-width: 100px;
+            white-space: nowrap !important;
+        }
+
         /* ── MOBILE ── */
         @media (max-width: 991px) {
             .sidebar { transform: translateX(-100%); }
@@ -193,6 +215,77 @@
             .sb-overlay.open { display: block; }
             .user-pill__info { display: none; } 
             .namaste-text { font-size: 1.1rem; }
+        }
+
+        /* ── MOBILE CARDS (GLOBAL TABLES) ── */
+        @media screen and (max-width: 1024px) {
+            .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
+            
+            table.modern-responsive-table, 
+            table.modern-responsive-table tbody, 
+            table.modern-responsive-table tr, 
+            table.modern-responsive-table td {
+                display: block !important;
+                width: 100% !important;
+                min-width: 0 !important; 
+                white-space: normal !important; 
+            }
+
+            table.modern-responsive-table thead { display: none !important; }
+
+            table.modern-responsive-table tbody tr {
+                margin-bottom: 1.25rem !important;
+                border: 1px solid var(--border) !important;
+                border-radius: 12px !important;
+                padding: 1rem !important;
+                background: var(--surface) !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+            }
+
+            table.modern-responsive-table tbody td {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 0.6rem 0 !important;
+                border-bottom: 1px dashed var(--ink-100) !important;
+                text-align: right !important; 
+                border-top: none !important;
+            }
+            
+            table.modern-responsive-table tbody td:last-child {
+                border-bottom: none !important;
+                padding-bottom: 0 !important;
+                margin-top: 0.5rem;
+                justify-content: flex-end !important;
+            }
+
+            /* The base style for the injected labels */
+            table.modern-responsive-table tbody td::before {
+                font-weight: 700;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+                text-align: left;
+                margin-right: 1rem;
+            }
+            
+            /* Fix odd row shadows from Bootstrap striped tables */
+            table.modern-responsive-table tbody tr:nth-of-type(odd) td {
+                box-shadow: none !important;
+                background-color: transparent !important;
+            }
+        }
+
+        /* ── EXTRA SMALL MOBILE TWEAKS (Phones < 576px) ── */
+        @media (max-width: 575px) {
+            .topbar { padding: 0 1rem; gap: 0.5rem; }
+            .namaste-text { font-size: 0.95rem; }
+            .user-pill { padding: 0.2rem 0.2rem 0.2rem 0.5rem; }
+            .user-pill__avatar { width: 32px; height: 32px; font-size: 0.8rem; margin-right: 0.5rem; }
+            .user-pill__logout { width: 32px; height: 32px; }
+            .user-pill__divider { margin: 0 0.3rem; }
+            .content-body { padding: 0.75rem; }
         }
 
         /* ── MINI MODE ── */

@@ -20,7 +20,7 @@
         }
     </style>
 </head>
-<body class="antialiased min-h-screen w-full transition-colors duration-300 bg-[#f4f7f5] dark:bg-[#0f172a]">
+<body class="antialiased min-h-screen w-full transition-colors duration-300 bg-[#f4f7f5] dark:bg-[#0f172a] overflow-x-hidden">
 
     <div class="flex min-h-screen items-center justify-center p-4 md:p-8">
         <div id="auth-container" class="w-full max-w-6xl overflow-hidden rounded-2xl relative opacity-0 scale-95 transition-all duration-500 ease-out bg-white shadow-2xl shadow-gray-200 dark:bg-slate-800 dark:shadow-xl dark:shadow-slate-900/50">
@@ -35,7 +35,7 @@
                 </svg>
             </button>
 
-            <div class="flex flex-col md:flex-row min-h-[600px]">
+            <div class="flex flex-col md:flex-row min-h-0 md:min-h-[600px]">
                 {{-- LEFT SIDE: Image Collage --}}
                 <div class="hidden md:block w-full md:w-3/5 p-6 animate-fade-in bg-[#f8faf9] dark:bg-slate-900/50">
                     <div class="grid grid-cols-2 grid-rows-3 gap-4 h-full overflow-hidden">
@@ -72,12 +72,12 @@
                 </div>
                 
                 {{-- RIGHT SIDE: Dynamic Form Slot --}}
-                <div class="stagger-anim opacity-0 translate-x-5 w-full md:w-2/5 p-8 md:p-12 flex flex-col justify-center relative transition-all duration-700 ease-out bg-white text-gray-900 dark:bg-slate-800 dark:text-white">
+                <div class="stagger-anim opacity-0 translate-x-5 w-full md:w-2/5 p-6 sm:p-8 md:p-12 flex flex-col justify-center relative transition-all duration-700 ease-out bg-white text-gray-900 dark:bg-slate-800 dark:text-white">
                     <div class="max-w-sm w-full mx-auto">
                         
                         {{-- Shared Logo --}}
                         <div class="flex flex-col items-center mb-8">
-                            <img src="{{ asset('assets/images/logo11.png') }}" alt="Easy Tax Logo" class="h-[6.5rem] w-auto object-contain" onerror="this.style.display='none'; document.getElementById('fallback-logo').classList.remove('hidden'); document.getElementById('fallback-logo').classList.add('flex');" />
+                            <img src="{{ asset('assets/images/logo11.png') }}" alt="Easy Tax Logo" class="h-20 sm:h-[6.5rem] w-auto object-contain" onerror="this.style.display='none'; document.getElementById('fallback-logo').classList.remove('hidden'); document.getElementById('fallback-logo').classList.add('flex');" />
                             <div id="fallback-logo" class="hidden flex-col items-center">
                                 <svg viewBox="0 0 120 100" class="w-[5.5rem] h-auto mx-auto mb-1">
                                     <defs><clipPath id="circle-clip-new"><circle cx="60" cy="45" r="38" /></clipPath></defs>

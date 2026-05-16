@@ -209,6 +209,7 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             padding: 1rem 0.75rem !important;
+            white-space: nowrap;
         }
         table.dataTable tbody td {
             padding: 1.2rem 0.75rem !important;
@@ -238,7 +239,7 @@
             .filter-group { width: 100%; }
         }
 
-        /* ── ULTRA-COMPACT TABLE (NO SCROLLING) ── */
+        /* ── DESKTOP FIT TABLE STYLES ── */
         .data-card { overflow: visible !important; }
         
         .compact-table {
@@ -248,23 +249,100 @@
         
         .compact-table th, 
         .compact-table td {
-            padding: 6px 4px !important; 
-            font-size: 0.75rem !important; 
             white-space: normal !important;
             vertical-align: middle !important;
             word-break: break-word;
         }
 
-        .compact-table .btn {
-            padding: 3px 6px !important;
-            font-size: 0.7rem !important;
-            line-height: 1.2;
-        }
-
+        /* Protect Action Buttons on Desktop */
         .compact-table th:last-child,
         .compact-table td:last-child {
-            min-width: 60px;
+            min-width: 100px;
+            white-space: nowrap !important;
             text-align: right;
+        }
+
+        /* ==========================================================================
+           🔥 MORPH TABLE INTO CARDS ON MOBILE & TABLET (Max 1024px) 🔥
+           ========================================================================== */
+        @media screen and (max-width: 1024px) {
+            
+            .data-card-body { padding: 1rem !important; }
+            .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
+            
+            table.compact-table, 
+            table.compact-table tbody, 
+            table.compact-table tr, 
+            table.compact-table td {
+                display: block !important;
+                width: 100% !important;
+                min-width: 0 !important; 
+                white-space: normal !important; 
+            }
+
+            table.compact-table thead {
+                display: none !important;
+            }
+
+            table.compact-table tbody tr {
+                margin-bottom: 1.25rem !important;
+                border: 1px solid var(--border-color) !important;
+                border-radius: 12px !important;
+                padding: 1rem !important;
+                background: #ffffff !important;
+                box-shadow: var(--card-shadow) !important;
+            }
+
+            table.compact-table tbody td {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 0.6rem 0 !important;
+                border-bottom: 1px dashed var(--border-color) !important;
+                text-align: right !important; 
+                border-top: none !important;
+            }
+            
+            table.compact-table tbody td:last-child {
+                border-bottom: none !important;
+                padding-bottom: 0 !important;
+                margin-top: 0.5rem;
+                justify-content: flex-end !important;
+            }
+
+            table.compact-table tbody td::before {
+                font-weight: 700;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+                text-align: left;
+                margin-right: 1rem;
+            }
+            
+            /* Fix hover odd shadows */
+            table.compact-table tbody tr:nth-of-type(odd) td {
+                box-shadow: none !important;
+                background-color: transparent !important;
+            }
+
+            /* --- BASE COLUMNS --- */
+            table.compact-table tbody td:nth-child(1)::before { content: "App ID"; }
+            table.compact-table tbody td:nth-child(2)::before { content: "Service Type"; }
+            table.compact-table tbody td:nth-child(3)::before { content: "Status"; }
+            table.compact-table tbody td:nth-child(4)::before { content: "Payment"; }
+            table.compact-table tbody td:nth-child(5)::before { content: "Amount"; }
+
+            /* --- STANDARD TABLE --- */
+            table.compact-table:not(.is-itr) tbody td:nth-child(6)::before { content: "Date Submitted"; }
+            table.compact-table:not(.is-itr) tbody td:nth-child(7)::before { content: "Actions"; display: none; }
+
+            /* --- ITR FILING TABLE --- */
+            table.compact-table.is-itr tbody td:nth-child(6)::before { content: "ACK NO"; }
+            table.compact-table.is-itr tbody td:nth-child(7)::before { content: "COMPUTATION"; }
+            table.compact-table.is-itr tbody td:nth-child(8)::before { content: "BALANCE SHEET"; }
+            table.compact-table.is-itr tbody td:nth-child(9)::before { content: "Date Submitted"; }
+            table.compact-table.is-itr tbody td:nth-child(10)::before { content: "Actions"; display: none; }
         }
     </style>
 @endsection
@@ -411,27 +489,30 @@
             </div>
 
            <div class="data-card-body">
-                <table id="applicationsTable" class="table w-100 compact-table">
-                    <thead>
-                        <tr>
-                            <th>App ID</th>
-                            <th>Service Type</th>
-                            <th>Status</th>
-                            <th>Payment</th>
-                            <th>Amount</th>
-                            
-                            {{-- Check URL param dynamically for Agent side headers --}}
-                            @if(request()->query('type') === 'itr-filing')
-                                <th>ACK NO</th>
-                                <th>COMPUTATION</th>
-                                <th>BALANCE SHEET</th>
-                            @endif
-                            
-                            <th>Date Submitted</th>
-                            <th class="text-right">Actions</th>
-                        </tr>
-                    </thead>
-                </table>
+               <div class="table-responsive">
+                    {{-- Added conditional 'is-itr' class here --}}
+                    <table id="applicationsTable" class="table w-100 compact-table @if(request()->query('type') === 'itr-filing') is-itr @endif">
+                        <thead>
+                            <tr>
+                                <th>App ID</th>
+                                <th>Service Type</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Amount</th>
+                                
+                                {{-- Check URL param dynamically for Agent side headers --}}
+                                @if(request()->query('type') === 'itr-filing')
+                                    <th>ACK NO</th>
+                                    <th>COMPUTATION</th>
+                                    <th>BALANCE SHEET</th>
+                                @endif
+                                
+                                <th>Date Submitted</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
             </div>
         </div>
 
