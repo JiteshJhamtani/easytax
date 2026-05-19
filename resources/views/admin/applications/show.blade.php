@@ -159,7 +159,7 @@
                         }
                     }
 
-                    // 🚨 4. CLEANUP FILTER: Remove any member that is completely empty (Members 3-8) 🚨
+                    //  4. CLEANUP FILTER: Remove any member that is completely empty (Members 3-8) 
                     foreach ($repeaterGroups as $prefix => $items) {
                         foreach ($items as $index => $itemData) {
                             $hasData = false;
@@ -243,14 +243,49 @@
                 ];
                 
                 $isCompanySetup = in_array($application->service->slug ?? '', $companyServices);
-                $isGstSetup = ($application->service->slug ?? '') === 'gst-registration';
+                $isGstSetup = in_array($application->service->slug ?? '', ['gst-registration', 'gst-return-filing']);
             @endphp
 
-            {{-- ADMIN INPUT FORM FOR COMPANY OR GST DELIVERABLES --}}
-           
+           {{-- ADMIN INPUT FORM FOR COMPANY OR GST DELIVERABLES --}}
+            @if($isCompanySetup || $isGstSetup || in_array($application->service->slug, ['gst-return-filing', 'gst-annual-package']))
+            <div class="card border-0 shadow-sm mb-4 mt-4 rounded-lg elegant-border">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h3 class="card-title font-weight-bold text-dark mb-0">
+                        <i class="fas fa-key text-warning mr-2"></i> {{ $isCompanySetup ? 'Company' : 'GST' }} Credentials & Deliverables
+                    </h3>
+                </div>
+                <div class="card-body p-4 bg-light rounded-bottom">
+                    <form action="{{ route('admin.applications.storeCredentials', $application->id) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">Portal Username / ID</label>
+                                @php 
+                                    // Bypasses the earlier array_filter so data stays visible after saving
+                                    $rawFormData = is_string($application->form_data) ? json_decode($application->form_data, true) : ($application->form_data ?? []); 
+                                @endphp
+                                <input type="text" name="admin_username" class="form-control border-light shadow-sm" placeholder="Enter username" value="{{ $rawFormData['admin_username'] ?? '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">Portal Password</label>
+                                <input type="text" name="admin_password" class="form-control border-light shadow-sm" placeholder="Enter password" value="{{ $rawFormData['admin_password'] ?? '' }}">
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">{{ $isCompanySetup ? 'Incorporation Certificate' : 'GST Certificate / Final Document' }}</label>
+                                <input type="file" name="final_document" class="form-control border-light shadow-sm" style="height:auto;padding:0.35rem 0.5rem;font-size:0.8rem;border-radius:6px;" accept=".pdf">
+                                <small class="text-muted mt-1 d-block">Only PDF files up to 5MB are allowed.</small>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary font-weight-bold mt-2 shadow-sm">
+                            <i class="fas fa-save mr-1"></i> Save Details
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @endif
         </div>
 
-        {{-- ── RIGHT COLUMN ── --}}
+        {{-- ── RIGHT COLUMN ──   --}}
         <div class="col-lg-4">
 
             {{-- ADMIN ACTIONS --}}
@@ -258,7 +293,7 @@
                 <div class="card-header bg-white py-3 border-bottom text-center">
                     <h3 class="card-title font-weight-bold text-dark w-100 float-none mb-0">
                         <i class="fas fa-cogs text-primary mr-2"></i> Admin Actions
-                    </h3>
+                    </h3> 
                 </div>
                 <div class="card-body p-4">
                     <form method="POST" action="{{ route('admin.applications.updateStatus', $application->id) }}">
