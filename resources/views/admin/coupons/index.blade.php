@@ -3,7 +3,7 @@
 @section('css')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
-        /* Makes Select2 look good inside bootstrap */
+        /* Makes Select2 look good inside bootstrap */ 
         .select2-container .select2-selection--multiple {
             min-height: 38px;
             border-radius: 8px;
@@ -56,7 +56,7 @@
         }
 
         /* ==========================================================================
-           🔥 MORPH TABLE INTO CARDS ON MOBILE & TABLET (Max 1024px) 🔥
+            MORPH TABLE INTO CARDS ON MOBILE & TABLET (Max 1024px) 
            ========================================================================== */
         @media screen and (max-width: 1024px) {
             
@@ -275,6 +275,21 @@
                         <small class="text-muted">Leave blank so ALL agents can use it.</small>
                     </div>
 
+                    {{-- NEW: Target Specific Services --}}
+                    <div class="form-group mt-3">
+                        <label class="font-weight-bold">Applicable Services (Optional)</label>
+                        <select name="target_services[]" class="form-control select2-services" multiple="multiple" style="width: 100%;">
+                            {{-- Assuming you pass $services from your controller --}}
+                            @if(isset($services))
+                                @foreach($services as $service)
+                                    <option value="{{ $service->id }}">{{ $service->name }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                        <small class="text-muted">Leave blank so it applies to ALL services.</small>
+                    </div>
+                    {{-- END NEW --}}
+
                     <div class="row mt-3">
                         <div class="col-md-6 form-group">
                             <label class="font-weight-bold">Total Campaign Uses</label>
@@ -306,11 +321,18 @@
         // Fix the modal trap
         $('#createPromoModal').appendTo('body');
         
-        // Initialize the multi-select dropdown
+        // Initialize the agents multi-select
         $('.select2-agents').select2({
             placeholder: "Search and select agents...",
             allowClear: true,
-            dropdownParent: $('#createPromoModal') // <--- CRITICAL FOR MODALS
+            dropdownParent: $('#createPromoModal')
+        });
+
+        // Initialize the services multi-select
+        $('.select2-services').select2({
+            placeholder: "Search and select services...",
+            allowClear: true,
+            dropdownParent: $('#createPromoModal')
         });
     });
 </script>
