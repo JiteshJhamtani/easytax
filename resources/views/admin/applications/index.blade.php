@@ -353,7 +353,7 @@
 {{-- DATA TABLE --}}
 <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
     <table id="applicationsTable" class="table w-100 @if($type === 'itr-filing') is-itr @endif">
-        <thead>
+       <thead>
             <tr>
                 <th>App ID</th>
                 <th>Agent</th>
@@ -368,7 +368,15 @@
                     <th>BALANCE SHEET</th>
                 @endif
                 <th>Date Submitted</th>
-                <th>Assign To</th>
+<th style="min-width: 160px; vertical-align: top;">
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+        <span>ASSIGN TO</span>
+        <label style="font-size: 0.75rem; font-weight: 500; text-transform: none; letter-spacing: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: #64748b; margin: 0;">
+            <input type="checkbox" id="autoAssignTenToggle" style="margin: 0; cursor: pointer;"> 
+            Auto-assign next 10
+        </label>
+    </div>
+</th>             
                 <th class="text-right">Actions</th>
             </tr>
         </thead>
@@ -524,40 +532,84 @@
 </div>
 
 @section('js')
- 
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
     <script src="{{ asset('assets/js/admin-applications.js') }}?v={{ time() }}"></script>
 
     <script>
-        // Handle Team Member Assignment 
-        $(document).on('change', '.assign-team-select', function() {
-            let select = $(this);
-            let appId = select.data('app-id');
-            let teamId = select.val();
-            let originalBg = select.css('background-color');
+        $(document).ready(function() {
+            
+            // Helper function to execute the AJAX call safely
+            function processAssignment(selectElement, appId, teamId, originalBg) {
+                // Disable while loading
+                selectElement.prop('disabled', true).css('background-color', '#f1f5f9');
 
-            // Disable while loading
-            select.prop('disabled', true).css('background-color', '#f1f5f9');
+                $.ajax({
+                    url: '/admin/applications/' + appId + '/assign',
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        team_id: teamId
+                    },
+                    success: function(res) {
+                        selectElement.prop('disabled', false).css('background-color', '#dcfce7'); // Flash success green
+                        setTimeout(() => selectElement.css('background-color', originalBg), 1000);
+                    },
+                    error: function(err) {
+                        // Revert value on error
+                        selectElement.val('');
+                        selectElement.prop('disabled', false).css('background-color', '#fee2e2'); // Flash error red
+                        setTimeout(() => selectElement.css('background-color', originalBg), 1000);
+                    }
+                });
+            }
 
-            $.ajax({
-                // Hits the /team/admin/applications/{id}/assign route directly
-                url: '/admin/applications/' + appId + '/assign',
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    team_id: teamId
-                },
-                success: function(res) {
-                    select.prop('disabled', false).css('background-color', '#dcfce7'); // Flash success green
-                    setTimeout(() => select.css('background-color', originalBg), 1000);
-                },
-                error: function(err) {
-                    select.prop('disabled', false).css('background-color', '#fee2e2'); // Flash error red
-                    setTimeout(() => select.css('background-color', originalBg), 1000);
-                    alert('Failed to assign team member.');
+            // Handle Team Member Assignment 
+            $(document).on('change', '.assign-team-select', function() {
+                let primarySelect = $(this);
+                let primaryAppId = primarySelect.data('app-id');
+                let teamId = primarySelect.val();
+                let originalBg = primarySelect.css('background-color');
+                
+                let isAutoAssignActive = $('#autoAssignTenToggle').is(':checked');
+
+                // If user cleared the dropdown, just update this single row and abort
+                if (!teamId) {
+                    processAssignment(primarySelect, primaryAppId, teamId, originalBg);
+                    return;
                 }
+
+                // Create an array of dropdowns to process. Always starts with the one clicked.
+                let selectsToProcess = [primarySelect];
+
+                // If the checkbox is ticked, find the next 9 unassigned applications
+                if (isAutoAssignActive) {
+                    $('.assign-team-select').each(function() {
+                        // Stop searching once we hit 10 total applications
+                        if (selectsToProcess.length >= 10) return false; 
+                        
+                        let currentSelect = $(this);
+                        
+                        // Check if this dropdown is currently empty (unassigned) and is NOT the one we just clicked
+                        if (currentSelect.val() == "" && currentSelect.data('app-id') !== primaryAppId) {
+                            
+                            // Visually update the dropdown for the user immediately
+                            currentSelect.val(teamId);
+                            
+                            // Add to our processing queue
+                            selectsToProcess.push(currentSelect);
+                        }
+                    });
+                }
+
+                // Execute the assignments
+                // We run them simultaneously, leveraging the existing logic
+                selectsToProcess.forEach(function(selectEl) {
+                    let id = selectEl.data('app-id');
+                    processAssignment(selectEl, id, teamId, originalBg);
+                });
             });
+            
         });
     </script>
 @endsection

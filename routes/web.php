@@ -44,11 +44,6 @@ Route::get('/track/{application}', [\App\Http\Controllers\Front\ApplicationContr
     ->middleware('signed'); // This is the magic lock!
 // ---------------------------------
 
-Route::get('/clear-cache', function () {
-    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-    return "<h2 style='color:green; font-family:sans-serif;'>✅ Laravel Cache Cleared Successfully!</h2>";
-});
-
 Route::get('/pages/{slug}', [\App\Http\Controllers\Front\PageController::class, 'show'])
     ->name('pages.show');
 
