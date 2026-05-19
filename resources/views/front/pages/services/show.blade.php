@@ -254,6 +254,33 @@
             .actions-inner { flex-direction: column-reverse; }
             .btn-outline-secondary, .btn-submit { width: 100%; text-align: center; justify-content: center; }
         }
+
+        /* ── WIZARD UI STYLES ── */
+        .wizard-step { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .wizard-step.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .wizard-header {
+            display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid var(--border-light); padding-bottom: 1rem;
+        }
+        
+        .wizard-tab {
+            flex: 1; text-align: center; font-size: 0.85rem; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.05em; padding: 0.5rem; position: relative; transition: color 0.3s;
+        }
+        
+        .wizard-tab.active { color: var(--brand-green); }
+        .wizard-tab.active::after {
+            content: ''; position: absolute; bottom: -17px; left: 0; right: 0; height: 3px; background: var(--brand-green); border-radius: 3px 3px 0 0;
+        }
+        
+        .wizard-actions {
+            display: flex; justify-content: space-between; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-light);
+        }
     </style>
 @endsection
 
@@ -320,7 +347,10 @@
         
 
     {{-- LIVE PRICE PREVIEW BOX WITH COUPON SYSTEM --}}
-                    @if(in_array($service->slug, ['gst-return-filing', 'itr-filing','gst-annual-package']))
+                    @if(in_array
+                    ($service->slug, ['gst-return-filing', 'itr-filing','gst-annual-package',
+                    'gst-registration']
+                    ))
                         <div class="card border-success mb-4 shadow-sm mt-4">
                             <div class="card-body bg-success-soft">
                                 <table class="table table-sm table-borderless mb-0 font-weight-bold">
@@ -344,15 +374,13 @@
                                     </tr>
                                 </table>
                                 
-                                @if($service->slug === 'itr-filing')
                                 <div class="input-group mt-3">
-                                    <input type="text" id="promo-code-input" class="form-control text-uppercase" placeholder="Enter Promo Code (e.g. ITR50)" style="min-height: 38px;">
+                                    <input type="text" id="promo-code-input" class="form-control text-uppercase" placeholder="Enter Promo Code" style="min-height: 38px;">
                                     <div class="input-group-append">
                                         <button class="btn btn-dark" type="button" id="apply-promo-btn" style="border-radius: 0 8px 8px 0;">Apply</button>
                                     </div>
                                 </div>
                                 <small id="promo-message" class="form-text text-muted mt-1"></small>
-                                @endif
 
                             </div>
                         </div>
@@ -367,27 +395,449 @@
     :toPay="$amountToPay" 
 />
 
-@endsection
 
+@endsection
 @section('js')
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    {{-- REMOVED Duplicate jQuery and Popper to prevent conflicts with your Master Layout --}}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="{{ asset('assets/js/form.js') }}"></script>
 
     {{-- ── MAIN FORM BRAIN ── --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        // ── 1. GLOBAL VARIABLES & PRICING RULES ──
+        const rawRules = @json($service->pricingRules ?? []);
+        const pricingRules = Array.isArray(rawRules) ? rawRules : Object.values(rawRules);
+        let appliedPromoBonus = 0;
+        let appliedPromoCode = '';
 
-            // ── PRICING RULES ──────────────────────────────── 
-            const rawRules = @json($service->pricingRules ?? []);
-            const pricingRules = Array.isArray(rawRules) ? rawRules : Object.values(rawRules);
+        function normalizeValue(val) {
+            return val ? String(val).toLowerCase().trim() : '';
+        }
 
-            function normalizeValue(val) {
-                return val ? String(val).toLowerCase().trim() : '';
+       // ── 2. SMART TOOLTIP INJECTION ENGINE ──
+        function injectTooltips() {
+            const helpers = {
+                // Filing Details
+                'has_capital_gains': 'Did the client sell property, gold, shares, or mutual funds this year?',
+                'has_business': 'Does the client own a shop, trade, or work as a freelancer?',
+                'turnover': 'Total sales or earnings from the business before expenses.',
+                'it_password': 'If the client doesn\'t remember, select No. We will reset it for them.',
+                
+                // Bank Details
+                'ifsc_code': 'Found on the client\'s bank passbook or cheque leaf.',
+                'bank_account_number': 'We need this so the Income Tax Dept knows where to send the refund.',
+                
+                // Documents
+                'form_16': 'Ask the salaried client for the PDF their HR department gave them.',
+                'broker_statement': 'Download from apps like Zerodha, Groww, or AngelOne.',
+                'profit_loss_statement': 'A summary of business income and expenses.',
+                'balance_sheet': 'Required for formal business accounts.',
+                'pan': 'Upload a clear, readable photo of the PAN card front.',
+                'aadhaar': 'Upload a clear photo of the Aadhaar card.'
+            };
+
+            Object.keys(helpers).forEach(function(fieldName) {
+                let $field = $('[name="' + fieldName + '"]');
+                if($field.length) {
+                    let $label = $field.closest('.form-group').find('label').first();
+                    if($label.find('.tax-tooltip-icon').length === 0) {
+                        
+                        // Protect against quotes breaking the HTML
+                        let safeContent = helpers[fieldName].replace(/"/g, '&quot;');
+                        
+                        $label.append(` 
+                            <i class="fas fa-question-circle text-primary tax-tooltip-icon ml-1" 
+                               tabindex="0" 
+                               data-toggle="popover" 
+                               data-trigger="hover focus" 
+                               data-placement="top" 
+                               data-content="${safeContent}" 
+                               style="cursor: pointer; font-size: 0.85rem;">
+                            </i>
+                        `);
+                    }
+                }
+            });
+
+            try {
+                $('[data-toggle="popover"]').popover();
+            } catch (error) {
+                console.warn("Bootstrap popover unavailable. Using standard tooltips.");
+                $('.tax-tooltip-icon').each(function() {
+                    $(this).attr('title', $(this).attr('data-content'));
+                });
+            }
+        }
+        // ── 3. SMART CONDITIONAL LOGIC ──
+        function initSmartFormLogic() {
+            const logicMap = {
+                'has_salary': { inputs: ['salary_amount'], docs: ['form_16'] },
+                'has_business': { inputs: ['business_amount', 'turnover'], docs: ['profit_loss_statement', 'balance_sheet'] },
+                'has_capital_gains': { inputs: [], docs: ['broker_statement'] }
+            };
+
+            function toggleDependentFields(triggerName) {
+                let val = $('select[name="' + triggerName + '"]').val() || $('input[name="' + triggerName + '"]:checked').val() || '';
+                val = val.toLowerCase().trim();
+                let isYes = (val === 'yes');
+                let config = logicMap[triggerName];
+                
+                config.inputs.forEach(fieldName => {
+                    let $input = $('[name="' + fieldName + '"]');
+                    let $wrapper = $input.closest('.form-group');
+                    if (isYes) { $wrapper.slideDown(250); } 
+                    else { $wrapper.slideUp(250); $input.val('').trigger('change'); }
+                });
+
+                config.docs.forEach(docName => {
+                    let $doc = $('input[type="file"][name="' + docName + '"]');
+                    let $wrapper = $doc.closest('.form-group');
+                    if (isYes) { 
+                        $wrapper.slideDown(250); 
+                        if ($doc.data('was-required')) $doc.prop('required', true);
+                    } else { 
+                        $wrapper.slideUp(250); 
+                        $doc.data('was-required', $doc.prop('required')); 
+                        $doc.prop('required', false).val(''); 
+                    }
+                });
             }
 
-            // ── INCOME TAX PASSWORD LOGIC ────────────────────
+            Object.keys(logicMap).forEach(triggerName => {
+                $('form').on('change', '[name="' + triggerName + '"]', function() {
+                    toggleDependentFields(triggerName);
+                });
+                toggleDependentFields(triggerName);
+            });
+        }
+
+      // ── 4. AUTO-MAGIC WIZARD GENERATOR (Now with Clickable Tabs) ──
+        function convertToWizard() {
+            let $sections = $('.form-section');
+            if ($sections.length <= 1) return; 
+
+            let headerHtml = '<div class="wizard-header">';
+            $sections.each(function(index) {
+                let title = $(this).find('h3').text().trim() || 'Step ' + (index + 1);
+                // Added cursor:pointer to make it obvious they are clickable
+                headerHtml += `<div class="wizard-tab ${index === 0 ? 'active' : ''}" data-step="${index}" style="cursor: pointer;">${title}</div>`;
+                
+                $(this).addClass('wizard-step').attr('data-step', index);
+                if (index === 0) $(this).addClass('active');
+
+                let buttonsHtml = '<div class="wizard-actions col-12">';
+                if (index > 0) {
+                    buttonsHtml += `<button type="button" class="btn btn-outline-secondary btn-prev">← Previous</button>`;
+                } else {
+                    buttonsHtml += `<div></div>`;
+                }
+
+                if (index < $sections.length - 1) {
+                    buttonsHtml += `<button type="button" class="btn btn-dark btn-next" style="background: #111827; color: white;">Next Step →</button>`;
+                } else {
+                    let $submitBtn = $('.btn-submit').closest('.form-actions-sticky');
+                    if($submitBtn.length) {
+                        buttonsHtml += $submitBtn.html();
+                        $submitBtn.hide(); 
+                    }
+                }
+                buttonsHtml += '</div>';
+                $(this).append(buttonsHtml);
+            });
+            headerHtml += '</div>';
+
+            $('.form-body form').prepend(headerHtml);
+
+            // Function to handle switching steps safely
+            function goToStep($current, targetIndex) {
+                $current.removeClass('active');
+                $('.wizard-step[data-step="' + targetIndex + '"]').addClass('active');
+                $('.wizard-tab').removeClass('active');
+                $('.wizard-tab[data-step="' + targetIndex + '"]').addClass('active');
+                window.scrollTo({ top: $('.sv-card').offset().top - 50, behavior: 'smooth' });
+            }
+
+            // Next Button Click
+            $('.btn-next').on('click', function(e) {
+                e.preventDefault();
+                let $current = $(this).closest('.wizard-step');
+                
+                let isValid = true;
+                $current.find(':input[required]:visible').each(function() {
+                    if (!this.checkValidity()) {
+                        this.reportValidity();
+                        isValid = false;
+                        return false; 
+                    }
+                });
+
+                if (isValid) {
+                    goToStep($current, $current.data('step') + 1);
+                }
+            });
+
+            // Previous Button Click
+            $('.btn-prev').on('click', function(e) {
+                e.preventDefault();
+                let $current = $(this).closest('.wizard-step');
+                goToStep($current, $current.data('step') - 1);
+            });
+
+            // 🟢 NEW: Clickable Tabs Logic 🟢
+            $('.wizard-tab').on('click', function() {
+                let targetIndex = $(this).data('step');
+                let $currentTab = $('.wizard-tab.active');
+                let currentIndex = $currentTab.data('step');
+                let $currentStep = $('.wizard-step[data-step="' + currentIndex + '"]');
+
+                if (targetIndex === currentIndex) return; // Do nothing if clicking current tab
+
+                // If jumping FORWARD, validate the current step first so they can't skip required fields
+                if (targetIndex > currentIndex) {
+                    let isValid = true;
+                    $currentStep.find(':input[required]:visible').each(function() {
+                        if (!this.checkValidity()) {
+                            this.reportValidity();
+                            isValid = false;
+                            return false; 
+                        }
+                    });
+                    if (!isValid) return; // Stop them from jumping
+                }
+
+                // If jumping backward, or if forward validation passed, switch steps
+                goToStep($currentStep, targetIndex);
+            });
+        }
+
+        // ── 5. BANK REPEATER & GST NESTED FIELDS ──
+        function initBankRepeater() {
+            let currentVisibleBank = 1;
+            let maxBanks = 5; 
+
+            for(let i = 2; i <= maxBanks; i++) {
+                let accInput = $('input[name="bank_account_number_' + i + '"]');
+                let ifscInput = $('input[name="ifsc_code_' + i + '"]');
+                if (accInput.length === 0) break;
+
+                if (accInput.val() !== '' || ifscInput.val() !== '') {
+                    currentVisibleBank = i; 
+                } else {
+                    accInput.closest('.form-group').hide();
+                    ifscInput.closest('.form-group').hide();
+                }
+            }
+
+            let lastVisibleIfscName = currentVisibleBank === 1 ? 'ifsc_code' : 'ifsc_code_' + currentVisibleBank;
+            let lastVisibleIfscWrapper = $('input[name="' + lastVisibleIfscName + '"]').closest('.form-group');
+
+            if(lastVisibleIfscWrapper.length > 0 && $('input[name="bank_account_number_' + (currentVisibleBank + 1) + '"]').length > 0) {
+                lastVisibleIfscWrapper.after(`
+                    <div class="col-12 mb-3 mt-2 form-group" id="add-bank-wrapper">
+                        <button type="button" id="add-bank-btn" class="btn btn-sm" style="background-color: #1E9C5D; color: white; border-radius: 5px; font-weight: bold; padding: 6px 16px; border: none;">
+                            + Add Another Bank
+                        </button>
+                    </div>
+                `);
+            }
+
+            $(document).off('click', '#add-bank-btn').on('click', '#add-bank-btn', function() {
+                currentVisibleBank++;
+                let nextAccWrapper = $('input[name="bank_account_number_' + currentVisibleBank + '"]').closest('.form-group');
+                let nextIfscWrapper = $('input[name="ifsc_code_' + currentVisibleBank + '"]').closest('.form-group');
+
+                nextAccWrapper.slideDown(250);
+                nextIfscWrapper.slideDown(250);
+                $('#add-bank-wrapper').insertAfter(nextIfscWrapper);
+
+                if($('input[name="bank_account_number_' + (currentVisibleBank + 1) + '"]').length === 0) {
+                    $('#add-bank-wrapper').hide();
+                }
+            });
+        }
+
+        function handleNestedFields() {
+            let businessVal = $('input[name="has_business"]:checked').val();
+            let itrTurnoverWrapper = $('input[name="turnover"]').closest('.form-group');
+            if (businessVal === 'yes') {
+                itrTurnoverWrapper.slideDown(200);
+            } else if (businessVal !== undefined) {
+                itrTurnoverWrapper.slideUp(200);
+                $('input[name="turnover"]').prop('checked', false);
+            }
+
+            let gstType = $('select[name="gst_type"]').val();
+            let frequencyDropdown = $('select[name="frequency_of_return"]');
+            
+            if (gstType === 'composition') {
+                $('select[name="annual_turnover_range"] option[value="nil_turnover"]').show();
+                $('select[name="annual_turnover_range"] option[value="with_turnover"]').show();
+                $('select[name="annual_turnover_range"] option[value="nil"]').hide();
+                $('select[name="annual_turnover_range"] option[value="upto_35"]').hide();
+                $('select[name="annual_turnover_range"] option[value="above_35"]').hide();
+                
+                let ct = $('select[name="annual_turnover_range"]').val();
+                if (['nil','upto_35','above_35'].includes(ct)) $('select[name="annual_turnover_range"]').val('');
+                
+                frequencyDropdown.find('option[value="monthly"]').hide();
+                frequencyDropdown.find('option[value="annual"]').hide();
+                frequencyDropdown.find('option[value="quarterly"]').show();
+                frequencyDropdown.find('option[value="annual_gstr4"]').show();
+                
+                let cf = frequencyDropdown.val();
+                if (['monthly','annual'].includes(cf)) frequencyDropdown.val('').trigger('change');
+                
+            } else if (gstType === 'regular') {
+                $('select[name="annual_turnover_range"] option[value="nil"]').show();
+                $('select[name="annual_turnover_range"] option[value="upto_35"]').show();
+                $('select[name="annual_turnover_range"] option[value="above_35"]').show();
+                $('select[name="annual_turnover_range"] option[value="nil_turnover"]').hide();
+                $('select[name="annual_turnover_range"] option[value="with_turnover"]').hide();
+                
+                let ct = $('select[name="annual_turnover_range"]').val();
+                if (['nil_turnover','with_turnover'].includes(ct)) $('select[name="annual_turnover_range"]').val('');
+                
+                frequencyDropdown.find('option[value="monthly"]').show();
+                frequencyDropdown.find('option[value="quarterly"]').show();
+                frequencyDropdown.find('option[value="annual"]').show();
+                frequencyDropdown.find('option[value="annual_gstr4"]').hide();
+                
+                let cf = frequencyDropdown.val();
+                if (['annual_gstr4'].includes(cf)) frequencyDropdown.val('').trigger('change');
+            }
+
+            let frequency = frequencyDropdown.val();
+            let planWrapper    = $('select[name="plan"]').closest('.form-group');
+            let monthWrapper   = $('select[name="month"]').closest('.form-group');
+            let quarterWrapper = $('select[name="quarter"]').closest('.form-group');
+            
+            if (frequency === 'monthly') {
+                planWrapper.show(); monthWrapper.show(); quarterWrapper.hide();
+                $('select[name="plan"] option[value="yearly_12"]').show();
+                $('select[name="plan"] option[value="yearly_4"]').hide();
+            } else if (frequency === 'quarterly') {
+                planWrapper.show(); monthWrapper.hide(); quarterWrapper.show();
+                $('select[name="plan"] option[value="yearly_4"]').show();
+                $('select[name="plan"] option[value="yearly_12"]').hide();
+            } else if (frequency === 'annual' || frequency === 'annual_gstr4' || frequency === 'annual_gstr9') {
+                planWrapper.hide(); monthWrapper.hide(); quarterWrapper.hide();
+                $('select[name="plan"]').val('');
+                $('select[name="month"]').val('');
+                $('select[name="quarter"]').val('');
+            }
+        }
+
+        // ── 6. DYNAMIC PRICING CALCULATOR ──
+        function calculateDynamicPrice() {
+            let selectedGst  = normalizeValue($('select[name="gst_type"]').val() || $('input[name="gst_type"]:checked').val());
+            let selectedFreq = normalizeValue($('select[name="frequency_of_return"]').val() || $('input[name="frequency_of_return"]:checked').val());
+            let selectedPlan = normalizeValue($('select[name="plan"]').val() || $('input[name="plan"]:checked').val());
+            let s_type = normalizeValue($('select[name="itr_type"]').val() || $('input[name="itr_type"]:checked').val());
+            let s_bus  = normalizeValue($('select[name="has_business"]').val() || $('input[name="has_business"]:checked').val());
+            let s_cg   = normalizeValue($('select[name="has_capital_gains"]').val() || $('input[name="has_capital_gains"]:checked').val());
+            let s_sal  = normalizeValue($('select[name="has_salary"]').val() || $('input[name="has_salary"]:checked').val());
+            let selectedTurnover = normalizeValue($('select[name="turnover"]').val() || $('input[name="turnover"]:checked').val() || $('select[name="annual_turnover_range"]').val() || $('select[name="total_bills"]').val());
+            
+            let match = pricingRules.find(rule => {
+                return (normalizeValue(rule.gst_type)          === '' || normalizeValue(rule.gst_type)          === 'any' || normalizeValue(rule.gst_type)          === selectedGst) &&
+                       (normalizeValue(rule.frequency)         === '' || normalizeValue(rule.frequency)         === 'any' || normalizeValue(rule.frequency)         === selectedFreq) &&
+                       (normalizeValue(rule.plan)              === '' || normalizeValue(rule.plan)              === 'any' || normalizeValue(rule.plan)              === selectedPlan) &&
+                       (normalizeValue(rule.turnover)          === '' || normalizeValue(rule.turnover)          === 'any' || normalizeValue(rule.turnover)          === selectedTurnover) &&
+                       (normalizeValue(rule.itr_type)          === '' || normalizeValue(rule.itr_type)          === 'any' || normalizeValue(rule.itr_type)          === s_type) &&
+                       (normalizeValue(rule.itr_business)      === '' || normalizeValue(rule.itr_business)      === 'any' || normalizeValue(rule.itr_business)      === s_bus) &&
+                       (normalizeValue(rule.itr_capital_gains) === '' || normalizeValue(rule.itr_capital_gains) === 'any' || normalizeValue(rule.itr_capital_gains) === s_cg) &&
+                       (normalizeValue(rule.itr_salary)        === '' || normalizeValue(rule.itr_salary)        === 'any' || normalizeValue(rule.itr_salary)        === s_sal);
+            });
+
+            let finalTotal   = match ? parseFloat(match.base_price)        : {{ $service->price ?? 0 }};
+            let baseComm     = match ? parseFloat(match.commission_amount) : {{ $service->commission_value ?? 0 }};
+            
+            let totalComm = baseComm + appliedPromoBonus;
+            let walletDeduct = finalTotal - totalComm;
+
+            if(walletDeduct < 0) walletDeduct = 0;
+
+            $('#calc-total').text(finalTotal.toFixed(2));
+            $('#calc-comm').text(baseComm.toFixed(2));
+            $('#calc-deduct').text(walletDeduct.toFixed(2));
+        }
+
+        // ── 7. OTHER DYNAMIC HIDE/SHOW ENGINE (Directors/Partners) ──
+        function applyDynamicHideShow() {
+            const REPEATER_CONFIGS = [
+                { trigger: 'number_of_members', prefix: 'member' },
+                { trigger: 'number_of_directors', prefix: 'director' },
+                { trigger: 'number_of_partners', prefix: 'partner' }
+            ];
+
+            REPEATER_CONFIGS.forEach(cfg => {
+                let $dropdown = $('select').filter(function() {
+                    return ($(this).attr('name') || '').includes(cfg.trigger);
+                });
+                
+                if ($dropdown.length === 0) return;
+
+                $dropdown.on('change', function() {
+                    let count = parseInt($(this).val()) || 0;
+                    
+                    for (let i = 1; i <= 8; i++) {
+                        let $dataFields = $(':input').not('[type="file"]').filter(function() {
+                            return ($(this).attr('name') || '').includes(cfg.prefix + '_' + i + '_');
+                        });
+                        
+                        let $fileFields = $('input[type="file"]').filter(function() {
+                            let name = $(this).attr('name') || '';
+                            return name.endsWith('_' + i) || name.includes('_' + i + ']') || name.includes('_' + i + '[');
+                        });
+                        
+                        let sectionTitleRegex = new RegExp(cfg.prefix + '\\s+' + i, 'i');
+                        let $section = $('.form-section').filter(function() {
+                            let text = $(this).find('h3').text();
+                            return sectionTitleRegex.test(text);
+                        });
+
+                        let $containers = $dataFields.closest('.form-group').add($fileFields.closest('.form-group'));
+
+                        if (i <= count) {
+                            $containers.show();
+                            $section.show();
+                            $dataFields.add($fileFields).each(function() {
+                                if ($(this).data('was-required')) { $(this).prop('required', true); }
+                            });
+                        } else {
+                            $containers.hide();
+                            $section.hide();
+                            $dataFields.add($fileFields).each(function() {
+                                if ($(this).prop('required')) {
+                                    $(this).data('was-required', true);
+                                    $(this).prop('required', false);
+                                }
+                                if ($(this).is(':checkbox, :radio')) { $(this).prop('checked', false); } 
+                                else { $(this).val(''); }
+                            });
+                        }
+                    }
+                });
+
+                $dropdown.trigger('change');
+            });
+        }
+
+
+        // ── 🟢 THE MASTER INITIALIZER (RUNS ON PAGE LOAD) 🟢 ──
+        $(document).ready(function() {
+            // FIX THE MODAL FREEZE BUG: Move the modal safely out of the nested wrapper
+            $('#cheatSheetModal').appendTo('body');
+
+            // 1. Build the UI
+            injectTooltips();
+            convertToWizard();
+            initSmartFormLogic();
+            initBankRepeater();
+            applyDynamicHideShow();
+
+            // 2. Setup IT Password Dropdown Behavior
             let $itPasswordInput = $('input[name="it_password"]');
             if ($itPasswordInput.length > 0) {
                 let $itPasswordContainer = $itPasswordInput.closest('.form-group');
@@ -403,6 +853,7 @@
                 $itPasswordContainer.before(dropdownHtml);
                 $itPasswordContainer.hide();
                 $itPasswordInput.prop('required', false);
+                
                 $('#has_it_password').on('change', function() {
                     let val = $(this).val();
                     if (val === 'yes') {
@@ -418,292 +869,14 @@
                 });
             }
 
-           function handleNestedFields() {
-                let businessVal = $('input[name="has_business"]:checked').val();
-                let itrTurnoverWrapper = $('input[name="turnover"]').closest('.form-group');
-                if (businessVal === 'yes') {
-                    itrTurnoverWrapper.slideDown(200);
-                } else if (businessVal !== undefined) {
-                    itrTurnoverWrapper.slideUp(200);
-                    $('input[name="turnover"]').prop('checked', false);
-                }
-
-                let gstType = $('select[name="gst_type"]').val();
-                let frequencyDropdown = $('select[name="frequency_of_return"]');
-                if (gstType === 'composition') {
-                    $('select[name="annual_turnover_range"] option[value="nil_turnover"]').show();
-                    $('select[name="annual_turnover_range"] option[value="with_turnover"]').show();
-                    $('select[name="annual_turnover_range"] option[value="nil"]').hide();
-                    $('select[name="annual_turnover_range"] option[value="upto_35"]').hide();
-                    $('select[name="annual_turnover_range"] option[value="above_35"]').hide();
-                    let ct = $('select[name="annual_turnover_range"]').val();
-                    if (['nil','upto_35','above_35'].includes(ct)) $('select[name="annual_turnover_range"]').val('');
-                    frequencyDropdown.find('option[value="monthly"]').hide();
-                    frequencyDropdown.find('option[value="annual"]').hide();
-                    frequencyDropdown.find('option[value="quarterly"]').show();
-                    frequencyDropdown.find('option[value="annual_gstr4"]').show();
-                    let cf = frequencyDropdown.val();
-                    if (['monthly','annual'].includes(cf)) frequencyDropdown.val('').trigger('change');
-                } else if (gstType === 'regular') {
-                    $('select[name="annual_turnover_range"] option[value="nil"]').show();
-                    $('select[name="annual_turnover_range"] option[value="upto_35"]').show();
-                    $('select[name="annual_turnover_range"] option[value="above_35"]').show();
-                    $('select[name="annual_turnover_range"] option[value="nil_turnover"]').hide();
-                    $('select[name="annual_turnover_range"] option[value="with_turnover"]').hide();
-                    let ct = $('select[name="annual_turnover_range"]').val();
-                    if (['nil_turnover','with_turnover'].includes(ct)) $('select[name="annual_turnover_range"]').val('');
-                    frequencyDropdown.find('option[value="monthly"]').show();
-                    frequencyDropdown.find('option[value="quarterly"]').show();
-                    frequencyDropdown.find('option[value="annual"]').show();
-                    frequencyDropdown.find('option[value="annual_gstr4"]').hide();
-                    let cf = frequencyDropdown.val();
-                    if (['annual_gstr4'].includes(cf)) frequencyDropdown.val('').trigger('change');
-                }
-
-                let frequency = frequencyDropdown.val();
-                let planWrapper    = $('select[name="plan"]').closest('.form-group');
-                let monthWrapper   = $('select[name="month"]').closest('.form-group');
-                let quarterWrapper = $('select[name="quarter"]').closest('.form-group');
-                
-                if (frequency === 'monthly') {
-                    planWrapper.show(); monthWrapper.show(); quarterWrapper.hide();
-                    $('select[name="plan"] option[value="yearly_12"]').show();
-                    $('select[name="plan"] option[value="yearly_4"]').hide();
-                } else if (frequency === 'quarterly') {
-                    planWrapper.show(); monthWrapper.hide(); quarterWrapper.show();
-                    $('select[name="plan"] option[value="yearly_4"]').show();
-                    $('select[name="plan"] option[value="yearly_12"]').hide();
-                } 
-                else if (frequency === 'annual' || frequency === 'annual_gstr4' || frequency === 'annual_gstr9') {
-                    planWrapper.hide(); monthWrapper.hide(); quarterWrapper.hide();
-                    $('select[name="plan"]').val('');
-                    $('select[name="month"]').val('');
-                    $('select[name="quarter"]').val('');
-                }
-            }
-
-           // ── GLOBAL PROMO VARIABLES ──
-            let appliedPromoBonus = 0;
-            let appliedPromoCode = '';
-
-            // ── PRICING CALCULATOR ───────────────────────────
-            function calculateDynamicPrice() {
-                let selectedGst  = normalizeValue($('select[name="gst_type"]').val() || $('input[name="gst_type"]:checked').val());
-                let selectedFreq = normalizeValue($('select[name="frequency_of_return"]').val() || $('input[name="frequency_of_return"]:checked').val());
-                let selectedPlan = normalizeValue($('select[name="plan"]').val() || $('input[name="plan"]:checked').val());
-                let s_type = normalizeValue($('select[name="itr_type"]').val() || $('input[name="itr_type"]:checked').val());
-                let s_bus  = normalizeValue($('select[name="has_business"]').val() || $('input[name="has_business"]:checked').val());
-                let s_cg   = normalizeValue($('select[name="has_capital_gains"]').val() || $('input[name="has_capital_gains"]:checked').val());
-                let s_sal  = normalizeValue($('select[name="has_salary"]').val() || $('input[name="has_salary"]:checked').val());
-                let selectedTurnover = normalizeValue($('select[name="turnover"]').val() || $('input[name="turnover"]:checked').val() || $('select[name="annual_turnover_range"]').val() || $('select[name="total_bills"]').val());
-                
-                let match = pricingRules.find(rule => {
-                    return (normalizeValue(rule.gst_type)          === '' || normalizeValue(rule.gst_type)          === 'any' || normalizeValue(rule.gst_type)          === selectedGst) &&
-                           (normalizeValue(rule.frequency)         === '' || normalizeValue(rule.frequency)         === 'any' || normalizeValue(rule.frequency)         === selectedFreq) &&
-                           (normalizeValue(rule.plan)              === '' || normalizeValue(rule.plan)              === 'any' || normalizeValue(rule.plan)              === selectedPlan) &&
-                           (normalizeValue(rule.turnover)          === '' || normalizeValue(rule.turnover)          === 'any' || normalizeValue(rule.turnover)          === selectedTurnover) &&
-                           (normalizeValue(rule.itr_type)          === '' || normalizeValue(rule.itr_type)          === 'any' || normalizeValue(rule.itr_type)          === s_type) &&
-                           (normalizeValue(rule.itr_business)      === '' || normalizeValue(rule.itr_business)      === 'any' || normalizeValue(rule.itr_business)      === s_bus) &&
-                           (normalizeValue(rule.itr_capital_gains) === '' || normalizeValue(rule.itr_capital_gains) === 'any' || normalizeValue(rule.itr_capital_gains) === s_cg) &&
-                           (normalizeValue(rule.itr_salary)        === '' || normalizeValue(rule.itr_salary)        === 'any' || normalizeValue(rule.itr_salary)        === s_sal);
-                });
-
-                let finalTotal   = match ? parseFloat(match.base_price)        : {{ $service->price ?? 0 }};
-                let baseComm     = match ? parseFloat(match.commission_amount) : {{ $service->commission_value ?? 0 }};
-                
-                // ADD THE COUPON BONUS TO THE COMMISSION
-                let totalComm = baseComm + appliedPromoBonus;
-                let walletDeduct = finalTotal - totalComm;
-
-                // Ensure wallet deduct never goes below 0
-                if(walletDeduct < 0) walletDeduct = 0;
-
-                $('#calc-total').text(finalTotal.toFixed(2));
-                $('#calc-comm').text(baseComm.toFixed(2));
-                $('#calc-deduct').text(walletDeduct.toFixed(2));
-            }
-
+            // 3. Setup Pricing & Nested Field Listeners
             $('form').on('change', 'select, input[type="radio"]', function() {
                 handleNestedFields();
                 calculateDynamicPrice();
             });
             setTimeout(() => { handleNestedFields(); calculateDynamicPrice(); }, 500);
 
-            function initIncomeFields() {
-                // Safely get values whether they are Dropdowns or Radio buttons
-                let hasSalary = $('select[name="has_salary"]').val() || $('input[name="has_salary"]:checked').val() || '';
-                let hasBusiness = $('select[name="has_business"]').val() || $('input[name="has_business"]:checked').val() || '';
-                
-                // Convert to lowercase so 'Yes', 'YES', and 'yes' all work perfectly
-                hasSalary = hasSalary.toLowerCase().trim();
-                hasBusiness = hasBusiness.toLowerCase().trim();
-                
-                if (hasSalary !== 'yes') $('input[name="salary_amount"]').closest('.form-group').hide();
-                if (hasBusiness !== 'yes') $('input[name="business_amount"]').closest('.form-group').hide();
-            }
-
-            $('form').on('change', '[name="has_salary"], [name="has_business"]', function() {
-                let name = $(this).attr('name');
-                let val = $(this).val() ? $(this).val().toLowerCase().trim() : '';
-                
-                let amountInput = (name === 'has_salary') ? $('input[name="salary_amount"]') : $('input[name="business_amount"]');
-                let wrapper = amountInput.closest('.form-group');
-
-                if (val === 'yes') {
-                    wrapper.slideDown(250);
-                } else {
-                    wrapper.slideUp(250);
-                    amountInput.val(''); 
-                }
-            });
-            
-            function initBankRepeater() {
-                let currentVisibleBank = 1;
-                let maxBanks = 5; // Adjust this if you made more than 5 in admin
-
-                // 1. Check which banks actually have data (crucial for form validation reloads)
-                for(let i = 2; i <= maxBanks; i++) {
-                    let accInput = $('input[name="bank_account_number_' + i + '"]');
-                    let ifscInput = $('input[name="ifsc_code_' + i + '"]');
-
-                    // Stop checking if these fields don't exist in the HTML at all
-                    if (accInput.length === 0) break;
-
-                    // If Laravel repopulated data after an error, KEEP IT VISIBLE
-                    if (accInput.val() !== '' || ifscInput.val() !== '') {
-                        currentVisibleBank = i; 
-                    } else {
-                        // Safe to hide
-                        accInput.closest('.form-group').hide();
-                        ifscInput.closest('.form-group').hide();
-                    }
-                }
-
-                // 2. Inject Button safely immediately after the LAST currently visible bank
-                let lastVisibleIfscName = currentVisibleBank === 1 ? 'ifsc_code' : 'ifsc_code_' + currentVisibleBank;
-                let lastVisibleIfscWrapper = $('input[name="' + lastVisibleIfscName + '"]').closest('.form-group');
-
-                // Only inject if there is actually room for another bank
-                if(lastVisibleIfscWrapper.length > 0 && $('input[name="bank_account_number_' + (currentVisibleBank + 1) + '"]').length > 0) {
-                    lastVisibleIfscWrapper.after(`
-                        <div class="col-12 mb-3 mt-2 form-group" id="add-bank-wrapper">
-                            <button type="button" id="add-bank-btn" class="btn btn-sm" style="background-color: #1E9C5D; color: white; border-radius: 5px; font-weight: bold; padding: 6px 16px; border: none;">
-                                + Add Another Bank
-                            </button>
-                        </div>
-                    `);
-                }
-
-                // 3. Button Click Event
-                $(document).off('click', '#add-bank-btn').on('click', '#add-bank-btn', function() {
-                    currentVisibleBank++;
-                    
-                    let nextAccWrapper = $('input[name="bank_account_number_' + currentVisibleBank + '"]').closest('.form-group');
-                    let nextIfscWrapper = $('input[name="ifsc_code_' + currentVisibleBank + '"]').closest('.form-group');
-
-                    nextAccWrapper.slideDown(250);
-                    nextIfscWrapper.slideDown(250);
-                    
-                    $('#add-bank-wrapper').insertAfter(nextIfscWrapper);
-
-                    // If we reached the last bank available in the HTML, hide the button
-                    if($('input[name="bank_account_number_' + (currentVisibleBank + 1) + '"]').length === 0) {
-                        $('#add-bank-wrapper').hide();
-                    }
-                });
-            }
-
-            // Run initializers immediately 
-            $(document).ready(function() {
-                initIncomeFields();
-                initBankRepeater();
-            });
-// ── SMART FORM HIDE/SHOW ENGINE ─────────────────────────── 
-            const REPEATER_CONFIGS = [
-                { trigger: 'number_of_members', prefix: 'member' },
-                { trigger: 'number_of_directors', prefix: 'director' },
-                { trigger: 'number_of_partners', prefix: 'partner' }
-            ];
-
-            function applyDynamicHideShow() {
-                REPEATER_CONFIGS.forEach(cfg => {
-                    // Find the dropdown (handles normal names or array names)
-                    let $dropdown = $('select').filter(function() {
-                        return ($(this).attr('name') || '').includes(cfg.trigger);
-                    });
-                    
-                    if ($dropdown.length === 0) return; // Skip if this service doesn't have it
-
-                    $dropdown.on('change', function() {
-                        let count = parseInt($(this).val()) || 0;
-                        
-                        // Loop 1 through 8 (Max potential fields)
-                        for (let i = 1; i <= 8; i++) {
-                            
-                            // 1. Find Data Fields (e.g., member_1_name)
-                            let $dataFields = $(':input').not('[type="file"]').filter(function() {
-                                return ($(this).attr('name') || '').includes(cfg.prefix + '_' + i + '_');
-                            });
-                            
-                            // 2. Find Document Uploads (BULLETPROOF FILE FINDER)
-                            let $fileFields = $('input[type="file"]').filter(function() {
-                                let name = $(this).attr('name') || '';
-                                // This matches bank_statement_1, documents[bank_statement_1], bank_statement_1[], etc.
-                                return name.endsWith('_' + i) || name.includes('_' + i + ']') || name.includes('_' + i + '[');
-                            });
-                            
-                            // 3. Find the Entire Section Wrapper (e.g., "Member 1 Details")
-                            let sectionTitleRegex = new RegExp(cfg.prefix + '\\s+' + i, 'i');
-                            let $section = $('.form-section').filter(function() {
-                                let text = $(this).find('h3').text();
-                                return sectionTitleRegex.test(text);
-                            });
-
-                            // Group all wrappers to hide/show cleanly
-                            let $containers = $dataFields.closest('.form-group').add($fileFields.closest('.form-group'));
-
-                            if (i <= count) {
-                                // SHOW: The user needs this index
-                                $containers.show();
-                                $section.show();
-                                
-                                // Re-apply 'required' if the field originally needed it
-                                $dataFields.add($fileFields).each(function() {
-                                    if ($(this).data('was-required')) {
-                                        $(this).prop('required', true);
-                                    }
-                                });
-                            } else {
-                                // HIDE: The user doesn't need this index
-                                $containers.hide();
-                                $section.hide();
-                                
-                                // Remove 'required' so the form can submit without error, and clear values
-                                $dataFields.add($fileFields).each(function() {
-                                    if ($(this).prop('required')) {
-                                        $(this).data('was-required', true); // Remember it was required
-                                        $(this).prop('required', false);
-                                    }
-                                    if ($(this).is(':checkbox, :radio')) {
-                                        $(this).prop('checked', false);
-                                    } else {
-                                        $(this).val('');
-                                    }
-                                });
-                            }
-                        }
-                    });
-
-                    // Trigger immediately on page load to hide extras
-                    $dropdown.trigger('change');
-                });
-            }
-
-            // Start the engine
-            applyDynamicHideShow();
-
-
-            // ── COUPON SYSTEM LOGIC ───────────────────────────
+            // 4. Setup Coupon Logic
             $('#apply-promo-btn').on('click', function() {
                 let codeInput = $('#promo-code-input').val().toUpperCase().trim();
                 let $btn = $(this);
@@ -714,7 +887,6 @@
                 $btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
                 $msg.removeClass('text-danger text-success').addClass('text-muted').text("Verifying code...");
 
-                // Call the backend API
                 fetch('/agent/validate-coupon', {
                     method: 'POST',
                     headers: {
@@ -729,28 +901,20 @@
                 .then(response => response.json())
                 .then(data => {
                     $btn.html('Apply');
-
                     if (data.valid) {
-                        // Update global variables
                         appliedPromoBonus = parseFloat(data.bonus);
                         appliedPromoCode = data.code;
-
-                        // Show the UI Row
                         $('#promo-row').show();
                         $('#applied-promo-name').text(data.code);
                         $('#promo-bonus-amount').text(appliedPromoBonus.toFixed(2));
-
-                        // Recalculate totals
                         calculateDynamicPrice();
 
-                        // Add a hidden input directly inside the form so Laravel gets it on submit
                         if($('#hidden-coupon-input').length === 0) {
                             $('form').append('<input type="hidden" name="applied_coupon" id="hidden-coupon-input" value="'+data.code+'">');
                         } else {
                             $('#hidden-coupon-input').val(data.code);
                         }
 
-                        // Lock the UI now 
                         $('#promo-code-input').prop('disabled', true);
                         $msg.removeClass('text-muted text-danger').addClass('text-success font-weight-bold').html('<i class="fas fa-check-circle"></i> Promo applied successfully!');
                     } else {
@@ -764,70 +928,46 @@
                 });
             });
 
-        }); // end DOMContentLoaded
+        }); // END MASTER INITIALIZER
 
-        // ── THE OMNISCIENT MUTATION OBSERVER ENGINE ──────────────────
-            console.log("Add-More Script is officially loaded and watching...");
-
-            (function() {
-                // Create an observer that watches the entire page for HTML changes
-                var observer = new MutationObserver(function(mutations, obs) {
-                    
-                    // Look for our 30 documents
-                    var myDocs = $('input[type="file"]').filter(function() {
-                        return $(this).attr('name') && $(this).attr('name').includes('bill_doc_');
-                    });
-
-                    // If it found them AND we haven't added the button yet...
-                    if (myDocs.length > 0 && $('#add-more-bills-btn').length === 0) {
-                        
-                        console.log("Form detected! Hiding 29 documents now.");
-
-                        // 1. Hide documents 2 through 30
-                        myDocs.each(function(index) {
-                            if (index > 0) { 
-                                $(this).closest('.form-group').hide();
-                            }
-                        });
-
-                        // 2. Inject the Button right below the first document
-                        let firstWrapper = myDocs.first().closest('.form-group');
-                        firstWrapper.after(`
-                            <div class="col-12 mb-3 mt-2" id="add-more-wrapper">
-                                <button type="button" id="add-more-bills-btn" class="btn btn-primary btn-sm" style="background-color: #0d6efd; color: white; border-radius: 5px; padding: 6px 16px; border: none; font-weight: bold; cursor: pointer;">
-                                    + Add Another Bill
-                                </button>
-                            </div>
-                        `);
-
-                        // 3. Button Click Logic
-                        let visibleCount = 1;
-                        $(document).off('click', '#add-more-bills-btn').on('click', '#add-more-bills-btn', function() {
-                            if (visibleCount < myDocs.length) {
-                                let nextWrapper = $(myDocs[visibleCount]).closest('.form-group');
-                                nextWrapper.slideDown(250);
-                                
-                                // Move the button down below the newly opened box
-                                $('#add-more-wrapper').insertAfter(nextWrapper);
-                                
-                                visibleCount++;
-                            }
-
-                            // Hide the button permanently if they reach 30
-                            if (visibleCount >= myDocs.length) {
-                                $('#add-more-wrapper').hide();
-                            }
-                        });
-                    }
+        // ── 8. THE OMNISCIENT MUTATION OBSERVER ENGINE ──
+        (function() {
+            var observer = new MutationObserver(function(mutations, obs) {
+                var myDocs = $('input[type="file"]').filter(function() {
+                    return $(this).attr('name') && $(this).attr('name').includes('bill_doc_');
                 });
 
-                // Start watching the body for any dynamic HTML injections
-                observer.observe(document.body, { childList: true, subtree: true });
-            })();
+                if (myDocs.length > 0 && $('#add-more-bills-btn').length === 0) {
+                    myDocs.each(function(index) {
+                        if (index > 0) { $(this).closest('.form-group').hide(); }
+                    });
+
+                    let firstWrapper = myDocs.first().closest('.form-group');
+                    firstWrapper.after(`
+                        <div class="col-12 mb-3 mt-2" id="add-more-wrapper">
+                            <button type="button" id="add-more-bills-btn" class="btn btn-primary btn-sm" style="background-color: #0d6efd; color: white; border-radius: 5px; padding: 6px 16px; border: none; font-weight: bold; cursor: pointer;">
+                                + Add Another Bill
+                            </button>
+                        </div>
+                    `);
+
+                    let visibleCount = 1;
+                    $(document).off('click', '#add-more-bills-btn').on('click', '#add-more-bills-btn', function() {
+                        if (visibleCount < myDocs.length) {
+                            let nextWrapper = $(myDocs[visibleCount]).closest('.form-group');
+                            nextWrapper.slideDown(250);
+                            $('#add-more-wrapper').insertAfter(nextWrapper);
+                            visibleCount++;
+                        }
+                        if (visibleCount >= myDocs.length) { $('#add-more-wrapper').hide(); }
+                    });
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+        })();
     </script>
     
-   
-    {{-- ── RAZORPAY GATEWAY INVOCATION ── --}}
+    {{-- ── 9. RAZORPAY GATEWAY INVOCATION ── --}}
     @if (session('razorpay_order'))
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -841,7 +981,6 @@
                     name: 'EasyTax',
                     description: 'Application Processing Fee',
                     handler: function(response) {
-                        // User paid successfully! Send them to the payment.success route
                         const form = document.createElement('form');
                         form.method = 'POST';
                         form.action = '{{ route('payment.success') }}';
@@ -863,13 +1002,8 @@
                         document.body.appendChild(form);
                         form.submit();
                     },
-
-
-                    
-
                     modal: {
                         ondismiss: function() {
-                            // User closed the Razorpay window without paying
                             const form = document.createElement('form');
                             form.method = 'POST';
                             form.action = '{{ route('payment.failure') }}';
@@ -894,12 +1028,8 @@
                 };
 
                 const rzp = new Razorpay(options);
-                
-                // Add a tiny delay so the page can finish rendering before the popup takes over
                 setTimeout(() => { rzp.open(); }, 300);
             });
-
-           
-</script>
+        </script>
     @endif
 @endsection
