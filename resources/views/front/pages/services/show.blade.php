@@ -438,12 +438,13 @@
             };
 
             Object.keys(helpers).forEach(function(fieldName) {
-                let $field = $('[name="' + fieldName + '"]');
-                if($field.length) {
-                    let $label = $field.closest('.form-group').find('label').first();
-                    if($label.find('.tax-tooltip-icon').length === 0) {
+                let $fields = $('[name*="' + fieldName + '"]');
+                
+                $fields.each(function() {
+                    let $label = $(this).closest('.form-group').find('label').first();
+                    
+                    if($label.length && $label.find('.tax-tooltip-icon').length === 0) {
                         
-                        // Protect against quotes breaking the HTML
                         let safeContent = helpers[fieldName].replace(/"/g, '&quot;');
                         
                         $label.append(` 
@@ -457,7 +458,7 @@
                             </i>
                         `);
                     }
-                }
+                });
             });
 
             try {
