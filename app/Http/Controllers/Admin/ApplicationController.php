@@ -512,7 +512,7 @@ class ApplicationController extends Controller
         $request->validate([
             'admin_username' => 'nullable|string', 
             'admin_password' => 'nullable|string',
-            'final_document' => 'nullable|file|mimes:pdf,png,jpg,jpeg|max:5120',
+            'final_document' => 'nullable|file|mimes:pdf|max:5120',
         ]);
 
         // Safely decode JSON if it comes out as a string

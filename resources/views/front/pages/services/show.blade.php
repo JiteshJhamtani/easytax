@@ -529,6 +529,95 @@
             });
             setTimeout(() => { handleNestedFields(); calculateDynamicPrice(); }, 500);
 
+            function initIncomeFields() {
+                // Safely get values whether they are Dropdowns or Radio buttons
+                let hasSalary = $('select[name="has_salary"]').val() || $('input[name="has_salary"]:checked').val() || '';
+                let hasBusiness = $('select[name="has_business"]').val() || $('input[name="has_business"]:checked').val() || '';
+                
+                // Convert to lowercase so 'Yes', 'YES', and 'yes' all work perfectly
+                hasSalary = hasSalary.toLowerCase().trim();
+                hasBusiness = hasBusiness.toLowerCase().trim();
+                
+                if (hasSalary !== 'yes') $('input[name="salary_amount"]').closest('.form-group').hide();
+                if (hasBusiness !== 'yes') $('input[name="business_amount"]').closest('.form-group').hide();
+            }
+
+            $('form').on('change', '[name="has_salary"], [name="has_business"]', function() {
+                let name = $(this).attr('name');
+                let val = $(this).val() ? $(this).val().toLowerCase().trim() : '';
+                
+                let amountInput = (name === 'has_salary') ? $('input[name="salary_amount"]') : $('input[name="business_amount"]');
+                let wrapper = amountInput.closest('.form-group');
+
+                if (val === 'yes') {
+                    wrapper.slideDown(250);
+                } else {
+                    wrapper.slideUp(250);
+                    amountInput.val(''); 
+                }
+            });
+            
+            function initBankRepeater() {
+                let currentVisibleBank = 1;
+                let maxBanks = 5; // Adjust this if you made more than 5 in admin
+
+                // 1. Check which banks actually have data (crucial for form validation reloads)
+                for(let i = 2; i <= maxBanks; i++) {
+                    let accInput = $('input[name="bank_account_number_' + i + '"]');
+                    let ifscInput = $('input[name="ifsc_code_' + i + '"]');
+
+                    // Stop checking if these fields don't exist in the HTML at all
+                    if (accInput.length === 0) break;
+
+                    // If Laravel repopulated data after an error, KEEP IT VISIBLE
+                    if (accInput.val() !== '' || ifscInput.val() !== '') {
+                        currentVisibleBank = i; 
+                    } else {
+                        // Safe to hide
+                        accInput.closest('.form-group').hide();
+                        ifscInput.closest('.form-group').hide();
+                    }
+                }
+
+                // 2. Inject Button safely immediately after the LAST currently visible bank
+                let lastVisibleIfscName = currentVisibleBank === 1 ? 'ifsc_code' : 'ifsc_code_' + currentVisibleBank;
+                let lastVisibleIfscWrapper = $('input[name="' + lastVisibleIfscName + '"]').closest('.form-group');
+
+                // Only inject if there is actually room for another bank
+                if(lastVisibleIfscWrapper.length > 0 && $('input[name="bank_account_number_' + (currentVisibleBank + 1) + '"]').length > 0) {
+                    lastVisibleIfscWrapper.after(`
+                        <div class="col-12 mb-3 mt-2 form-group" id="add-bank-wrapper">
+                            <button type="button" id="add-bank-btn" class="btn btn-sm" style="background-color: #1E9C5D; color: white; border-radius: 5px; font-weight: bold; padding: 6px 16px; border: none;">
+                                + Add Another Bank
+                            </button>
+                        </div>
+                    `);
+                }
+
+                // 3. Button Click Event
+                $(document).off('click', '#add-bank-btn').on('click', '#add-bank-btn', function() {
+                    currentVisibleBank++;
+                    
+                    let nextAccWrapper = $('input[name="bank_account_number_' + currentVisibleBank + '"]').closest('.form-group');
+                    let nextIfscWrapper = $('input[name="ifsc_code_' + currentVisibleBank + '"]').closest('.form-group');
+
+                    nextAccWrapper.slideDown(250);
+                    nextIfscWrapper.slideDown(250);
+                    
+                    $('#add-bank-wrapper').insertAfter(nextIfscWrapper);
+
+                    // If we reached the last bank available in the HTML, hide the button
+                    if($('input[name="bank_account_number_' + (currentVisibleBank + 1) + '"]').length === 0) {
+                        $('#add-bank-wrapper').hide();
+                    }
+                });
+            }
+
+            // Run initializers immediately 
+            $(document).ready(function() {
+                initIncomeFields();
+                initBankRepeater();
+            });
 // ── SMART FORM HIDE/SHOW ENGINE ─────────────────────────── 
             const REPEATER_CONFIGS = [
                 { trigger: 'number_of_members', prefix: 'member' },
@@ -612,6 +701,7 @@
 
             // Start the engine
             applyDynamicHideShow();
+
 
             // ── COUPON SYSTEM LOGIC ───────────────────────────
             $('#apply-promo-btn').on('click', function() {

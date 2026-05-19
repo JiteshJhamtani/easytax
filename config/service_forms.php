@@ -124,7 +124,7 @@ return [
                         'name' => 'itr_type',
                         'label' => 'Financial/Tax Year',
                         'type' => 'select',
-                        'required' => false,
+                        'required' => true,
                         'validation' => 'required|string',
                         'options' => [
                             '2027-28' => 'F.Y. 2027-28',
@@ -138,7 +138,7 @@ return [
                         'name' => 'type_user',
                         'label' => 'User Type',
                         'type' => 'select',
-                        'required' => false,
+                        'required' => true,
                         'validation' => 'required|string',
                         'options' => [
                             'vle' => 'VLE',
@@ -146,21 +146,10 @@ return [
                         ],
                     ],
                     [
-                        'name' => 'has_business',
-                        'label' => 'Business / Other Income?',
-                        'type' => 'select',
-                        'required' => false,
-                        'validation' => 'required|string',
-                        'options' => [
-                            'yes' => 'Yes',
-                            'no' => 'No',
-                        ],
-                    ],
-                    [
                         'name' => 'turnover',
                         'label' => 'Business Turnover',
                         'type' => 'select',
-                        'required' => false,
+                        'required' => true,
                         'validation' => '',
                         'options' => [
                             'less_than_20l' => 'Less than 20 Lakh Sales',
@@ -171,7 +160,7 @@ return [
                         'name' => 'has_salary',
                         'label' => 'Salary Income?',
                         'type' => 'select',
-                        'required' => false,
+                        'required' => true,
                         'validation' => 'required|string',
                         'options' => [
                             'yes' => 'Yes',
@@ -189,7 +178,7 @@ return [
                         'name' => 'has_capital_gains',
                         'label' => 'Capital Gain Transactions?',
                         'type' => 'select',
-                        'required' => false,
+                        'required' => true,
                         'validation' => 'required|string',
                         'options' => [
                             'yes' => 'Yes',
@@ -227,6 +216,24 @@ return [
                         'required' => false,
                         'validation' => 'nullable|string',
                     ],
+                    [
+                        'name' => 'has_business',
+                        'label' => 'Business / Other Income?',
+                        'type' => 'select',
+                        'required' => false,
+                        'validation' => 'required|string',
+                        'options' => [
+                            'yes' => 'Yes',
+                            'no' => 'No',
+                        ],
+                    ],
+                    [
+                        'name' => 'business_amount',
+                        'label' => 'Enter Total business Amount',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|numeric|min:0',
+                    ],
                 ],
             ],
             'bank_details' => [
@@ -243,47 +250,47 @@ return [
                         'name' => 'ifsc_code',
                         'label' => 'IFSC Code',
                         'type' => 'text',
-                        'required' => false,
+                        'required' => true,
                         'validation' => 'required|string',
                     ],
                     [
-                        'name' => 'bank_account_number2',
+                        'name' => 'bank_account_number_2',
                         'label' => '2nd Bank Account Number(optional)',
                         'type' => 'text',
                         'required' => false,
                         'validation' => 'nullable|string',
                     ],
                     [
-                        'name' => 'ifsc_code2',
-                        'label' => 'IFSC Code',
+                        'name' => 'ifsc_code_2',
+                        'label' => '2nd IFSC Code',
                         'type' => 'text',
                         'required' => false,
                         'validation' => 'nullable|string',
                     ],
                     [
-                        'name' => 'bank_account_number3',
+                        'name' => 'bank_account_number_3',
                         'label' => '3rd Bank Account Number(optional)',
                         'type' => 'text',
                         'required' => false,
                         'validation' => 'nullable|string',
                     ],
                     [
-                        'name' => 'ifsc_code3',
-                        'label' => 'IFSC Code',
+                        'name' => 'ifsc_code_3',
+                        'label' => '3rd IFSC Code',
                         'type' => 'text',
                         'required' => false,
                         'validation' => 'nullable|string',
                     ],
                     [
-                        'name' => 'bank_account_number4',
+                        'name' => 'bank_account_number_4',
                         'label' => '4th Bank Account Number(optional)',
                         'type' => 'text',
                         'required' => false,
                         'validation' => 'nullable|string',
                     ],
                     [
-                        'name' => 'ifsc_code4',
-                        'label' => 'IFSC Code',
+                        'name' => 'ifsc_code_4',
+                        'label' => '4th IFSC Code',
                         'type' => 'text',
                         'required' => false,
                         'validation' => 'nullable|string',
@@ -295,7 +302,7 @@ return [
             [
                 'name' => 'form_16',
                 'label' => 'Form 16 (For Salaried)',
-                'required' => false,
+                'required' => true,
                 'mimes' => [
                     'pdf',
                 ],
@@ -351,7 +358,7 @@ return [
             [
                 'name' => 'pan',
                 'label' => 'PAN Card',
-                'required' => false,
+                'required' => true,
                 'mimes' => [
                     'pdf',
                     'jpg',
@@ -361,7 +368,7 @@ return [
             [
                 'name' => 'aadhaar',
                 'label' => 'Aadhaar  Card',
-                'required' => false,
+                'required' => true,
                 'mimes' => [
                     'pdf',
                     'jpg',
@@ -5692,7 +5699,7 @@ return [
             [
                 'name' => 'director_pan',
                 'label' => 'PAN Card (Director)',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'jpg',
@@ -5702,7 +5709,7 @@ return [
             [
                 'name' => 'director_address_proof',
                 'label' => 'Address Proof (Director)',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'jpg',
@@ -5712,7 +5719,7 @@ return [
             [
                 'name' => 'director_passport_photo',
                 'label' => 'Passport Size Photograph (Director)',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'jpg',
                     'png',
@@ -5721,7 +5728,7 @@ return [
             [
                 'name' => 'director_bank_statement',
                 'label' => 'Bank Statement (Director)',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'jpg',
@@ -5731,7 +5738,7 @@ return [
             [
                 'name' => 'nominee_pan',
                 'label' => 'PAN Card (Nominee)',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'jpg',
@@ -5741,7 +5748,7 @@ return [
             [
                 'name' => 'nominee_address_proof',
                 'label' => 'Address Proof (Nominee)',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'jpg',
@@ -5751,7 +5758,7 @@ return [
             [
                 'name' => 'nominee_passport_photo',
                 'label' => 'Passport Size Photograph (Nominee)',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'jpg',
                     'png',
@@ -5760,7 +5767,7 @@ return [
             [
                 'name' => 'registered_office_proof',
                 'label' => 'Registered Office Address Proof (Electricity Bill / Rent Agreement)',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'jpg',
