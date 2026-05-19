@@ -39,11 +39,27 @@ class CouponController extends Controller
             return response()->json(['valid' => false, 'message' => 'This promo code has expired.']);
         }
 
-        // SCENARIO 4: Code is locked to a different service
+        // SCENARIO 4: Code is locked to a single legacy service (Old Method)
         if ($coupon->service_id) {
             $service = DB::table('services')->where('slug', $serviceSlug)->first();
             if ($service && $coupon->service_id != $service->id) {
                 return response()->json(['valid' => false, 'message' => 'This code cannot be used for this specific service.']);
+            }
+        }
+
+        //  SCENARIO 4B: Code is locked to multiple specific services (NEW METHOD)
+        if (!empty($coupon->target_services)) {
+            // Fetch the service the user is currently trying to buy
+            $currentService = DB::table('services')->where('slug', $serviceSlug)->first();
+            
+            if ($currentService) {
+                // Decode the JSON array of allowed service IDs (e.g., ["1", "4"])
+                $allowedServices = json_decode($coupon->target_services, true);
+                
+                // If it's a valid array, and the current service ID is NOT in that array, reject it
+                if (is_array($allowedServices) && count($allowedServices) > 0 && !in_array($currentService->id, $allowedServices)) {
+                    return response()->json(['valid' => false, 'message' => 'This promo code is not valid for the selected service.']);
+                }
             }
         }
 
@@ -63,7 +79,7 @@ class CouponController extends Controller
             return response()->json(['valid' => false, 'message' => 'You have already used this promo code the maximum allowed times.']);
         }
 
-        // 🚀 SCENARIO 7: Code is locked to a SPECIFIC Agent (Cross-Server Check)
+        // SCENARIO 7: Code is locked to a SPECIFIC Agent (Cross-Server Check)
         if (!empty($coupon->target_agents)) {
             $allowedAgents = json_decode($coupon->target_agents, true);
 
