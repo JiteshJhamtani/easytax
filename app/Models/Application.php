@@ -71,15 +71,20 @@ return $this->belongsTo(Service::class, 'service_id');
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('documents')
-            ->useDisk('private') // change from public
-            ->acceptsMimeTypes([
-                'application/pdf',
-                'image/jpeg',
-                'image/png',
-                'application/vnd.ms-excel',
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            ]);
+        $collections = [
+            'documents',
+            'admin_uploads',
+            'itr_acknowledgement',
+            'computation_sheet',
+            'moa_document',
+            'aoa_document',
+            'final_deliverables',
+            'balance_sheet'
+        ];
+
+        foreach ($collections as $collection) {
+            $this->addMediaCollection($collection)->useDisk('private');
+        }
     }
 
     /*

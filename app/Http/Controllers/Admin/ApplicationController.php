@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ApplicationsExport;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ApplicationsExport;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Maatwebsite\Excel\Facades\Excel;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+
+
 
 class ApplicationController extends Controller
 {
-
-   public function index(Request $request)
+    public function index(Request $request)
     {
         $type = $request->query('type', 'other');
         $pageTitle = match ($type) {
@@ -30,19 +31,19 @@ class ApplicationController extends Controller
         $services = Service::where('active', true)->get();
         $agents = User::where('role', 'agent')->get();
 
-         // --- NEW DYNAMIC KPI LOGIC ---
-       
-       $query = Application::query();
+        // --- NEW DYNAMIC KPI LOGIC ---
 
-       if ($type === 'incomplete') {
-           $query->where(function ($q) {
-               $q->whereIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
-                 ->orWhereIn('payment_status', ['FAILED', 'PENDING']);
-           })->whereNotIn('status', ['SUBMITTED', 'IN_PROGRESS', 'E_FILING', 'OTP_VERIFICATION', 'COMPLETED']);
-       } else {
-           $query->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
-                 ->where('payment_status', '!=', 'FAILED');
-       }
+        $query = Application::query();
+
+        if ($type === 'incomplete') {
+            $query->where(function ($q) {
+                $q->whereIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+                    ->orWhereIn('payment_status', ['FAILED', 'PENDING']);
+            })->whereNotIn('status', ['SUBMITTED', 'IN_PROGRESS', 'E_FILING', 'OTP_VERIFICATION', 'COMPLETED']);
+        } else {
+            $query->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+                ->where('payment_status', '!=', 'FAILED');
+        }
 
         $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
 
@@ -64,7 +65,7 @@ class ApplicationController extends Controller
             SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
             SUM(CASE WHEN payment_status = 'FAILED' THEN 1 ELSE 0 END) as failed
         ")->first();
-        
+
         // -----------------------------
 
         $teamMembers = \App\Models\User::whereIn('role', ['TEAM', 'team', 'ADMIN', 'admin'])->where('is_active', true)->get();
@@ -74,10 +75,16 @@ class ApplicationController extends Controller
         ));
     }
 
-  public function data(Request $request)
+    public function data(Request $request)
     {
-        // 2. FORM DATA EXPORTS 
-        $query = Application::with(['service', 'agent', 'media']);
+        // 2. FORM DATA EXPORTS
+        $query = Application::with([
+            'service',
+            'agent',
+            'media' => function ($q) {
+                $q->whereIn('collection_name', ['itr_acknowledgement', 'computation_sheet', 'balance_sheet']);
+            },
+        ]);
 
         $type = $request->type ?? 'other';
 
@@ -89,10 +96,10 @@ class ApplicationController extends Controller
             // OR (it is NOT completed AND its payment is Pending/Failed)
             $query->where(function ($q) {
                 $q->whereIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
-                  ->orWhere(function ($subQ) {
-                      $subQ->whereIn('payment_status', ['FAILED', 'PENDING'])
-                           ->where('status', '!=', 'COMPLETED'); // If it is COMPLETED, do NOT put it in Incomplete!
-                  });
+                    ->orWhere(function ($subQ) {
+                        $subQ->whereIn('payment_status', ['FAILED', 'PENDING'])
+                            ->where('status', '!=', 'COMPLETED'); // If it is COMPLETED, do NOT put it in Incomplete!
+                    });
             });
         } else {
             // For all standard service tabs (ITR, GST, etc) AND the Completed tab:
@@ -115,92 +122,117 @@ class ApplicationController extends Controller
             }
         }
 
-        if ($request->agent) { $query->where('agent_id', $request->agent); }
-        if ($request->service) { $query->where('service_id', $request->service); }
-        if ($request->status) { $query->where('status', $request->status); }
-        if ($request->payment) { $query->where('payment_status', $request->payment); }
-        if ($request->date_from) { $query->whereDate('created_at', '>=', $request->date_from); }
-        if ($request->date_to) { $query->whereDate('created_at', '<=', $request->date_to); }
+        if ($request->agent) {
+            $query->where('agent_id', $request->agent);
+        }
+        if ($request->service) {
+            $query->where('service_id', $request->service);
+        }
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+        if ($request->payment) {
+            $query->where('payment_status', $request->payment);
+        }
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
 
         $teamMembers = \App\Models\User::whereIn('role', ['TEAM', 'team', 'ADMIN', 'admin'])->where('is_active', true)->get();
 
         return datatables()->of($query)
-            ->filterColumn('agent', function($query, $keyword) {
-                $query->whereHas('agent', function($q) use ($keyword) {
+            ->filterColumn('agent', function ($query, $keyword) {
+                $query->whereHas('agent', function ($q) use ($keyword) {
                     $q->where('name', 'like', "%{$keyword}%");
                 });
             })
-            ->filterColumn('service', function($query, $keyword) {
-                $query->whereHas('service', function($q) use ($keyword) {
+            ->filterColumn('service', function ($query, $keyword) {
+                $query->whereHas('service', function ($q) use ($keyword) {
                     $q->where('name', 'like', "%{$keyword}%");
                 });
             })
-            ->addColumn('dynamic_data', function($a) {
+            ->addColumn('dynamic_data', function ($a) {
                 $targetField = $a->service->primary_data_field ?? null;
-                if (!$targetField || empty($a->form_data)) {
+                if (! $targetField || empty($a->form_data)) {
                     return '<span class="text-muted text-xs font-italic">N/A</span>';
                 }
                 $formData = is_string($a->form_data) ? json_decode($a->form_data, true) : $a->form_data;
                 $value = $formData[$targetField] ?? null;
-                if (!$value) return '<span class="text-muted text-xs font-italic">N/A</span>';
+                if (! $value) {
+                    return '<span class="text-muted text-xs font-italic">N/A</span>';
+                }
                 $displayVal = is_array($value) ? implode(', ', $value) : (string) $value;
-                return '<span class="font-weight-bold text-dark">' . $displayVal . '</span>';
+
+                return '<span class="font-weight-bold text-dark">'.e($displayVal).'</span>';
             })
             // 1. ACK NUMBER COLUMN
-            ->addColumn('ack_no', function($a) {
-                if ($a->service->slug !== 'itr-filing') return '-';
-                
+            ->addColumn('ack_no', function ($a) {
+                if ($a->service->slug !== 'itr-filing') {
+                    return '-';
+                }
+
                 $ackMedia = $a->getFirstMedia('itr_acknowledgement');
-                
+
                 if ($ackMedia) {
                     $downloadUrl = route('admin.documents.download', $ackMedia->id);
                     $ackNumber = $ackMedia->getCustomProperty('ack_number');
-                    
-                    if (!$ackNumber) {
+
+                    if (! $ackNumber) {
                         try {
-                            $parser = new \Smalot\PdfParser\Parser();
+                            $parser = new \Smalot\PdfParser\Parser;
                             $pdf = $parser->parseFile($ackMedia->getPath());
                             $text = substr($pdf->getText(), 0, 2000);
-                            
+
                             if (preg_match('/\b(\d{15})\b/', $text, $matches)) {
                                 $ackNumber = $matches[1];
                                 $ackMedia->setCustomProperty('ack_number', $ackNumber);
                                 $ackMedia->save();
                             }
-                        } catch (\Exception $e) {}
+                        } catch (\Exception $e) {
+                        }
                     }
-                    
+
                     $html = '';
                     if ($ackNumber) {
                         $html .= '<span class="d-block font-weight-bold text-dark mb-1">'.$ackNumber.'</span>';
                     }
                     $html .= '<a href="'.$downloadUrl.'" class="text-primary font-weight-bold"><i class="fas fa-download mr-1"></i> Download</a>';
-                    
+
                     return $html;
                 }
+
                 return '<span class="text-muted text-xs font-italic">Pending</span>';
             })
             // 2. COMPUTATION COLUMN
-            ->addColumn('computation', function($a) {
-                if ($a->service->slug !== 'itr-filing') return '-';
+            ->addColumn('computation', function ($a) {
+                if ($a->service->slug !== 'itr-filing') {
+                    return '-';
+                }
                 $compMedia = $a->getFirstMedia('computation_sheet');
                 if ($compMedia) {
                     $downloadUrl = route('admin.documents.download', $compMedia->id);
+
                     return '<a href="'.$downloadUrl.'" class="text-primary font-weight-bold"><i class="fas fa-download mr-1"></i> Download</a>';
                 }
+
                 return '<span class="text-muted text-xs font-italic">Pending</span>';
             })
             // 3. NEW SMART BALANCE SHEET GENERATOR
-            ->addColumn('balance_sheet', function($a) {
-                if ($a->service->slug !== 'itr-filing') return '-';
-                
+            ->addColumn('balance_sheet', function ($a) {
+                if ($a->service->slug !== 'itr-filing') {
+                    return '-';
+                }
+
                 $bsMedia = $a->getFirstMedia('balance_sheet');
-                
+
                 if ($bsMedia) {
                     $viewUrl = route('admin.documents.view', $bsMedia->id);
                     $downloadUrl = route('admin.documents.download', $bsMedia->id);
                     $regenUrl = route('admin.applications.balance-sheet', $a->id);
-                    
+
                     // Show View, Download, and a tiny Regenerate button
                     return '
                     <div class="d-flex align-items-center gap-1">
@@ -211,47 +243,48 @@ class ApplicationController extends Controller
                 }
 
                 $url = route('admin.applications.balance-sheet', $a->id);
+
                 return '<a href="'.$url.'" class="btn btn-sm btn-outline-success font-weight-bold" style="white-space: nowrap;"><i class="fas fa-file-excel mr-1"></i> Generate</a>';
             })
-            ->addColumn('checkbox', fn($a) => '<input type="checkbox" class="row-select" value="' . $a->id . '">')
-            ->addColumn('agent', fn($a) => $a->agent->name ?? 'N/A')
-            ->addColumn('service', fn($a) => $a->service->name ?? 'N/A')
-            ->addColumn('status', fn($a) => '<span class="badge badge-info">' . ($a->status->value ?? $a->status) . '</span>')
-            ->addColumn('payment', fn($a) => '<span class="badge badge-success">' . ($a->payment_status->value ?? $a->payment_status) . '</span>')
-            ->addColumn('amount', fn($a) => '₹' . number_format($a->amount, 2))
-            ->addColumn('date', fn($a) => $a->created_at->format('d M Y'))
+            ->addColumn('checkbox', fn ($a) => '<input type="checkbox" class="row-select" value="'.$a->id.'">')
+            ->addColumn('agent', fn ($a) => $a->agent->name ?? 'N/A')
+            ->addColumn('service', fn ($a) => $a->service->name ?? 'N/A')
+            ->addColumn('status', fn ($a) => '<span class="badge badge-info">'.($a->status->value ?? $a->status).'</span>')
+            ->addColumn('payment', fn ($a) => '<span class="badge badge-success">'.($a->payment_status->value ?? $a->payment_status).'</span>')
+            ->addColumn('amount', fn ($a) => '₹'.number_format($a->amount, 2))
+            ->addColumn('date', fn ($a) => $a->created_at->format('d M Y'))
             ->addColumn('assign_to', function ($a) use ($teamMembers) {
-                $html = '<select class="form-select form-select-sm d-inline-block w-auto assign-team-select"  data-app-id="' . $a->id . '" style="border-radius: 6px; font-size: 0.85rem; height: 31px; border: 1px solid #cbd5e1; outline: none;">';
+                $html = '<select class="form-select form-select-sm d-inline-block w-auto assign-team-select"  data-app-id="'.$a->id.'" style="border-radius: 6px; font-size: 0.85rem; height: 31px; border: 1px solid #cbd5e1; outline: none;">';
                 $html .= '<option value="">Unassigned</option>';
-                foreach($teamMembers as $member) {
+                foreach ($teamMembers as $member) {
                     $selected = $a->assigned_to == $member->id ? 'selected' : '';
-                    $html .= '<option value="' . $member->id . '" ' . $selected . '>' . $member->name . '</option>';
+                    $html .= '<option value="'.$member->id.'" '.$selected.'>'.$member->name.'</option>';
                 }
                 $html .= '</select>';
+
                 return $html;
             })
             ->addColumn('actions', function ($a) {
-                return '<a href="' . route('admin.applications.show', $a) . '" class="btn btn-sm btn-primary">View</a>';
+                return '<a href="'.route('admin.applications.show', $a).'" class="btn btn-sm btn-primary">View</a>';
             })
-            ->rawColumns(['checkbox', 'dynamic_data', 'status', 'payment','ack_no','computation','balance_sheet', 'assign_to', 'actions'])
+            ->rawColumns(['checkbox', 'dynamic_data', 'status', 'payment', 'ack_no', 'computation', 'balance_sheet', 'assign_to', 'actions'])
             ->make(true);
     }
 
-
-   public function export(Request $request)
+    public function export(Request $request)
     {
         $filter = $request->query('filter');
 
         // 1. STANDARD EXPORT (Using existing Maatwebsite logic)
-        if (!$filter) {
+        if (! $filter) {
             return Excel::download(
-                new ApplicationsExport(),
+                new ApplicationsExport,
                 'applications.xlsx'
             );
         }
 
-        // 2. FORM DATA EXPORTS 
-       // 2. FORM DATA EXPORTS 
+        // 2. FORM DATA EXPORTS
+        // 2. FORM DATA EXPORTS
         $query = Application::with(['agent', 'service'])
             ->whereHas('service', function ($q) {
                 $q->where('name', 'ITR Filing (Individual / Business)');
@@ -280,7 +313,7 @@ class ApplicationController extends Controller
             $formData = is_string($app->form_data) ? json_decode($app->form_data, true) : $app->form_data;
             if (is_array($formData)) {
                 foreach (array_keys($formData) as $key) {
-                    if (!in_array($key, $dynamicKeys)) {
+                    if (! in_array($key, $dynamicKeys)) {
                         $dynamicKeys[] = $key;
                     }
                 }
@@ -288,29 +321,29 @@ class ApplicationController extends Controller
         }
 
         $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename={$fileName}",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $standardColumns = ['App ID', 'Agent Name', 'Service', 'Status', 'Submitted Date'];
-        $displayDynamicKeys = array_map(function($key) {
+        $displayDynamicKeys = array_map(function ($key) {
             return \Illuminate\Support\Str::title(str_replace('_', ' ', $key));
         }, $dynamicKeys);
-        
+
         $csvHeaders = array_merge($standardColumns, $displayDynamicKeys);
 
-        $callback = function() use($applications, $csvHeaders, $dynamicKeys) {
+        $callback = function () use ($applications, $csvHeaders, $dynamicKeys) {
             $file = fopen('php://output', 'w');
-            
-            fputs($file, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+
+            fwrite($file, $bom = (chr(0xEF).chr(0xBB).chr(0xBF)));
             fputcsv($file, $csvHeaders);
 
             foreach ($applications as $app) {
                 $formData = is_string($app->form_data) ? json_decode($app->form_data, true) : $app->form_data;
-                if (!is_array($formData)) {
+                if (! is_array($formData)) {
                     $formData = [];
                 }
 
@@ -320,7 +353,7 @@ class ApplicationController extends Controller
                     $app->agent->name ?? 'N/A',
                     $app->service->name ?? 'N/A',
                     $statusValue,
-                    $app->created_at->format('d M Y h:i A')
+                    $app->created_at->format('d M Y h:i A'),
                 ];
 
                 foreach ($dynamicKeys as $key) {
@@ -340,13 +373,12 @@ class ApplicationController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-
     public function bulk(Request $request)
     {
 
         $ids = $request->ids;
 
-        if (!$ids) {
+        if (! $ids) {
             return back()->with('error', 'No rows selected.');
         }
 
@@ -356,7 +388,6 @@ class ApplicationController extends Controller
         return back()->with('success', 'Applications updated.');
     }
 
-
     public function show(Application $application)
     {
         $application->load(['service', 'agent']);
@@ -364,7 +395,7 @@ class ApplicationController extends Controller
         return view('admin.applications.show', compact('application'));
     }
 
- public function updateStatus(Request $request, Application $application)
+    public function updateStatus(Request $request, Application $application)
     {
         $request->validate([
             'status' => 'required|string|in:IN_PROGRESS,E_FILING,OTP_VERIFICATION,COMPLETED',
@@ -375,15 +406,15 @@ class ApplicationController extends Controller
         if ($request->status === 'COMPLETED') {
             $application->update(['completed_at' => now()]);
 
-            // --- DYNAMIC EMAIL AUTOMATION --- 
-            $emailKey = $application->service->applicant_email_field; 
-            
-            if (!empty($application->form_data)) {
+            // --- DYNAMIC EMAIL AUTOMATION ---
+            $emailKey = $application->service->applicant_email_field;
+
+            if (! empty($application->form_data)) {
                 $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
-                
+
                 // SMART FALLBACK: If emailKey is missing in DB, try common email fields
-                $clientEmail = (!empty($emailKey) && isset($formData[$emailKey])) 
-                    ? $formData[$emailKey] 
+                $clientEmail = (! empty($emailKey) && isset($formData[$emailKey]))
+                    ? $formData[$emailKey]
                     : ($formData['email'] ?? $formData['email_id'] ?? $formData['applicant_email'] ?? null);
 
                 $clientName = $formData['applicant_name'] ?? $formData['name'] ?? $formData['full_name'] ?? $formData['company_name'] ?? $formData['firm_name'] ?? 'Valued Client';
@@ -393,16 +424,16 @@ class ApplicationController extends Controller
                     try {
                         Mail::send('emails.application_completed', [
                             'application' => $application,
-                            'clientName'  => $clientName,
-                            'trackingUrl' => $trackingUrl
-                        ], function($message) use ($clientEmail, $application) {
+                            'clientName' => $clientName,
+                            'trackingUrl' => $trackingUrl,
+                        ], function ($message) use ($clientEmail, $application) {
                             $serviceName = $application->service->name ?? 'Service';
                             $message->to($clientEmail)
-                                    ->subject("Completed: Your {$serviceName} Application");
+                                ->subject("Completed: Your {$serviceName} Application");
                         });
                         \Log::info("Completion email sent to {$clientEmail} for App #{$application->id}");
                     } catch (\Exception $e) {
-                        \Log::error("Email failed for App #{$application->id}: " . $e->getMessage());
+                        \Log::error("Email failed for App #{$application->id}: ".$e->getMessage());
                     }
                 }
             }
@@ -411,49 +442,49 @@ class ApplicationController extends Controller
         activity('application')
             ->performedOn($application)
             ->causedBy(auth()->user())
-            ->log('Status updated to ' . $request->status);
+            ->log('Status updated to '.$request->status);
 
         return back()->with('success', 'Application status updated successfully.');
     }
 
     private function sendSnptWhatsapp($phone, Application $application)
     {
-        $cleanPhone = preg_replace('/[^0-9]/', '', (string)$phone);
+        $cleanPhone = preg_replace('/[^0-9]/', '', (string) $phone);
         if (strlen($cleanPhone) == 10) {
-            $cleanPhone = '91' . $cleanPhone; 
+            $cleanPhone = '91'.$cleanPhone;
         }
 
         $serviceName = $application->service->name ?? 'Service';
         $message = "Hello! Great news: Your application for {$serviceName} (App ID: #{$application->id}) has been successfully COMPLETED. Thank you for choosing EasyTax!";
 
         try {
-            $instanceId = 'YOUR_SNPT_INSTANCE_ID'; 
+            $instanceId = 'YOUR_SNPT_INSTANCE_ID';
             $accessToken = 'YOUR_SNPT_ACCESS_TOKEN';
 
-            Http::post("https://snpt.in/api/send", [
+            Http::post('https://snpt.in/api/send', [
                 'number' => $cleanPhone,
                 'type' => 'text',
                 'message' => $message,
                 'instance_id' => $instanceId,
-                'access_token' => $accessToken
+                'access_token' => $accessToken,
             ]);
             \Log::info("WhatsApp sent to {$cleanPhone} for App #{$application->id}");
         } catch (\Exception $e) {
-            \Log::error("WhatsApp failed for App #{$application->id}: " . $e->getMessage());
+            \Log::error("WhatsApp failed for App #{$application->id}: ".$e->getMessage());
         }
     }
 
-  public function uploadDocument(Request $request, Application $application)
+    public function uploadDocument(Request $request, Application $application)
     {
         $request->validate([
-            'document'         => 'nullable|file|mimes:pdf,png,jpg,jpeg|max:5120',
-            'ack_file'         => 'nullable|file|mimes:pdf|max:5120',
+            'document' => 'nullable|file|mimes:pdf,png,jpg,jpeg|max:5120',
+            'ack_file' => 'nullable|file|mimes:pdf|max:5120',
             'computation_file' => 'nullable|file|mimes:pdf|max:5120',
-            'moa_file'         => 'nullable|file|mimes:pdf,doc,docx|max:5120', // New validation
-            'aoa_file'         => 'nullable|file|mimes:pdf,doc,docx|max:5120', // New validation
+            'moa_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // New validation
+            'aoa_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // New validation
         ]);
 
-        $uploaded = false; 
+        $uploaded = false;
 
         if ($request->hasFile('document')) {
             $application->addMediaFromRequest('document')->toMediaCollection('documents', 'private');
@@ -463,15 +494,16 @@ class ApplicationController extends Controller
         if ($request->hasFile('ack_file')) {
             $media = $application->addMediaFromRequest('ack_file')->toMediaCollection('itr_acknowledgement', 'private');
             try {
-                $parser = new \Smalot\PdfParser\Parser();
+                $parser = new \Smalot\PdfParser\Parser;
                 $pdf = $parser->parseFile($media->getPath());
-                $text = substr($pdf->getText(), 0, 2000); 
+                $text = substr($pdf->getText(), 0, 2000);
                 if (preg_match('/\b(\d{15})\b/', $text, $matches)) {
                     $media->setCustomProperty('ack_number', $matches[1]);
                     $media->save();
                 }
-            } catch (\Exception $e) {}
-            
+            } catch (\Exception $e) {
+            }
+
             $uploaded = true;
         }
 
@@ -494,7 +526,7 @@ class ApplicationController extends Controller
             $uploaded = true;
         }
 
-        if (!$uploaded) {
+        if (! $uploaded) {
             return back()->with('error', 'Please select a file to upload.');
         }
 
@@ -510,14 +542,14 @@ class ApplicationController extends Controller
     {
         // Removed the old moa/aoa string validations
         $request->validate([
-            'admin_username' => 'nullable|string', 
+            'admin_username' => 'nullable|string',
             'admin_password' => 'nullable|string',
             'final_document' => 'nullable|file|mimes:pdf|max:5120',
         ]);
 
         // Safely decode JSON if it comes out as a string
-        $formData = is_string($application->form_data) 
-            ? json_decode($application->form_data, true) 
+        $formData = is_string($application->form_data)
+            ? json_decode($application->form_data, true)
             : ($application->form_data ?? []);
 
         // Save GST Credentials
@@ -536,12 +568,12 @@ class ApplicationController extends Controller
             // Check if it is a company service based on the slug
             $companyServices = ['fpo-registration', 'section-8-company', 'llp-registration', 'opc-registration', 'private-limited-company-registration'];
             $isCompanySetup = in_array($application->service->slug ?? '', $companyServices);
-            
+
             // Automatically name the file correctly
             $certLabel = $isCompanySetup ? 'Incorporation Certificate' : 'GST Certificate';
 
             $application->addMediaFromRequest('final_document')
-                ->withCustomProperties(['label' => $certLabel]) 
+                ->withCustomProperties(['label' => $certLabel])
                 ->toMediaCollection('final_deliverables', 'private');
         }
 
@@ -554,13 +586,14 @@ class ApplicationController extends Controller
         return back()->with('success', 'Credentials and deliverables saved successfully.');
     }
 
-   public function deleteDocument($mediaId)
+    public function deleteDocument($mediaId)
     {
         $media = Media::findOrFail($mediaId);
         if (strtoupper(auth()->user()->role) !== 'ADMIN') {
             abort(403, 'Unauthorized action.');
         }
         $media->delete();
+
         return back()->with('success', 'Document deleted successfully.');
     }
 
@@ -575,7 +608,7 @@ class ApplicationController extends Controller
         activity('application')
             ->performedOn($application)
             ->causedBy(auth()->user())
-            ->log('Payment status updated to ' . $request->payment_status);
+            ->log('Payment status updated to '.$request->payment_status);
 
         return back()->with('success', 'Payment status updated successfully.');
     }
@@ -586,10 +619,11 @@ class ApplicationController extends Controller
         if (auth()->user()->role !== 'ADMIN') {
             abort(403, 'Unauthorized');
         }
-        $path = storage_path('app/private/' . $media->id . '/' . $media->file_name);
-        if (!file_exists($path)) {
+        $path = storage_path('app/private/'.$media->id.'/'.$media->file_name);
+        if (! file_exists($path)) {
             abort(404, 'File not found');
         }
+
         return response()->file($path);
     }
 
@@ -599,31 +633,32 @@ class ApplicationController extends Controller
         if (auth()->user()->role !== 'ADMIN') {
             abort(403, 'Unauthorized');
         }
-        $path = storage_path('app/private/' . $media->id . '/' . $media->file_name);
-        if (!file_exists($path)) {
+        $path = storage_path('app/private/'.$media->id.'/'.$media->file_name);
+        if (! file_exists($path)) {
             abort(404, 'File not found');
         }
+
         return response()->download($path, $media->file_name);
     }
 
     public function exportSingle(Application $application)
     {
         $formData = $application->form_data ?? [];
-        $fileName = 'Application_' . $application->id . '_Client_Data.csv';
+        $fileName = 'Application_'.$application->id.'_Client_Data.csv';
 
         $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename={$fileName}",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $columns = ['Field Name', 'Provided Value'];
 
-        $callback = function() use($formData, $columns) {
+        $callback = function () use ($formData, $columns) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, $columns); 
+            fputcsv($file, $columns);
 
             foreach ($formData as $key => $value) {
                 $displayKey = \Illuminate\Support\Str::title(str_replace('_', ' ', $key));
@@ -641,18 +676,18 @@ class ApplicationController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-  public function balanceSheetForm($id)
+    public function balanceSheetForm($id)
     {
         $application = Application::with('media')->findOrFail($id);
 
         $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
-        
+
         $sales = (float) preg_replace('/[^0-9.]/', '', $formData['business_turnover'] ?? 0);
         $netProfit = (float) preg_replace('/[^0-9.]/', '', $formData['business_income'] ?? $formData['business_profession_income'] ?? 0);
         $otherIncome = (float) preg_replace('/[^0-9.]/', '', $formData['other_income'] ?? 0);
 
         $extractedData = [];
-        $parser = new \Smalot\PdfParser\Parser();
+        $parser = new \Smalot\PdfParser\Parser;
 
         $compMedia = $application->getFirstMedia('computation_sheet');
 
@@ -674,14 +709,17 @@ class ApplicationController extends Controller
                     $extractedData['sundry_creditors'] = (float) str_replace(',', '', $matches[1]);
                 }
                 if (preg_match('/Gross Receipts\/Turnover\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches)) {
-                    $sales = (float) str_replace(',', '', $matches[1]); 
+                    $sales = (float) str_replace(',', '', $matches[1]);
                 }
                 if (preg_match('/Net Profit Declared\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches) || preg_match('/Total Income\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches)) {
                     $foundProfit = (float) str_replace(',', '', $matches[1]);
-                    if ($foundProfit > 0) { $netProfit = $foundProfit; }
+                    if ($foundProfit > 0) {
+                        $netProfit = $foundProfit;
+                    }
                 }
 
-            } catch (\Exception $e) { }
+            } catch (\Exception $e) {
+            }
         }
 
         return view('admin.applications.balance_sheet', compact('application', 'sales', 'netProfit', 'otherIncome', 'extractedData'));
@@ -690,7 +728,7 @@ class ApplicationController extends Controller
     public function generateBalanceSheetPdf(Request $request, $id)
     {
         $application = Application::findOrFail($id);
-        
+
         $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
         $applicantName = strtoupper($formData['applicant_name'] ?? 'APPLICANT NAME');
         $panNumber = strtoupper($formData['pan_number'] ?? 'PAN NOT PROVIDED');
@@ -703,12 +741,12 @@ class ApplicationController extends Controller
         $grossProfit = ($data['sales'] + $data['closing_stock']) - ($data['opening_stock'] + $data['purchases'] + $data['direct_expenses']);
         $tradingTotal = $data['sales'] + $data['closing_stock'];
 
-        $totalIndirectExp = $data['salaries'] + $data['electricity'] + $data['shop_rent'] + $data['telephone_internet'] + 
+        $totalIndirectExp = $data['salaries'] + $data['electricity'] + $data['shop_rent'] + $data['telephone_internet'] +
                             $data['printing_stationery'] + $data['repairs_maintenance'] + $data['interest_on_loan'] + $data['other_expenses'];
-        
+
         $totalIndirectInc = $data['interest_income'] + $data['other_income'];
         $netProfit = ($grossProfit + $totalIndirectInc) - $totalIndirectExp;
-        $pnlTotal = $totalIndirectExp + $netProfit; 
+        $pnlTotal = $totalIndirectExp + $netProfit;
 
         $closingCapital = $data['opening_capital'] + $netProfit - $data['drawings'];
         $capitalTotal = $data['opening_capital'] + $netProfit;
@@ -716,19 +754,19 @@ class ApplicationController extends Controller
         $bsTotal = $closingCapital + $data['bank_loan'] + $data['other_loans'] + $data['sundry_creditors'] + $data['other_current_liabilities'];
 
         $pdfData = compact(
-            'applicantName', 'panNumber', 'data', 
-            'grossProfit', 'netProfit', 'closingCapital', 
+            'applicantName', 'panNumber', 'data',
+            'grossProfit', 'netProfit', 'closingCapital',
             'tradingTotal', 'pnlTotal', 'bsTotal', 'capitalTotal'
         );
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.applications.pdfs.balance_sheet', $pdfData);
-        
+
         // --- NEW: AUTO-SAVE TO DATABASE ---
-        $fileName = 'Balance_Sheet_' . $panNumber . '.pdf';
-        
+        $fileName = 'Balance_Sheet_'.$panNumber.'.pdf';
+
         // Clear any old balance sheets for this app so they don't pile up
         $application->clearMediaCollection('balance_sheet');
-        
+
         // Save the raw PDF string to the private folder
         $application->addMediaFromString($pdf->output())
             ->usingFileName($fileName)
@@ -739,19 +777,18 @@ class ApplicationController extends Controller
         return $pdf->stream($fileName);
     }
 
-   
     public function assignTeam(Request $request, $id)
     {
         $application = \App\Models\Application::findOrFail($id);
-        
+
         $application->update([
             // If they select "Unassigned" it sends null, otherwise it saves the User ID
-            'assigned_to' => $request->team_id ? $request->team_id : null 
+            'assigned_to' => $request->team_id ? $request->team_id : null,
         ]);
 
         return response()->json([
-            'success' => true, 
-            'message' => 'Application assigned successfully!'
+            'success' => true,
+            'message' => 'Application assigned successfully!',
         ]);
     }
 }

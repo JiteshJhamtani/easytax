@@ -134,19 +134,19 @@ class DashboardController extends Controller
         ]);
 
         if ($request->hasFile('document')) {
-            $application->addMediaFromRequest('document')->toMediaCollection('admin_uploads');
+            $application->addMediaFromRequest('document')->toMediaCollection('admin_uploads', 'private');
         }
         if ($request->hasFile('ack_file')) {
-            $application->addMediaFromRequest('ack_file')->toMediaCollection('itr_acknowledgement');
+            $application->addMediaFromRequest('ack_file')->toMediaCollection('itr_acknowledgement', 'private');
         }
         if ($request->hasFile('computation_file')) {
-            $application->addMediaFromRequest('computation_file')->toMediaCollection('computation_sheet');
+            $application->addMediaFromRequest('computation_file')->toMediaCollection('computation_sheet', 'private');
         }
         if ($request->hasFile('moa_file')) {
-            $application->addMediaFromRequest('moa_file')->toMediaCollection('moa_document');
+            $application->addMediaFromRequest('moa_file')->toMediaCollection('moa_document', 'private');
         }
         if ($request->hasFile('aoa_file')) {
-            $application->addMediaFromRequest('aoa_file')->toMediaCollection('aoa_document');
+            $application->addMediaFromRequest('aoa_file')->toMediaCollection('aoa_document', 'private');
         }
 
         return back()->with('success', 'Document uploaded successfully.');
