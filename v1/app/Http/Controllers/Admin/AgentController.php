@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Application;
 use App\Models\AgentPayout;
+use App\Models\Application;
+use App\Models\User;
 use App\Services\AgentCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -13,7 +13,6 @@ use Yajra\DataTables\Facades\DataTables;
 
 class AgentController extends Controller
 {
-
     /*
     |--------------------------------------------------------------------------
     | Agents List
@@ -30,14 +29,12 @@ class AgentController extends Controller
         $agents = User::query()
             ->where('role', 'agent')
             ->withCount([
-                'applications'
+                'applications',
             ])
             ->withSum('applications as commission_total', 'commission_amount')
             ->withSum('payouts as payouts_total', 'amount');
 
         return DataTables::of($agents)
-
-            
 
             ->addColumn('action', function ($agent) {
 
@@ -47,17 +44,17 @@ class AgentController extends Controller
 
                 return '
 
-            <a href="' . route('admin.agents.show', $agent) . '"
+            <a href="'.route('admin.agents.show', $agent).'"
             class="btn btn-sm btn-primary">View</a>
 
-            <a href="' . route('admin.agents.edit', $agent) . '"
+            <a href="'.route('admin.agents.edit', $agent).'"
             class="btn btn-sm btn-warning">Edit</a>
 
             <form method="POST"
-            action="' . route('admin.agents.toggle-status', $agent) . '"
+            action="'.route('admin.agents.toggle-status', $agent).'"
             style="display:inline;">
-            ' . csrf_field() . method_field('PATCH') . '
-            <button class="btn btn-sm btn-danger">' . $toggle . '</button>
+            '.csrf_field().method_field('PATCH').'
+            <button class="btn btn-sm btn-danger">'.$toggle.'</button>
             </form>
 
             ';
@@ -84,27 +81,27 @@ class AgentController extends Controller
 
         $data = $request->validate([
 
-            'name'     => 'required|string|max:255',
+            'name' => 'required|string|max:255',
 
-            'email'    => 'required|email|unique:users,email',
+            'email' => 'required|email|unique:users,email',
 
-            'password' => 'required|min:6|confirmed'
+            'password' => 'required|min:6|confirmed',
 
         ]);
 
-        $agent = User::create([
+        $agent = User::forceCreate([
 
             'agent_code' => AgentCodeService::generate(),
 
-            'name'       => $data['name'],
+            'name' => $data['name'],
 
-            'email'      => $data['email'],
+            'email' => $data['email'],
 
-            'password'   => Hash::make($data['password']),
+            'password' => Hash::make($data['password']),
 
-            'role'       => 'agent',
+            'role' => 'agent',
 
-            'is_active'  => true
+            'is_active' => true,
 
         ]);
 
@@ -126,14 +123,14 @@ class AgentController extends Controller
 
         $stats = [
 
-            'applications'      => $applications->count(),
+            'applications' => $applications->count(),
 
-            'submitted'         => $applications
+            'submitted' => $applications
                 ->clone()
                 ->where('status', 'SUBMITTED')
                 ->count(),
 
-            'commission_total'  => $applications
+            'commission_total' => $applications
                 ->clone()
                 ->sum('commission_amount'),
 
@@ -142,7 +139,7 @@ class AgentController extends Controller
                 ->whereNull('payout_id')
                 ->sum('commission_amount'),
 
-            'payouts_total'     => AgentPayout::where('agent_id', $agent->id)
+            'payouts_total' => AgentPayout::where('agent_id', $agent->id)
                 ->sum('amount'),
 
         ];
@@ -167,17 +164,17 @@ class AgentController extends Controller
     public function update(Request $request, User $agent)
     {
         $data = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email',
-            'password' => 'nullable|min:6|confirmed'
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'password' => 'nullable|min:6|confirmed',
         ]);
 
         // Update basic fields
-        $agent->name  = $data['name'];
+        $agent->name = $data['name'];
         $agent->email = $data['email'];
 
         // Update password only if provided
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $agent->password = Hash::make($data['password']);
         }
 
@@ -197,7 +194,7 @@ class AgentController extends Controller
     public function toggleStatus(User $agent)
     {
 
-        $agent->is_active = !$agent->is_active;
+        $agent->is_active = ! $agent->is_active;
 
         $agent->save();
 

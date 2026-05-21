@@ -7,23 +7,22 @@ use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
- use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-      // ── KPI Cards ──  
+        // ── KPI Cards ──
         $kpis = [
-            // 1. Total Active (Excludes Drafts, Cancelled, and Failed)  
+            // 1. Total Active (Excludes Drafts, Cancelled, and Failed)
             'total_applications' => Application::query()
                 ->whereNotIn('status', ['DRAFT', 'CANCELLED'])
                 ->where('payment_status', '!=', 'FAILED')
                 ->count(),
-                
-            'completed_applications' => Application::query()->where('status', 'COMPLETED')->count(), 
-            
+
+            'completed_applications' => Application::query()->where('status', 'COMPLETED')->count(),
+
             // 2. Pending Active
             'pending_applications' => Application::query()
                 ->whereNotIn('status', ['COMPLETED', 'DRAFT', 'CANCELLED'])
@@ -34,27 +33,26 @@ class DashboardController extends Controller
             'processed_applications' => Application::query()
                 ->where(function ($query) {
                     $query->whereIn('status', ['DRAFT', 'CANCELLED'])
-                          ->orWhere('payment_status', 'FAILED',);
+                        ->orWhere('payment_status', 'FAILED');
                 })
                 ->count(),
-            
-            
+
             // 4. Financials & Agents (Now perfectly synced with the tables & charts)
             'total_revenue' => Application::query()
                 ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
                 ->where('payment_status', '!=', 'FAILED')
                 ->sum(DB::raw('amount - commission_amount')),
-            
+
             'total_commission' => Application::query()
                 ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
                 ->where('payment_status', '!=', 'FAILED')
                 ->sum('commission_amount'),
-            
-           'total_agents' => User::query()
+
+            'total_agents' => User::query()
                 ->where('role', 'AGENT')
-                ->where('is_active', true) 
+                ->where('is_active', true)
                 ->count(),
-                
+
             // NEW: Count active marketers (checking both cases just to be safe!)
             'total_marketers' => User::query()
                 ->whereIn('role', ['marketer', 'MARKETER'])
@@ -67,7 +65,7 @@ class DashboardController extends Controller
             ->select(
                 DB::raw("DATE_FORMAT(submitted_at, '%Y-%m') as month"),
                 DB::raw('COUNT(*) as applications_count'),
-                DB::raw("SUM(CASE WHEN payment_status = 'SUCCESS' THEN (amount - commission_amount) ELSE 0 END) as revenue")
+                DB::raw("SUM(CASE WHEN payment_status = 'PAID' THEN (amount - commission_amount) ELSE 0 END) as revenue")
             )
             ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
             ->where('payment_status', '!=', 'FAILED')
@@ -101,7 +99,7 @@ class DashboardController extends Controller
             ->get();
 
         // ── Top 10 Services (Fixed for Cross-Server databases) ──
-        
+
         // 1. We query the LOCAL applications table first (keeping your filters intact)
         $topServicesStats = Application::query()
             ->selectRaw('service_id, COUNT(id) as applications_count, COALESCE(SUM(amount - commission_amount), 0) as revenue')
@@ -145,47 +143,47 @@ class DashboardController extends Controller
         ));
     }
 
-public function switchServer($target)
-{
-    // 1. Define your destination URLs
-    $destinations = [
-        'upwest' => 'https://upwest.easytax.live',
-        'b2b' => 'https://b2b.easytax.live',
-        'marketing' => 'https://marketing.easytax.live',
-        'uat' => 'https://uat.easytax.live'     
-    ];
+    public function switchServer($target)
+    {
+        // 1. Define your destination URLs
+        $destinations = [
+            'upwest' => 'https://upwest.easytax.live',
+            'b2b' => 'https://b2b.easytax.live',
+            'marketing' => 'https://marketing.easytax.live',
+            'uat' => 'https://uat.easytax.live',
+        ];
 
-    if (!array_key_exists($target, $destinations)) {
-        abort(404, 'Server destination not found.');
+        if (! array_key_exists($target, $destinations)) {
+            abort(404, 'Server destination not found.');
+        }
+
+        // 2. Create a payload with the user's email and a 60-second expiration timestamp
+        $payload = json_encode([
+            'email' => auth()->user()->email,
+            'expires_at' => now()->addSeconds(60)->timestamp,
+        ]);
+
+        // 3. Encrypt the payload using your custom shared secret
+        $encrypter = new \Illuminate\Encryption\Encrypter(env('CROSS_SERVER_SECRET'), config('app.cipher'));
+        $token = $encrypter->encryptString($payload);
+
+        // 4. Redirect them to the auto-login route on the other server
+        return redirect()->away($destinations[$target].'/auto-login?token='.urlencode($token));
     }
-
-    // 2. Create a payload with the user's email and a 60-second expiration timestamp
-    $payload = json_encode([
-        'email' => auth()->user()->email,
-        'expires_at' => now()->addSeconds(60)->timestamp
-    ]);
-
-    // 3. Encrypt the payload using your custom shared secret
-    $encrypter = new \Illuminate\Encryption\Encrypter(env('CROSS_SERVER_SECRET'), config('app.cipher'));
-    $token = $encrypter->encryptString($payload);
-
-    // 4. Redirect them to the auto-login route on the other server
-    return redirect()->away($destinations[$target] . '/auto-login?token=' . urlencode($token));
-}
 
     public function fetchRemoteKpis(\Illuminate\Http\Request $request)
     {
         $server = $request->query('server');
-        
+
         // Define your server API URLs here
         $servers = [
             'upwest' => 'https://upwest.easytax.live',
             'b2b' => 'https://b2b.easytax.live',
             'marketing' => 'https://marketing.easytax.live',
-            'uat' => 'https://uat.easytax.live'     
+            'uat' => 'https://uat.easytax.live',
         ];
 
-        if (!array_key_exists($server, $servers)) {
+        if (! array_key_exists($server, $servers)) {
             return response()->json(['error' => 'Server not found'], 404);
         }
 
@@ -193,13 +191,13 @@ public function switchServer($target)
             // Securely fetch the KPIs from the target server
             $response = Http::withToken(env('CROSS_SERVER_SECRET'))
                 ->timeout(5) // Don't hang forever if the server is offline
-                ->get($servers[$server] . '/api/dashboard-kpis');
+                ->get($servers[$server].'/api/dashboard-kpis');
 
             if ($response->successful()) {
                 return response()->json($response->json());
             }
-            
-            return response()->json(['error' => 'Failed to fetch data from remote server. HTTP Status: ' . $response->status()], 500);
+
+            return response()->json(['error' => 'Failed to fetch data from remote server. HTTP Status: '.$response->status()], 500);
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Server unreachable'], 500);

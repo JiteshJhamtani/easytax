@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Application;
 use App\Models\AgentPayout;
+use App\Models\Application;
+use App\Models\User;
 use App\Services\AgentCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -13,7 +13,6 @@ use Yajra\DataTables\Facades\DataTables;
 
 class AgentController extends Controller
 {
-
     /*
     |--------------------------------------------------------------------------
     | Agents List
@@ -34,7 +33,7 @@ class AgentController extends Controller
             ->withSum('payouts as payouts_total', 'amount');
 
         return DataTables::of($agents)
-            
+
             // 1. Map the calculated database columns to the Javascript names
             ->addColumn('applications', function ($agent) {
                 return $agent->applications_count;
@@ -48,18 +47,20 @@ class AgentController extends Controller
 
             // 2. STOP Laravel from crashing by disabling SQL text searches on math columns
             ->filterColumn('applications', function($query, $keyword) { /* Do nothing */ })
-            ->filterColumn('commission', function($query, $keyword) { /* Do nothing */ })
-            ->filterColumn('payouts', function($query, $keyword) { /* Do nothing */ })
+            ->filterColumn('commission', function ($query, $keyword) { /* Do nothing */
+            })
+            ->filterColumn('payouts', function ($query, $keyword) { /* Do nothing */
+            })
 
             ->addColumn('action', function ($agent) {
                 $toggle = $agent->is_active ? 'Suspend' : 'Activate';
 
                 return '
-                <a href="' . route('admin.agents.show', $agent) . '" class="btn btn-sm btn-primary">View</a>
-                <a href="' . route('admin.agents.edit', $agent) . '" class="btn btn-sm btn-warning">Edit</a>
-                <form method="POST" action="' . route('admin.agents.toggle-status', $agent) . '" style="display:inline;">
-                    ' . csrf_field() . method_field('PATCH') . '
-                    <button class="btn btn-sm btn-danger">' . $toggle . '</button>
+                <a href="'.route('admin.agents.show', $agent).'" class="btn btn-sm btn-primary">View</a>
+                <a href="'.route('admin.agents.edit', $agent).'" class="btn btn-sm btn-warning">Edit</a>
+                <form method="POST" action="'.route('admin.agents.toggle-status', $agent).'" style="display:inline;">
+                    '.csrf_field().method_field('PATCH').'
+                    <button class="btn btn-sm btn-danger">'.$toggle.'</button>
                 </form>
                 ';
             })
@@ -78,27 +79,27 @@ class AgentController extends Controller
         return view('admin.agents.create');
     }
 
- public function store(Request $request)
+    public function store(Request $request)
     {
         $data = $request->validate([
-            'name'          => 'required|string|max:255',
-            'email'         => 'required|email|unique:users,email',
-            'password'      => 'required|min:6|confirmed',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:6|confirmed',
             'mobile_number' => 'nullable|string|max:20', // New validation
-            'whatsapp_no'   => 'nullable|string|max:20', // New validation
-            'address'       => 'nullable|string|max:500', // New validation
+            'whatsapp_no' => 'nullable|string|max:20', // New validation
+            'address' => 'nullable|string|max:500', // New validation
         ]);
 
-        $agent = User::create([
-            'agent_code'    => AgentCodeService::generate(),
-            'name'          => $data['name'],
-            'email'         => $data['email'],
-            'password'      => Hash::make($data['password']),
-            'role'          => 'agent',
-            'is_active'     => true,
+        $agent = User::forceCreate([
+            'agent_code' => AgentCodeService::generate(),
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+            'role' => 'agent',
+            'is_active' => true,
             'mobile_number' => $data['mobile_number'] ?? null, // New field
-            'whatsapp_no'   => $data['whatsapp_no'] ?? null,   // New field
-            'address'       => $data['address'] ?? null,       // New field
+            'whatsapp_no' => $data['whatsapp_no'] ?? null,   // New field
+            'address' => $data['address'] ?? null,       // New field
         ]);
 
         return redirect()
@@ -117,11 +118,11 @@ class AgentController extends Controller
         $applications = Application::where('agent_id', $agent->id);
 
         $stats = [
-            'applications'      => $applications->count(),
-            'submitted'         => $applications->clone()->where('status', 'SUBMITTED')->count(),
-            'commission_total'  => $applications->clone()->sum('commission_amount'),
+            'applications' => $applications->count(),
+            'submitted' => $applications->clone()->where('status', 'SUBMITTED')->count(),
+            'commission_total' => $applications->clone()->sum('commission_amount'),
             'commission_unpaid' => $applications->clone()->whereNull('payout_id')->sum('commission_amount'),
-            'payouts_total'     => AgentPayout::where('agent_id', $agent->id)->sum('amount'),
+            'payouts_total' => AgentPayout::where('agent_id', $agent->id)->sum('amount'),
         ];
 
         return view('admin.agents.show', compact('agent', 'stats'));
@@ -138,24 +139,24 @@ class AgentController extends Controller
         return view('admin.agents.edit', compact('agent'));
     }
 
-   public function update(Request $request, User $agent)
+    public function update(Request $request, User $agent)
     {
         $data = $request->validate([
-            'name'          => 'required|string|max:255',
-            'email'         => 'required|email',
-            'password'      => 'nullable|min:6|confirmed',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'password' => 'nullable|min:6|confirmed',
             'mobile_number' => 'nullable|string|max:20', // New validation
-            'whatsapp_no'   => 'nullable|string|max:20', // New validation
-            'address'       => 'nullable|string|max:500', // New validation
+            'whatsapp_no' => 'nullable|string|max:20', // New validation
+            'address' => 'nullable|string|max:500', // New validation
         ]);
 
-        $agent->name          = $data['name'];
-        $agent->email         = $data['email'];
+        $agent->name = $data['name'];
+        $agent->email = $data['email'];
         $agent->mobile_number = $data['mobile_number'] ?? null; // New field
-        $agent->whatsapp_no   = $data['whatsapp_no'] ?? null;   // New field
-        $agent->address       = $data['address'] ?? null;       // New field
+        $agent->whatsapp_no = $data['whatsapp_no'] ?? null;   // New field
+        $agent->address = $data['address'] ?? null;       // New field
 
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $agent->password = Hash::make($data['password']);
         }
 
@@ -174,10 +175,9 @@ class AgentController extends Controller
 
     public function toggleStatus(User $agent)
     {
-        $agent->is_active = !$agent->is_active;
+        $agent->is_active = ! $agent->is_active;
         $agent->save();
 
         return back()->with('success', 'Agent status updated');
     }
 }
-

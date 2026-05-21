@@ -13,8 +13,8 @@ return new class extends Migration {
         Schema::create('applications', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('agent_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('service_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('agent_id')->constrained()->restrictOnDelete();
+            $table->foreignId('service_id')->constrained()->restrictOnDelete();
 
             $table->json('form_data')->nullable();
 

@@ -232,8 +232,6 @@
             @if(strtoupper(auth()->user()->role) === 'ADMIN')
                 <div class="sb-section">Core</div>
 
-            @if(in_array(request()->getHost(), ['uat.easytax.live']))
-
                 {{-- NATIVE PORTAL SWITCHER --}}
                 <div class="sb-has-submenu">
                     <div class="sb-submenu-toggle" onclick="this.parentElement.classList.toggle('open')">
@@ -259,14 +257,12 @@
                     </div>
                 </div>
                 {{-- END PORTAL SWITCHER --}}
-                @endif
                 
                 <a href="{{ url('admin/dashboard') }}" class="sb-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" data-label="Dashboard">
                     <span class="sb-item__icon"><i class="fas fa-chart-pie"></i></span>
-                    Dashboard
+                    Dashboad
                     @if(request()->is('admin/dashboard*'))<span class="sb-item__dot"></span>@endif
                 </a>
-                @if(request()->getHost() == 'b2b.easytax.live' || request()->getHost() == 'uat.easytax.live')       
 
                 <div class="sb-section">Management</div>
 
@@ -275,8 +271,9 @@
                     Services
                     @if(request()->is('admin/services*'))<span class="sb-item__dot"></span>@endif
                 </a>
+
             
-                @endif
+
 
                 <div class="sb-section">Application Types</div>
 
@@ -322,7 +319,6 @@
                     Team 
                     @if(request()->routeIs('admin.team.*'))<span class="sb-item__dot"></span>@endif
                 </a>
-@if(request()->getHost() == 'b2b.easytax.live' || request()->getHost() == 'uat.easytax.live')       
        
                 <div class="sb-section">System</div>
 
@@ -349,10 +345,11 @@
         Pages
         @if(request()->is('admin/pages*'))<span class="sb-item__dot"></span>@endif
     </a>
-                
-@endif
-
             @endif
+                
+
+
+            
 
             {{-- ========================================== --}}
             {{-- CRM SECTION (Visible to Admin & Marketers) --}}
@@ -403,6 +400,9 @@
                     </svg>
                 </div>
             </div>
+            <div>
+               
+            </div>
 
             <div class="topbar__actions">
                 <div class="user-pill">
@@ -449,4 +449,3 @@
 @yield('js')
 </body>
 </html>
-
