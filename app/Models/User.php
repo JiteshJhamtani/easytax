@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Application;
 
 class User extends Authenticatable
 {
@@ -15,8 +14,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
-        'is_active',
         'agent_code',
         'notification_preference',
         'mobile_number',
@@ -32,9 +29,9 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at'       => 'datetime',
-            'password'                => 'hashed',
-            'is_active'               => 'boolean',
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'is_active' => 'boolean',
             'notification_preference' => \App\Enums\NotificationPreference::class,
         ];
     }
