@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Application;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class KpiController extends Controller
 {
     public function getKpis(Request $request)
     {
-        // Security Check using the secret in your .env file
-        if ($request->bearerToken() !== env('CROSS_SERVER_SECRET')) {
+        $token = (string) $request->bearerToken();
+        $secret = config('b2b.cross_server_secret', '');
+
+        // Security Check using the secret in your config
+        if (! $token || ! hash_equals($secret, $token)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
