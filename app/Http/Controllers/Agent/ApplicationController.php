@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Agent;
 
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
-use Illuminate\Http\Request;
-use App\Enums\PaymentStatus;
-use Illuminate\Support\Str;
-use App\Services\PhonePeService;
 use App\Models\PaymentLog;
+use App\Services\PhonePeService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ApplicationController extends Controller
@@ -52,7 +52,12 @@ class ApplicationController extends Controller
 
     public function data(Request $request)
     {
-        $query = Application::with(['service', 'media'])->where('agent_id', auth()->id());
+        $query = Application::with([
+            'service',
+            'media' => function ($q) {
+                $q->whereIn('collection_name', ['itr_acknowledgement', 'computation_sheet', 'balance_sheet']);
+            },
+        ])->where('agent_id', auth()->id());
 
         // --- FILTERING LOGIC ---
         $type = $request->query('type', 'other');
@@ -69,66 +74,91 @@ class ApplicationController extends Controller
         }
         // ---------------------------
 
-        if ($request->service) { $query->where('service_id', $request->service); }
-        if ($request->status) { $query->where('status', $request->status); }
-        if ($request->payment) { $query->where('payment_status', $request->payment); }
-        if ($request->date_from) { $query->whereDate('created_at', '>=', $request->date_from); }
-        if ($request->date_to) { $query->whereDate('created_at', '<=', $request->date_to); }
-        if ($request->filter === 'pending') { $query->where('status', '!=', 'COMPLETED'); }
-        if ($request->filter === 'completed') { $query->where('status', 'COMPLETED'); }
-        if ($request->filter === 'failed') { $query->where('payment_status', 'FAILED'); }
+        if ($request->service) {
+            $query->where('service_id', $request->service);
+        }
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+        if ($request->payment) {
+            $query->where('payment_status', $request->payment);
+        }
+        if ($request->date_from) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->date_to) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        if ($request->filter === 'pending') {
+            $query->where('status', '!=', 'COMPLETED');
+        }
+        if ($request->filter === 'completed') {
+            $query->where('status', 'COMPLETED');
+        }
+        if ($request->filter === 'failed') {
+            $query->where('payment_status', 'FAILED');
+        }
 
         return datatables()->of($query)
-            ->addColumn('service', fn($a) => $a->service->name)
-            ->addColumn('status', fn($a) => '<span class="badge badge-info">' . $a->status->value . '</span>')
-            ->addColumn('payment', fn($a) => '<span class="badge badge-success">' . $a->payment_status->value . '</span>')
-            ->addColumn('amount', fn($a) => '₹' . number_format($a->amount, 2))
-            ->addColumn('date', fn($a) => $a->created_at->format('d M Y'))
-            
+            ->addColumn('service', fn ($a) => $a->service->name)
+            ->addColumn('status', fn ($a) => '<span class="badge badge-info">'.$a->status->value.'</span>')
+            ->addColumn('payment', fn ($a) => '<span class="badge badge-success">'.$a->payment_status->value.'</span>')
+            ->addColumn('amount', fn ($a) => '₹'.number_format($a->amount, 2))
+            ->addColumn('date', fn ($a) => $a->created_at->format('d M Y'))
+
             // 1. ACK NUMBER COLUMN
-            ->addColumn('ack_no', function($a) {
-                if ($a->service->slug !== 'itr-filing') return '-';
-                
+            ->addColumn('ack_no', function ($a) {
+                if ($a->service->slug !== 'itr-filing') {
+                    return '-';
+                }
+
                 $ackMedia = $a->getFirstMedia('itr_acknowledgement');
                 if ($ackMedia) {
                     $downloadUrl = route('agent.documents.download', $ackMedia->id);
                     $ackNumber = $ackMedia->getCustomProperty('ack_number');
-                    
+
                     $html = '';
                     if ($ackNumber) {
                         $html .= '<span class="d-block font-weight-bold text-dark mb-1">'.$ackNumber.'</span>';
                     }
                     $html .= '<a href="'.$downloadUrl.'" class="text-primary font-weight-bold"><i class="fas fa-download mr-1"></i> Download</a>';
-                    
+
                     return $html;
                 }
+
                 return '<span class="text-muted text-xs font-italic">Pending</span>';
             })
 
             // 2. COMPUTATION COLUMN
-            ->addColumn('computation', function($a) {
-                if ($a->service->slug !== 'itr-filing') return '-';
-                
+            ->addColumn('computation', function ($a) {
+                if ($a->service->slug !== 'itr-filing') {
+                    return '-';
+                }
+
                 $compMedia = $a->getFirstMedia('computation_sheet');
                 if ($compMedia) {
                     $downloadUrl = route('agent.documents.download', $compMedia->id);
+
                     return '<a href="'.$downloadUrl.'" class="text-primary font-weight-bold"><i class="fas fa-download mr-1"></i> Download</a>';
                 }
+
                 return '<span class="text-muted text-xs font-italic">Pending</span>';
             })
 
             // 3. SMART BALANCE SHEET BUTTON
-            ->addColumn('balance_sheet', function($a) {
-                if ($a->service->slug !== 'itr-filing') return '-';
-                
+            ->addColumn('balance_sheet', function ($a) {
+                if ($a->service->slug !== 'itr-filing') {
+                    return '-';
+                }
+
                 $bsMedia = $a->getFirstMedia('balance_sheet');
-                
+
                 // If it has been generated, let Agent view, download, or regenerate
                 if ($bsMedia) {
                     $viewUrl = route('agent.documents.view', $bsMedia->id);
                     $downloadUrl = route('agent.documents.download', $bsMedia->id);
                     $regenUrl = route('agent.applications.balance-sheet', $a->id);
-                    
+
                     return '
                     <div class="d-flex align-items-center gap-1">
                         <a href="'.$viewUrl.'" target="_blank" class="btn btn-sm btn-light border text-primary px-2 py-1" title="View"><i class="fas fa-eye"></i></a>
@@ -139,9 +169,10 @@ class ApplicationController extends Controller
 
                 // If not generated yet, show the Generate button
                 $url = route('agent.applications.balance-sheet', $a->id);
+
                 return '<a href="'.$url.'" class="btn btn-sm btn-outline-success font-weight-bold" style="white-space: nowrap;"><i class="fas fa-file-excel mr-1"></i> Generate</a>';
             })
-            ->addColumn('actions', fn($a) => '<a href="' . route('agent.applications.show', $a) . '" class="btn btn-sm btn-primary">View</a>')
+            ->addColumn('actions', fn ($a) => '<a href="'.route('agent.applications.show', $a).'" class="btn btn-sm btn-primary">View</a>')
             ->rawColumns(['status', 'payment', 'ack_no', 'computation', 'balance_sheet', 'actions'])
             ->make(true);
     }
@@ -150,11 +181,10 @@ class ApplicationController extends Controller
     {
         abort_if($application->agent_id !== auth()->id(), 403);
 
-        $application->load(['service','media']);
+        $application->load(['service', 'media']);
 
         return view('agent.applications.show', compact('application'));
     }
-
 
     public function retry(Application $application)
     {
@@ -164,18 +194,18 @@ class ApplicationController extends Controller
             return back()->with('error', 'Payment already completed.');
         }
 
-        $transactionId = 'TXN_' . Str::uuid();
+        $transactionId = 'TXN_'.Str::uuid();
 
         $application->update([
             'payment_reference' => $transactionId,
-            'payment_status'    => PaymentStatus::PENDING
+            'payment_status' => PaymentStatus::PENDING,
         ]);
 
-        $phonePe = new PhonePeService();
+        $phonePe = new PhonePeService;
 
         $response = $phonePe->createPayment(
             $transactionId,
-            (int) ($application->amount * 100),
+            (int) round($application->amount * 100),
             (string) auth()->id(),
             route('payment.redirect'),
             route('payment.webhook')
@@ -184,8 +214,8 @@ class ApplicationController extends Controller
         PaymentLog::create([
             'application_id' => $application->id,
             'transaction_id' => $transactionId,
-            'event'          => 'retry',
-            'response'       => $response
+            'event' => 'retry',
+            'response' => $response,
         ]);
 
         if (isset($response['data']['instrumentResponse']['redirectInfo']['url'])) {
@@ -207,7 +237,7 @@ class ApplicationController extends Controller
 
         $application->update([
             'status' => \App\Enums\ApplicationStatus::CANCELLED,
-            'commission_amount' => 0 
+            'commission_amount' => 0,
         ]);
 
         activity('application')
@@ -235,9 +265,9 @@ class ApplicationController extends Controller
             abort(403, 'Unauthorized access to this document.');
         }
 
-        $path = storage_path('app/private/' . $media->id . '/' . $media->file_name);
+        $path = storage_path('app/private/'.$media->id.'/'.$media->file_name);
 
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             abort(404, 'File not found');
         }
 
@@ -252,9 +282,9 @@ class ApplicationController extends Controller
             abort(403, 'Unauthorized access to this document.');
         }
 
-        $path = storage_path('app/private/' . $media->id . '/' . $media->file_name);
+        $path = storage_path('app/private/'.$media->id.'/'.$media->file_name);
 
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             abort(404, 'File not found');
         }
 
@@ -269,18 +299,18 @@ class ApplicationController extends Controller
     public function balanceSheetForm($id)
     {
         $application = Application::with('media')->findOrFail($id);
-        
+
         // SECURITY: Ensure the agent owns this application!
         abort_if($application->agent_id !== auth()->id(), 403);
 
         $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
-        
+
         $sales = (float) preg_replace('/[^0-9.]/', '', $formData['business_turnover'] ?? 0);
         $netProfit = (float) preg_replace('/[^0-9.]/', '', $formData['business_income'] ?? $formData['business_profession_income'] ?? 0);
         $otherIncome = (float) preg_replace('/[^0-9.]/', '', $formData['other_income'] ?? 0);
 
         $extractedData = [];
-        $parser = new \Smalot\PdfParser\Parser();
+        $parser = new \Smalot\PdfParser\Parser;
 
         $compMedia = $application->getFirstMedia('computation_sheet');
 
@@ -302,14 +332,17 @@ class ApplicationController extends Controller
                     $extractedData['sundry_creditors'] = (float) str_replace(',', '', $matches[1]);
                 }
                 if (preg_match('/Gross Receipts\/Turnover\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches)) {
-                    $sales = (float) str_replace(',', '', $matches[1]); 
+                    $sales = (float) str_replace(',', '', $matches[1]);
                 }
                 if (preg_match('/Net Profit Declared\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches) || preg_match('/Total Income\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches)) {
                     $foundProfit = (float) str_replace(',', '', $matches[1]);
-                    if ($foundProfit > 0) { $netProfit = $foundProfit; }
+                    if ($foundProfit > 0) {
+                        $netProfit = $foundProfit;
+                    }
                 }
 
-            } catch (\Exception $e) { }
+            } catch (\Exception $e) {
+            }
         }
 
         return view('agent.applications.balance_sheet', compact('application', 'sales', 'netProfit', 'otherIncome', 'extractedData'));
@@ -318,7 +351,7 @@ class ApplicationController extends Controller
     public function generateBalanceSheetPdf(Request $request, $id)
     {
         $application = Application::findOrFail($id);
-        
+
         // SECURITY: Ensure the agent owns this application
         abort_if($application->agent_id !== auth()->id(), 403);
 
@@ -345,20 +378,20 @@ class ApplicationController extends Controller
 
         // Generate PDF using your template
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.applications.pdfs.balance_sheet', $pdfData);
-        
+
         // --- NEW: AUTO-SAVE TO DATABASE FOR AGENT ---
-        $fileName = 'Balance_Sheet_' . $panNumber . '.pdf';
-        
+        $fileName = 'Balance_Sheet_'.$panNumber.'.pdf';
+
         // Clear any old balance sheets for this app so they don't pile up
         $application->clearMediaCollection('balance_sheet');
-        
+
         // Save the raw PDF string to the private folder
         $application->addMediaFromString($pdf->output())
             ->usingFileName($fileName)
             ->usingName('Balance Sheet')
             ->toMediaCollection('balance_sheet', 'private');
         // ----------------------------------
-        
+
         return $pdf->stream($fileName);
     }
 }

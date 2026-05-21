@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Application;
 use App\Models\AgentPayout;
+use App\Models\Application;
 use Illuminate\Support\Facades\DB;
 
 class PayoutService
@@ -15,7 +15,7 @@ class PayoutService
             $query = Application::query()
                 ->whereNull('payout_id')
                 ->whereNotNull('commission_amount')
-                ->where('payment_status', 'SUCCESS')
+                ->where('payment_status', \App\Enums\PaymentStatus::PAID->value)
                 ->whereBetween('submitted_at', [$startDate, $endDate]);
 
             if ($agentId) {
@@ -35,15 +35,15 @@ class PayoutService
                 }
 
                 $payout = AgentPayout::create([
-                    'agent_id'     => $agent,
-                    'amount'       => $totalCommission,
+                    'agent_id' => $agent,
+                    'amount' => $totalCommission,
                     'period_start' => $startDate,
-                    'period_end'   => $endDate,
+                    'period_end' => $endDate,
                 ]);
 
                 Application::whereIn('id', $apps->pluck('id'))
                     ->update([
-                        'payout_id' => $payout->id
+                        'payout_id' => $payout->id,
                     ]);
 
                 $payouts[] = $payout;
@@ -57,7 +57,7 @@ class PayoutService
     {
         $payout->update([
             'paid_at' => now(),
-            'notes'   => $notes
+            'notes' => $notes,
         ]);
 
         return $payout;
@@ -68,7 +68,7 @@ class PayoutService
         $query = Application::query()
             ->whereNull('payout_id')
             ->whereNotNull('commission_amount')
-            ->where('payment_status', 'SUCCESS')
+            ->where('payment_status', \App\Enums\PaymentStatus::PAID->value)
             ->whereBetween('submitted_at', [$startDate, $endDate]);
 
         if ($agentId) {
@@ -88,9 +88,9 @@ class PayoutService
             }
 
             $preview[] = [
-                'agent_id'     => $agent,
+                'agent_id' => $agent,
                 'applications' => $apps->count(),
-                'amount'       => $totalCommission
+                'amount' => $totalCommission,
             ];
         }
 

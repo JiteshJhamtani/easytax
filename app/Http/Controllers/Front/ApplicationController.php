@@ -2,29 +2,27 @@
 
 namespace App\Http\Controllers\Front;
 
+use App\Enums\ApplicationStatus;
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\PaymentLog;
-use App\Models\Service;
-use App\Enums\ApplicationStatus;
-use App\Enums\PaymentStatus;
 use App\Services\ApplicationDocumentService;
 use App\Services\ApplicationLogger;
 use App\Services\FormValidator;
 use App\Services\RazorpayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class ApplicationController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
-    | Store Application & Initiate Razorpay Order new feature for controller 
+    | Store Application & Initiate Razorpay Order new feature for controller
 
     |--------------------------------------------------------------------------
     */
-public function store(
+    public function store(
         Request $request,
         string $slug,
         FormValidator $validator,
@@ -44,7 +42,7 @@ public function store(
             }
         }
 
-        \Illuminate\Support\Facades\Log::info("Form validation passed.");
+        \Illuminate\Support\Facades\Log::info('Form validation passed.');
 
         // ==========================================
         // DYNAMIC PRICING OVERRIDE ENGINE
@@ -53,54 +51,62 @@ public function store(
         $commission = $service->calculateCommission((float) $service->price);
 
         if (in_array($service->slug, ['gst-return-filing', 'itr-filing', 'gst-annual-package'])) {
-            
+
             $rule = null;
 
             if ($service->slug === 'gst-return-filing') {
                 $col1 = $validated['gst_type'] ?? '';
                 $col2 = $validated['annual_turnover_range'] ?? '';
                 $col3 = $validated['frequency_of_return'] ?? '';
-                $col4 = $validated['plan'] ?? ''; 
+                $col4 = $validated['plan'] ?? '';
 
                 $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
-                    ->where(function($q) use ($col1) { $q->where('gst_type', $col1)->orWhereNull('gst_type')->orWhere('gst_type', 'Any'); })
-                    ->where(function($q) use ($col2) { $q->where('turnover', $col2)->orWhereNull('turnover')->orWhere('turnover', 'Any'); })
-                    ->where(function($q) use ($col3) { $q->where('frequency', $col3)->orWhereNull('frequency')->orWhere('frequency', 'Any'); })
-                    ->where(function($q) use ($col4) { $q->where('plan', $col4)->orWhereNull('plan')->orWhere('plan', 'Any'); })
+                    ->where(function ($q) use ($col1) {
+                        $q->where('gst_type', $col1)->orWhereNull('gst_type')->orWhere('gst_type', 'Any');
+                    })
+                    ->where(function ($q) use ($col2) {
+                        $q->where('turnover', $col2)->orWhereNull('turnover')->orWhere('turnover', 'Any');
+                    })
+                    ->where(function ($q) use ($col3) {
+                        $q->where('frequency', $col3)->orWhereNull('frequency')->orWhere('frequency', 'Any');
+                    })
+                    ->where(function ($q) use ($col4) {
+                        $q->where('plan', $col4)->orWhereNull('plan')->orWhere('plan', 'Any');
+                    })
                     ->orderByRaw("(plan = 'Any' OR plan IS NULL) ASC")->first();
 
             } elseif ($service->slug === 'gst-annual-package') {
                 $turnoverVal = $validated['turnover'] ?? 'Any';
 
                 $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
-                    ->where(function($q) use ($turnoverVal) { 
-                        $q->where('turnover', $turnoverVal)->orWhereNull('turnover')->orWhere('turnover', 'Any'); 
+                    ->where(function ($q) use ($turnoverVal) {
+                        $q->where('turnover', $turnoverVal)->orWhereNull('turnover')->orWhere('turnover', 'Any');
                     })
                     ->orderByRaw("(turnover = 'Any' OR turnover IS NULL) ASC")
                     ->first();
             } else {
                 // ITR TRUE DATABASE MAPPING
-                $itrType     = $request->input('itr_type', 'Any'); 
-                $turnover    = $request->input('turnover', $request->input('business_turnover', 'Any')); 
-                $itrBusiness = $request->input('has_business', 'Any');      
-                $itrCapGains = $request->input('has_capital_gains', 'Any'); 
+                $itrType = $request->input('itr_type', 'Any');
+                $turnover = $request->input('turnover', $request->input('business_turnover', 'Any'));
+                $itrBusiness = $request->input('has_business', 'Any');
+                $itrCapGains = $request->input('has_capital_gains', 'Any');
 
                 $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
-                    ->where(function($q) use ($itrType) { 
+                    ->where(function ($q) use ($itrType) {
                         $q->where('itr_type', $itrType)->orWhere('itr_type', strtolower($itrType))
-                          ->orWhereNull('itr_type')->orWhereIn('itr_type', ['Any', 'any']); 
+                            ->orWhereNull('itr_type')->orWhereIn('itr_type', ['Any', 'any']);
                     })
-                    ->where(function($q) use ($turnover) { 
+                    ->where(function ($q) use ($turnover) {
                         $q->where('turnover', $turnover)->orWhere('turnover', strtolower($turnover))
-                          ->orWhereNull('turnover')->orWhereIn('turnover', ['Any', 'any']); 
+                            ->orWhereNull('turnover')->orWhereIn('turnover', ['Any', 'any']);
                     })
-                    ->where(function($q) use ($itrBusiness) { 
+                    ->where(function ($q) use ($itrBusiness) {
                         $q->where('itr_business', $itrBusiness)->orWhere('itr_business', strtolower($itrBusiness))
-                          ->orWhereNull('itr_business')->orWhereIn('itr_business', ['Any', 'any']); 
+                            ->orWhereNull('itr_business')->orWhereIn('itr_business', ['Any', 'any']);
                     })
-                    ->where(function($q) use ($itrCapGains) { 
+                    ->where(function ($q) use ($itrCapGains) {
                         $q->where('itr_capital_gains', $itrCapGains)->orWhere('itr_capital_gains', strtolower($itrCapGains))
-                          ->orWhereNull('itr_capital_gains')->orWhereIn('itr_capital_gains', ['Any', 'any']); 
+                            ->orWhereNull('itr_capital_gains')->orWhereIn('itr_capital_gains', ['Any', 'any']);
                     })
                     ->orderByRaw("
                         (CASE WHEN itr_capital_gains IS NOT NULL AND LOWER(itr_capital_gains) != 'any' THEN 1 ELSE 0 END) +
@@ -121,28 +127,56 @@ public function store(
         }
 
         // ==========================================
-        // 🎟️ COUPON MATH LOGIC 
+        // 🎟️ COUPON MATH LOGIC
         // ==========================================
         $couponId = null;
         $couponBonus = 0;
 
         $couponInput = $request->input('applied_coupon') ?? $request->input('coupon') ?? $request->input('coupon_code') ?? $request->input('code');
-        if (!empty($couponInput)) {
+        if (! empty($couponInput)) {
             $couponCode = strtoupper(trim($couponInput));
-            
+
             $connectionName = config()->has('database.connections.master_connection') ? 'master_connection' : config('database.default');
             try {
                 $coupon = \Illuminate\Support\Facades\DB::connection($connectionName)->table('coupons')->where('code', $couponCode)->where('is_active', true)->first();
             } catch (\Exception $e) {
                 $coupon = \Illuminate\Support\Facades\DB::table('coupons')->where('code', $couponCode)->where('is_active', true)->first();
             }
-            
+
             if ($coupon) {
+                // 1. Check expiration
+                if ($coupon->expires_at && now()->greaterThan($coupon->expires_at)) {
+                    return back()->with('error', 'This promo code has expired.')->withInput();
+                }
+
+                // 2. Check service locks
+                if ($coupon->service_id && $coupon->service_id != $service->id) {
+                    return back()->with('error', 'This code cannot be used for this service.')->withInput();
+                }
+                if (! empty($coupon->target_services)) {
+                    $allowedServices = json_decode($coupon->target_services, true);
+                    if (is_array($allowedServices) && count($allowedServices) > 0 && ! in_array($service->id, $allowedServices)) {
+                        return back()->with('error', 'This code cannot be used for this service.')->withInput();
+                    }
+                }
+
+                // 3. Check usage limits
+                if ($coupon->global_max_uses && $coupon->total_used >= $coupon->global_max_uses) {
+                    return back()->with('error', 'Promo code max usage reached.')->withInput();
+                }
+                $usedCount = \App\Models\Application::where('agent_id', auth()->id())
+                    ->where('coupon_id', $coupon->id)
+                    ->whereNotIn('status', ['DRAFT', 'CANCELLED'])
+                    ->count();
+                if ($coupon->max_uses_per_agent && $usedCount >= $coupon->max_uses_per_agent) {
+                    return back()->with('error', 'You have already used this promo code.')->withInput();
+                }
+
                 $couponId = $coupon->id;
                 $couponBonus = $coupon->bonus_amount;
-                
+
                 // Increase the agent's total commission by the bonus amount!
-                $commission += $couponBonus; 
+                $commission += $couponBonus;
 
                 // Synchronize the usage count back to the master database
                 try {
@@ -158,47 +192,47 @@ public function store(
         $amountToPay = max(0, $finalPrice - $commission);
 
         $application = \App\Models\Application::create([
-            'agent_id'          => auth()->id(),
-            'service_id'        => $service->id,
-            'form_data'         => $validated,
-            'amount'            => $finalPrice, 
-            'commission_amount' => $commission, 
-            
+            'agent_id' => auth()->id(),
+            'service_id' => $service->id,
+            'form_data' => $validated,
+            'amount' => $finalPrice,
+            'commission_amount' => $commission,
+
             // ── SAVE COUPON TO DATABASE ──
-            'coupon_id'         => $couponId,
-            'coupon_bonus'      => $couponBonus,
+            'coupon_id' => $couponId,
+            'coupon_bonus' => $couponBonus,
             // ─────────────────────────────
-            
-            'status'            => \App\Enums\ApplicationStatus::DRAFT,
-            'payment_status'    => \App\Enums\PaymentStatus::PENDING,
+
+            'status' => \App\Enums\ApplicationStatus::DRAFT,
+            'payment_status' => \App\Enums\PaymentStatus::PENDING,
         ]);
 
         \Illuminate\Support\Facades\Log::info("Draft application created with ID: {$application->id}");
 
         $applicationDocumentService->handleUploads($application, $request, $service->slug);
-        
+
         // Use your existing Logger
         if (class_exists('\App\Helpers\ApplicationLogger')) {
             \App\Helpers\ApplicationLogger::log($application->id, 'application_created');
         }
 
         // Create Razorpay order
-        $receiptId = 'APP_' . $application->id . '_' . time();
-        $razorpay  = new \App\Services\RazorpayService();
+        $receiptId = 'APP_'.$application->id.'_'.time();
+        $razorpay = new \App\Services\RazorpayService;
 
         $orderResponse = $razorpay->createOrder(
             $receiptId,
-            (int) ($amountToPay * 100), // Amount in paise
+            (int) round($amountToPay * 100), // Amount in paise
             [
                 'application_id' => $application->id,
-                'agent_id'       => auth()->id(),
-                'service_name'   => $service->name,
+                'agent_id' => auth()->id(),
+                'service_name' => $service->name,
             ]
         );
 
         \Illuminate\Support\Facades\Log::info("Razorpay order creation response for application {$application->id}", $orderResponse);
 
-        if (!$orderResponse['success']) {
+        if (! $orderResponse['success']) {
             return back()->with('error', 'Payment initialization failed. Please try again.');
         }
 
@@ -209,18 +243,18 @@ public function store(
         \App\Models\PaymentLog::create([
             'application_id' => $application->id,
             'transaction_id' => $receiptId,
-            'event'          => 'order_created',
-            'status'         => $orderResponse['status'] ?? null,
-            'payload'        => $validated,
-            'response'       => $orderResponse,
+            'event' => 'order_created',
+            'status' => $orderResponse['status'] ?? null,
+            'payload' => $validated,
+            'response' => $orderResponse,
         ]);
 
         return back()->with('razorpay_order', [
-            'order_id'       => $orderResponse['order_id'],
-            'amount'         => $orderResponse['amount'],
-            'currency'       => $orderResponse['currency'],
+            'order_id' => $orderResponse['order_id'],
+            'amount' => $orderResponse['amount'],
+            'currency' => $orderResponse['currency'],
             'application_id' => $application->id,
-            'key_id'         => config('razorpay.key_id'),
+            'key_id' => config('razorpay.key_id'),
         ]);
     }
     /*
@@ -229,12 +263,12 @@ public function store(
     |--------------------------------------------------------------------------
     */
 
-   public function paymentSuccess(Request $request)
+    public function paymentSuccess(Request $request)
     {
         $validated = $request->validate([
             'razorpay_payment_id' => 'required|string',
-            'razorpay_order_id'   => 'required|string',
-            'razorpay_signature'  => 'required|string',
+            'razorpay_order_id' => 'required|string',
+            'razorpay_signature' => 'required|string',
         ]);
 
         $application = Application::where('payment_reference', $validated['razorpay_order_id'])
@@ -242,15 +276,16 @@ public function store(
             ->firstOrFail();
 
         // Verify signature
-        $razorpay = new RazorpayService();
-        $isValid  = $razorpay->verifySignature(
+        $razorpay = new RazorpayService;
+        $isValid = $razorpay->verifySignature(
             $validated['razorpay_order_id'],
             $validated['razorpay_payment_id'],
             $validated['razorpay_signature']
         );
 
-        if (!$isValid) {
+        if (! $isValid) {
             Log::error('Razorpay signature verification failed', $validated);
+
             return redirect()->route('payment.result', ['txn' => $application->payment_reference])
                 ->with('error', 'Payment verification failed.');
         }
@@ -258,35 +293,52 @@ public function store(
         // Fetch payment details
         $payment = $razorpay->fetchPayment($validated['razorpay_payment_id']);
 
+        $expectedAmount = (int) round(max(0, $application->amount - $application->commission_amount) * 100);
+
+        if (($payment['amount'] ?? 0) !== $expectedAmount) {
+            Log::critical('Payment amount mismatch!', [
+                'application_id' => $application->id,
+                'expected' => $expectedAmount,
+                'received' => $payment['amount'] ?? 0,
+            ]);
+
+            return redirect()->route('payment.result', ['txn' => $application->payment_reference])
+                ->with('error', 'Payment amount verification failed. Contact support.');
+        }
+
         PaymentLog::create([
             'application_id' => $application->id,
             'transaction_id' => $validated['razorpay_payment_id'],
-            'event'          => 'payment_success',
-            'status'         => $payment['status'] ?? 'captured',
-            'payload'        => null,
-            'response'       => $payment,
+            'event' => 'payment_success',
+            'status' => $payment['status'] ?? 'captured',
+            'payload' => null,
+            'response' => $payment,
         ]);
 
-        // 🛑 STRICT CHECK: Only process this if it hasn't been paid yet!
-        if ($application->payment_status !== PaymentStatus::PAID) {
-            
-            $application->update([
-                'payment_status' => PaymentStatus::PAID,
-                'status'         => ApplicationStatus::SUBMITTED,
-                'submitted_at'   => now(),
-            ]);
+        //  STRICT CHECK: Only process this if it hasn't been paid yet!
+        \Illuminate\Support\Facades\DB::transaction(function () use ($application) {
+            $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
 
-            activity('application')
-                ->performedOn($application)
-                ->causedBy($application->agent)
-                ->log('Payment confirmed via Razorpay');
+            if ($lockedApplication->payment_status !== PaymentStatus::PAID) {
 
-            // Notify admins
-            $admins = \App\Models\User::where('role', 'ADMIN')->where('is_active', true)->get();
-            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationSubmittedNotification($application));
+                $lockedApplication->update([
+                    'payment_status' => PaymentStatus::PAID,
+                    'status' => ApplicationStatus::SUBMITTED,
+                    'submitted_at' => now(),
+                ]);
 
-            ApplicationLogger::log($application->id, 'payment_success');
-        }
+                activity('application')
+                    ->performedOn($lockedApplication)
+                    ->causedBy($lockedApplication->agent)
+                    ->log('Payment confirmed via Razorpay');
+
+                // Notify admins
+                $admins = \App\Models\User::where('role', 'ADMIN')->where('is_active', true)->get();
+                \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationSubmittedNotification($lockedApplication));
+
+                ApplicationLogger::log($lockedApplication->id, 'payment_success');
+            }
+        });
 
         return redirect()->route('payment.result', ['txn' => $application->payment_reference]);
     }
@@ -301,7 +353,7 @@ public function store(
     {
         $orderId = $request->input('razorpay_order_id');
 
-        if (!$orderId) {
+        if (! $orderId) {
             return redirect()->route('services.index')
                 ->with('error', 'Invalid payment reference.');
         }
@@ -311,18 +363,56 @@ public function store(
             ->first();
 
         if ($application) {
-            $application->update(['payment_status' => PaymentStatus::FAILED]);
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($application, $orderId, $request) {
+                $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
 
-            PaymentLog::create([
-                'application_id' => $application->id,
-                'transaction_id' => $orderId,
-                'event'          => 'payment_failed',
-                'status'         => 'failed',
-                'payload'        => $request->all(),
-                'response'       => null,
-            ]);
+                // 🛑 STRICT CHECK: Prevent overwriting a successful payment (e.g. if webhook already marked it PAID)
+                if ($lockedApplication->payment_status === PaymentStatus::PAID) {
+                    return redirect()->route('payment.result', ['txn' => $orderId])
+                        ->with('success', 'Payment was successful and processed in the background.');
+                }
 
-            ApplicationLogger::log($application->id, 'payment_failed');
+                // 🟢 FALLBACK CHECK: If the frontend froze but the payment actually succeeded, check Razorpay directly
+                $razorpay = new \App\Services\RazorpayService;
+                $orderStatus = $razorpay->fetchOrderStatus($orderId);
+
+                if ($orderStatus === 'paid') {
+                    $lockedApplication->update([
+                        'payment_status' => PaymentStatus::PAID,
+                        'status' => ApplicationStatus::SUBMITTED,
+                        'submitted_at' => now(),
+                    ]);
+
+                    activity('application')
+                        ->performedOn($lockedApplication)
+                        ->causedBy($lockedApplication->agent)
+                        ->log('Payment confirmed via fallback check after modal closure');
+
+                    // Notify admins
+                    $admins = \App\Models\User::where('role', 'ADMIN')->where('is_active', true)->get();
+                    \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationSubmittedNotification($lockedApplication));
+
+                    \App\Services\ApplicationLogger::log($lockedApplication->id, 'payment_success_fallback');
+
+                    return redirect()->route('payment.result', ['txn' => $orderId])
+                        ->with('success', 'Payment was successful and recovered automatically.');
+                }
+
+                $lockedApplication->update(['payment_status' => PaymentStatus::FAILED]);
+
+                PaymentLog::create([
+                    'application_id' => $lockedApplication->id,
+                    'transaction_id' => $orderId,
+                    'event' => 'payment_failed',
+                    'status' => 'failed',
+                    'payload' => $request->all(),
+                    'response' => null,
+                ]);
+
+                ApplicationLogger::log($lockedApplication->id, 'payment_failed');
+
+                return redirect()->route('payment.result', ['txn' => $orderId]);
+            });
         }
 
         return redirect()->route('payment.result', ['txn' => $orderId]);
@@ -338,10 +428,10 @@ public function store(
     {
         $transactionId = $request->query('txn');
 
-        if (!$transactionId) {
+        if (! $transactionId) {
             return view('agent.payment-result', [
                 'application' => null,
-                'error'       => 'Invalid transaction reference.',
+                'error' => 'Invalid transaction reference.',
             ]);
         }
 
@@ -349,10 +439,10 @@ public function store(
             ->where('agent_id', auth()->id())
             ->first();
 
-        if (!$application) {
+        if (! $application) {
             return view('agent.payment-result', [
                 'application' => null,
-                'error'       => 'Application not found.',
+                'error' => 'Application not found.',
             ]);
         }
 
@@ -377,41 +467,41 @@ public function store(
 
         // Re-use stored commission
         $amountToPay = max(0, $application->amount - $application->commission_amount);
-        $receiptId   = 'APP_' . $application->id . '_RETRY_' . time();
+        $receiptId = 'APP_'.$application->id.'_RETRY_'.time();
 
-        $razorpay      = new RazorpayService();
+        $razorpay = new RazorpayService;
         $orderResponse = $razorpay->createOrder(
             $receiptId,
-            (int) ($amountToPay * 100),
+            (int) round($amountToPay * 100),
             [
                 'application_id' => $application->id,
-                'agent_id'       => auth()->id(),
-                'retry'          => true,
+                'agent_id' => auth()->id(),
+                'retry' => true,
             ]
         );
 
-        if (!$orderResponse['success']) {
+        if (! $orderResponse['success']) {
             return back()->with('error', 'Retry failed. Please try again.');
         }
 
         $application->update([
             'payment_reference' => $orderResponse['order_id'],
-            'payment_status'    => PaymentStatus::PENDING,
+            'payment_status' => PaymentStatus::PENDING,
         ]);
 
         PaymentLog::create([
             'application_id' => $application->id,
             'transaction_id' => $receiptId,
-            'event'          => 'retry_order_created',
-            'response'       => $orderResponse,
+            'event' => 'retry_order_created',
+            'response' => $orderResponse,
         ]);
 
         return back()->with('razorpay_order', [
-            'order_id'       => $orderResponse['order_id'],
-            'amount'         => $orderResponse['amount'],
-            'currency'       => $orderResponse['currency'],
+            'order_id' => $orderResponse['order_id'],
+            'amount' => $orderResponse['amount'],
+            'currency' => $orderResponse['currency'],
             'application_id' => $application->id,
-            'key_id'         => config('razorpay.key_id'),
+            'key_id' => config('razorpay.key_id'),
         ]);
     }
 
@@ -421,19 +511,20 @@ public function store(
     |--------------------------------------------------------------------------
     */
 
-  public function webhook(Request $request)
+    public function webhook(Request $request)
     {
-        $payload   = $request->getContent();
+        $payload = $request->getContent();
         $signature = $request->header('X-Razorpay-Signature');
 
-        $razorpay = new RazorpayService();
+        $razorpay = new RazorpayService;
 
-        if (!$razorpay->verifyWebhook($payload, $signature)) {
+        if (! $razorpay->verifyWebhook($payload, $signature)) {
             Log::error('Razorpay webhook signature verification failed');
+
             return response()->json(['error' => 'Invalid signature'], 403);
         }
 
-        $data  = json_decode($payload, true);
+        $data = json_decode($payload, true);
         $event = $data['event'] ?? null;
 
         Log::info('Razorpay webhook received', ['event' => $event, 'data' => $data]);
@@ -441,47 +532,65 @@ public function store(
         // Handle payment.captured event
         if ($event === 'payment.captured') {
             $paymentId = $data['payload']['payment']['entity']['id'] ?? null;
-            $orderId   = $data['payload']['payment']['entity']['order_id'] ?? null;
+            $orderId = $data['payload']['payment']['entity']['order_id'] ?? null;
 
-            if (!$orderId) {
+            if (! $orderId) {
                 return response()->json(['error' => 'Missing order_id'], 400);
             }
 
             $application = Application::where('payment_reference', $orderId)->first();
 
-            if (!$application) {
+            if (! $application) {
                 Log::warning('Webhook: application not found for order', ['order_id' => $orderId]);
-                return response()->json(['success' => true]); 
+
+                return response()->json(['success' => true]);
             }
 
-            // 🛑 STRICT CHECK: Only update if not already paid by the frontend
-            if ($application->payment_status !== PaymentStatus::PAID) {
-                $application->update([
-                    'payment_status' => PaymentStatus::PAID,
-                    'status'         => ApplicationStatus::SUBMITTED,
-                    'submitted_at'   => now(),
-                ]);
+            $receivedAmount = $data['payload']['payment']['entity']['amount'] ?? 0;
+            $expectedAmount = (int) round(max(0, $application->amount - $application->commission_amount) * 100);
 
-                activity('application')
-                    ->performedOn($application)
-                    ->causedBy($application->agent)
-                    ->log('Payment confirmed via Razorpay (Webhook)');
-
-                // Notify admins
-                $admins = \App\Models\User::where('role', 'ADMIN')->where('is_active', true)->get();
-                \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationSubmittedNotification($application));
-
-                PaymentLog::create([
+            if ($receivedAmount !== $expectedAmount) {
+                Log::critical('Webhook: Payment amount mismatch!', [
                     'application_id' => $application->id,
-                    'transaction_id' => $paymentId,
-                    'event'          => 'webhook_captured',
-                    'status'         => 'captured',
-                    'payload'        => $data,
-                    'response'       => null,
+                    'expected' => $expectedAmount,
+                    'received' => $receivedAmount,
                 ]);
 
-                ApplicationLogger::log($application->id, 'payment_success_webhook');
+                return response()->json(['success' => true]);
             }
+
+            //  STRICT CHECK: Only update if not already paid by the frontend
+            \Illuminate\Support\Facades\DB::transaction(function () use ($application, $paymentId, $data) {
+                $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
+
+                if ($lockedApplication->payment_status !== PaymentStatus::PAID) {
+                    $lockedApplication->update([
+                        'payment_status' => PaymentStatus::PAID,
+                        'status' => ApplicationStatus::SUBMITTED,
+                        'submitted_at' => now(),
+                    ]);
+
+                    activity('application')
+                        ->performedOn($lockedApplication)
+                        ->causedBy($lockedApplication->agent)
+                        ->log('Payment confirmed via Razorpay (Webhook)');
+
+                    // Notify admins
+                    $admins = \App\Models\User::where('role', 'ADMIN')->where('is_active', true)->get();
+                    \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationSubmittedNotification($lockedApplication));
+
+                    PaymentLog::create([
+                        'application_id' => $lockedApplication->id,
+                        'transaction_id' => $paymentId,
+                        'event' => 'webhook_captured',
+                        'status' => 'captured',
+                        'payload' => $data,
+                        'response' => null,
+                    ]);
+
+                    ApplicationLogger::log($lockedApplication->id, 'payment_success_webhook');
+                }
+            });
         }
 
         // Handle payment.failed event
@@ -491,29 +600,37 @@ public function store(
             if ($orderId) {
                 $application = Application::where('payment_reference', $orderId)->first();
 
-                if ($application && $application->payment_status !== PaymentStatus::PAID) {
-                    $application->update(['payment_status' => PaymentStatus::FAILED]);
+                if ($application) {
+                    \Illuminate\Support\Facades\DB::transaction(function () use ($application, $data) {
+                        $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
 
-                    PaymentLog::create([
-                        'application_id' => $application->id,
-                        'transaction_id' => $data['payload']['payment']['entity']['id'] ?? null,
-                        'event'          => 'webhook_failed',
-                        'status'         => 'failed',
-                        'payload'        => $data,
-                        'response'       => null,
-                    ]);
+                        if ($lockedApplication->payment_status !== PaymentStatus::PAID) {
+                            $lockedApplication->update(['payment_status' => PaymentStatus::FAILED]);
 
-                    ApplicationLogger::log($application->id, 'payment_failed_webhook');
+                            PaymentLog::create([
+                                'application_id' => $lockedApplication->id,
+                                'transaction_id' => $data['payload']['payment']['entity']['id'] ?? null,
+                                'event' => 'webhook_failed',
+                                'status' => 'failed',
+                                'payload' => $data,
+                                'response' => null,
+                            ]);
+
+                            ApplicationLogger::log($lockedApplication->id, 'payment_failed_webhook');
+                        }
+                    });
                 }
             }
         }
 
         return response()->json(['success' => true]);
     }
+
     public function checkStatus($transactionId)
     {
         // 1. Try finding application via Razorpay order_id
         $application = Application::where('payment_reference', $transactionId)
+            ->where('agent_id', auth()->id())
             ->first();
 
         if ($application) {
@@ -525,7 +642,7 @@ public function store(
                     'paid', 'success', 'completed' => 'SUCCESS',
                     'failed', 'error' => 'FAILED',
                     default => 'PENDING'
-                }
+                },
             ]);
         }
 
@@ -542,19 +659,18 @@ public function store(
                     'paid', 'captured', 'success' => 'SUCCESS',
                     'failed', 'error' => 'FAILED',
                     default => 'PENDING'
-                }
+                },
             ]);
         }
 
         // 3. If nothing found → still return PENDING (not FAILED)
         return response()->json([
-            'status' => 'PENDING'
-           
+            'status' => 'PENDING',
+
         ]);
     }
 
-  
-  /**
+    /**
      * --- SECURE CLIENT TRACKING PAGE ---
      */
     public function track(\Illuminate\Http\Request $request, \App\Models\Application $application)
@@ -567,7 +683,7 @@ public function store(
         // 2. Load the related data needed for the view
         $application->load(['service', 'agent']);
 
-        // 3. Send them to the public tracking view 
+        // 3. Send them to the public tracking view
         return view('front.pages.applications.track', compact('application'));
     }
-}   
+}
