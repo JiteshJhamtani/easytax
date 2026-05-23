@@ -33,7 +33,7 @@
             font-weight: 700; 
             letter-spacing: 0.05em;
             padding: 1rem 0.75rem !important;
-            white-space: nowrap;
+            
         }
         .compact-table tbody td { 
             padding: 1rem 0.75rem !important; 
@@ -48,7 +48,7 @@
         .compact-table th:last-child,
         .compact-table td:last-child {
             min-width: 100px;
-            white-space: nowrap !important;
+            
         }
         
         /* ── BADGES ── */
@@ -58,81 +58,7 @@
         .badge-success-soft { background-color: #dcfce7; color: #166534; }
         .badge-danger-soft { background-color: #fee2e2; color: #991b1b; }
 
-        /* ==========================================================================
-           🔥 MORPH TABLE INTO CARDS ON MOBILE & TABLET (Max 1024px) 🔥
-           ========================================================================== */
-        @media screen and (max-width: 1024px) {
-            
-            .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
-            .data-card { overflow: visible !important; border: none !important; background: transparent !important; box-shadow: none !important; }
-            
-            .compact-table, 
-            .compact-table tbody, 
-            .compact-table tr, 
-            .compact-table td {
-                display: block !important;
-                width: 100% !important;
-                min-width: 0 !important; 
-                white-space: normal !important; 
-            }
-
-            .compact-table thead {
-                display: none !important;
-            }
-
-            .compact-table tbody tr {
-                margin-bottom: 1.25rem !important;
-                border: 1px solid #e8ecf0 !important;
-                border-radius: 12px !important;
-                padding: 1rem !important;
-                background: #ffffff !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-            }
-
-            .compact-table tbody td {
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                padding: 0.6rem 0 !important;
-                border-bottom: 1px dashed #e8ecf0 !important;
-                text-align: right !important; 
-                border-top: none !important;
-            }
-            
-            /* Action Buttons Row */
-            .compact-table tbody td:last-child {
-                border-bottom: none !important;
-                padding-bottom: 0 !important;
-                margin-top: 0.5rem;
-                justify-content: flex-end !important;
-            }
-
-            .compact-table tbody td::before {
-                font-weight: 700;
-                color: #7a8799;
-                text-transform: uppercase;
-                font-size: 0.75rem;
-                letter-spacing: 0.05em;
-                text-align: left;
-                margin-right: 1rem;
-            }
-
-            /* Fix Hover Dark Shadow inside mobile cards */
-            .compact-table tbody tr:nth-of-type(odd) td {
-                box-shadow: none !important;
-                background-color: transparent !important;
-            }
-
-            /* --- COLUMN MAP FOR LEADS CRM TABLE --- */
-            .compact-table tbody td:nth-child(1)::before { content: "Date"; }
-            .compact-table tbody td:nth-child(2)::before { content: "Lead Name"; }
-            .compact-table tbody td:nth-child(3)::before { content: "Contact Info"; }
-            .compact-table tbody td:nth-child(4)::before { content: "Service Interest"; }
-            .compact-table tbody td:nth-child(5)::before { content: "Source"; }
-            .compact-table tbody td:nth-child(6)::before { content: "Marketer"; }
-            .compact-table tbody td:nth-child(7)::before { content: "Status"; }
-            .compact-table tbody td:nth-child(8)::before { content: "Actions"; display: none; }
-        }
+        
     </style>
 @endsection
 
@@ -160,7 +86,7 @@
             <div class="p-4">
                 {{-- Wrapped table in table-responsive container --}}
                 <div class="table-responsive">
-                    <table id="leadsTable" class="table w-100 compact-table">
+                    <table id="leadsTable" class="responsive-card-table table w-100 compact-table">
                         <thead>
                             <tr>
                                 <th>Date</th>

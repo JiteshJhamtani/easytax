@@ -23,7 +23,7 @@
             </div>
 
             <div class="card-body">
-                <table id="servicesTable" class="table table-bordered table-striped modern-table w-100">
+                <table id="servicesTable" class="responsive-card-table table table-bordered table-striped modern-table w-100">
                     <thead>
                         <tr>
                             <th class="pl-3">ID</th>
@@ -97,7 +97,7 @@
             font-size: 0.8rem;
             font-weight: 700;
             letter-spacing: 0.3px;
-            white-space: nowrap;
+            
         }
 
         .badge-success-soft {

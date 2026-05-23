@@ -80,7 +80,7 @@
         
         table.dataTable thead th,
         table.dataTable tbody td {
-    white-space: nowrap !important;
+    
     word-wrap: normal !important; 
     word-break: keep-all !important; 
 }
@@ -119,7 +119,7 @@
             background: var(--ink-100); color: var(--slate); padding: 0.3rem 0.6rem;
             border-radius: 6px; font-family: 'Courier New', Courier, monospace;
             font-size: 0.85rem; font-weight: 700; border: 1px solid var(--border);
-            white-space: nowrap !important;
+            
             display: inline-block !important;
         }
 
@@ -237,7 +237,7 @@
     </div>
 
     <div class="table-card">
-        <table id="servicesTable" class="table w-100">
+        <table id="servicesTable" class="responsive-card-table table w-100">
             <thead>
                 <tr>
                     <th class="pl-3">ID</th>

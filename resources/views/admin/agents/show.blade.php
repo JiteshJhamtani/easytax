@@ -3,9 +3,9 @@
 @section('title', 'Agent Profile: ' . $agent->name)
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
-        <h1 class="m-0 text-dark font-weight-bold">Agent Overview</h1>
-        <a href="{{ route('admin.agents.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-2 flex-wrap" style="gap: 10px;">
+        <h1 class="m-0 text-dark font-weight-bold" style="font-size: 1.5rem;">Agent Overview</h1>
+        <a href="{{ route('admin.agents.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm text-nowrap">
             <i class="fas fa-arrow-left mr-1"></i> Back to Agents
         </a>
     </div>
@@ -18,36 +18,36 @@
         {{-- PROFILE HEADER CARD                 --}}
         {{-- =================================== --}}
         <div class="card modern-card border-0 mb-4 profile-header-card">
-            <div class="card-body p-4 d-flex align-items-center">
+            <div class="card-body p-3 p-md-4 d-flex flex-wrap flex-md-nowrap align-items-center">
 
                 {{-- Dynamic Avatar (Uses first letter of Agent's Name) --}}
-                <div class="profile-avatar mr-4 shadow-sm">
+                <div class="profile-avatar mr-3 mr-md-4 shadow-sm mb-3 mb-md-0">
                     {{ strtoupper(substr($agent->name, 0, 1)) }}
                 </div>
 
-                <div class="profile-info flex-grow-1">
-                    <h2 class="font-weight-bold text-dark mb-1 d-flex align-items-center">
-                        {{ $agent->name }}
-                        <span class="custom-badge badge-success-soft ml-3 text-sm">
+                <div class="profile-info flex-grow-1" style="min-width: 0;">
+                    <h2 class="font-weight-bold text-dark mb-2 d-flex flex-wrap align-items-center" style="gap: 10px;">
+                        <span class="text-truncate">{{ $agent->name }}</span>
+                        <span class="custom-badge badge-success-soft text-sm">
                             <i class="fas fa-check-circle mr-1"></i> Active
                         </span>
                     </h2>
-                    <div class="d-flex align-items-center mt-2 text-muted">
-                        <span class="agent-code-tag mr-3">
+                    <div class="d-flex flex-wrap align-items-center text-muted" style="gap: 10px;">
+                        <span class="agent-code-tag text-nowrap">
                             <i class="fas fa-id-badge text-primary mr-1"></i> {{ $agent->agent_code }}
                         </span>
                         {{-- Add email here if your agent model has it! --}}
                         @if ($agent->email)
-                            <span class="mr-3"><i class="fas fa-envelope mr-1"></i> {{ $agent->email }}</span>
+                            <span class="text-truncate" style="max-width: 100%;"><i class="fas fa-envelope mr-1"></i> {{ $agent->email }}</span>
                         @endif
-                        <span><i class="fas fa-calendar-alt mr-1"></i> Joined
+                        <span class="text-nowrap"><i class="fas fa-calendar-alt mr-1"></i> Joined
                             {{ $agent->created_at?->format('M Y') ?? 'Recently' }}</span>
                     </div>
                 </div>
 
                 {{-- Optional Quick Actions --}}
-                <div class="profile-actions pl-3 border-left">
-                    <a href="{{ route('admin.agents.edit', $agent) }}" class="btn btn-primary font-weight-bold shadow-sm">
+                <div class="profile-actions mt-3 mt-md-0 w-100 w-md-auto text-right">
+                    <a href="{{ route('admin.agents.edit', $agent) }}" class="btn btn-primary font-weight-bold shadow-sm text-nowrap">
                         <i class="fas fa-edit mr-1"></i> Edit Profile
                     </a>
                 </div>

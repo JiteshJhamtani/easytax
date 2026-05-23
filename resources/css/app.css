@@ -1,3 +1,116 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ==========================================================================
+  GLOBAL RESPONSIVE CARD TABLES 
+   Apply the class 'responsive-card-table' to any table to activate this.
+   ========================================================================== */
+
+/* Optimize desktop tables to fit maximum columns without scrolling */
+@media screen and (min-width: 1025px) {
+    table.responsive-card-table {
+        table-layout: auto !important;
+        width: 100% !important;
+    }
+    table.responsive-card-table thead th {
+        padding: 0.4rem 0.3rem !important;
+        font-size: 0.7rem !important;
+        white-space: normal !important;
+        word-break: normal !important;
+        line-height: 1.1;
+    }
+    table.responsive-card-table tbody td {
+        padding: 0.5rem 0.3rem !important;
+        font-size: 0.75rem !important;
+        white-space: normal !important; 
+        word-break: normal !important;
+        line-height: 1.2;
+    }
+    table.responsive-card-table .btn,
+    table.responsive-card-table select,
+    table.responsive-card-table input {
+        padding: 0.2rem 0.4rem !important;
+        font-size: 0.7rem !important;
+        height: auto !important;
+    }
+    table.responsive-card-table td:last-child,
+    table.responsive-card-table th:last-child {
+        min-width: auto !important;
+        white-space: nowrap !important;
+    }
+}
+/* Ensure the wrapper handles overflow nicely with a scrollbar inside the card if it still absolutely must, NOT page-level */
+.table-responsive {
+    overflow-x: auto !important; 
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+}
+
+/* Morph into Cards on Mobile & Laptops (prevents horizontal scrolling completely) */
+@media screen and (max-width: 1400px) {
+    .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
+    
+    table.responsive-card-table, 
+    table.responsive-card-table tbody, 
+    table.responsive-card-table tr, 
+    table.responsive-card-table td {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important; 
+    }
+
+    table.responsive-card-table thead { display: none !important; }
+
+    table.responsive-card-table tbody tr {
+        margin-bottom: 1.25rem !important;
+        border: 1px solid var(--border-color, #e2e8f0) !important;
+        border-radius: 12px !important;
+        padding: 1rem !important;
+        background: var(--bg-main, #ffffff) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+    }
+    table.responsive-card-table tr.d-none {
+        display: none !important;
+    }
+
+    table.responsive-card-table tbody td {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 0.6rem 0 !important;
+        border-bottom: 1px dashed var(--border-color, #e2e8f0) !important;
+        text-align: right !important; 
+        border-top: none !important;
+    }
+    
+    table.responsive-card-table tbody td:last-child {
+        border-bottom: none !important;
+        padding-bottom: 0 !important;
+        margin-top: 0.5rem;
+        justify-content: flex-end !important;
+    }
+
+    /* THE MAGIC TRICK: Pulls the column name directly from the HTML */
+    table.responsive-card-table tbody td::before {
+        content: attr(data-label); 
+        font-weight: 700;
+        color: var(--text-muted, #64748b);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        text-align: left;
+        margin-right: 1rem;
+    }
+    
+    /* Remove action text if needed */
+    table.responsive-card-table tbody td[data-label="Actions"]::before,
+    table.responsive-card-table tbody td[data-label="Action"]::before {
+        display: none !important;
+    }
+
+    table.responsive-card-table tbody tr:nth-of-type(odd) td {
+        box-shadow: none !important;
+        background-color: transparent !important;
+    }
+}

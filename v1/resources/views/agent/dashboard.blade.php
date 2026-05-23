@@ -119,7 +119,7 @@
             </div>
 
             <div class="card-body p-0 table-responsive">
-                <table class="table table-hover modern-table mb-0">
+                <table class="responsive-card-table table table-hover modern-table mb-0">
                     <thead>
                         <tr>
                             <th>App ID</th>

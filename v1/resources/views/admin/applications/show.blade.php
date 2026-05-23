@@ -80,7 +80,7 @@
 
                     @if (count($formData))
                         <div class="table-responsive">
-                            <table class="table mb-0 form-data-table">
+                            <table class="responsive-card-table table mb-0 form-data-table">
                                 <tbody>
                                     @foreach ($formData as $field => $value)
                                         <tr>

@@ -1,8 +1,8 @@
 {{-- resources/views/components/agent/kpi-card.blade.php --}}
 @props(['title', 'value', 'icon'])
 
-<div class="col-lg-4 col-md-6 col-sm-12">
-    <div class="kpi-card">
+<div class="col-lg-4 col-md-6 col-sm-12 mb-3">
+    <div class="kpi-card h-100">
         <div class="kpi-icon kpi-icon-green-soft">
             @include($icon)
         </div>

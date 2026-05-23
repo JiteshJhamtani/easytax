@@ -265,12 +265,26 @@
         }
 
         .wizard-header {
-            display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid var(--border-light); padding-bottom: 1rem;
+            display: flex; 
+            gap: 1rem; 
+            margin-bottom: 2rem; 
+            border-bottom: 2px solid var(--border-light); 
+            padding-bottom: 1rem;
+            overflow-x: auto; /* Allows horizontal scrolling if tabs exceed screen width */
+            scrollbar-width: thin; /* Thin scrollbar for Firefox */
+            scrollbar-color: var(--brand-green) transparent;
         }
         
+        .wizard-header::-webkit-scrollbar { height: 6px; }
+        .wizard-header::-webkit-scrollbar-track { background: transparent; }
+        .wizard-header::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 10px; }
+        .wizard-header::-webkit-scrollbar-thumb:hover { background: var(--brand-green); }
+
         .wizard-tab {
-            flex: 1; text-align: center; font-size: 0.85rem; font-weight: 700; color: var(--text-muted);
+            flex: 1 0 auto; /* Prevent tabs from shrinking below their content width */
+            text-align: center; font-size: 0.85rem; font-weight: 700; color: var(--text-muted);
             text-transform: uppercase; letter-spacing: 0.05em; padding: 0.5rem; position: relative; transition: color 0.3s;
+            white-space: nowrap; /* Keep text on one line */
         }
         
         .wizard-tab.active { color: var(--brand-green); }
@@ -353,7 +367,7 @@
                     ))
                         <div class="card border-success mb-4 shadow-sm mt-4">
                             <div class="card-body bg-success-soft">
-                                <table class="table table-sm table-borderless mb-0 font-weight-bold">
+                                <table class="responsive-card-table table table-sm table-borderless mb-0 font-weight-bold">
                                     <tr>
                                         <td class="text-success text-uppercase text-xs">Total Fee</td>
                                         <td class="text-right text-dark" style="font-size: 1.2rem;">₹<span id="calc-total">0.00</span></td>
@@ -363,7 +377,7 @@
                                         <td class="text-right text-success">₹<span id="calc-comm">0.00</span></td>
                                     </tr>
                                     
-                                    <tr id="promo-row" style="display: none;">
+                                    <tr id="promo-row" class="d-none">
                                         <td class="text-primary text-uppercase text-xs">Promo Bonus (<span id="applied-promo-name"></span>)</td>
                                         <td class="text-right text-primary">+ ₹<span id="promo-bonus-amount">0.00</span></td>
                                     </tr>
@@ -798,17 +812,22 @@
                             return sectionTitleRegex.test(text);
                         });
 
+                        let stepIndex = $section.data('step');
+                        let $tab = (stepIndex !== undefined) ? $('.wizard-tab[data-step="' + stepIndex + '"]') : $();
+
                         let $containers = $dataFields.closest('.form-group').add($fileFields.closest('.form-group'));
 
                         if (i <= count) {
                             $containers.show();
                             $section.show();
+                            $tab.show();
                             $dataFields.add($fileFields).each(function() {
                                 if ($(this).data('was-required')) { $(this).prop('required', true); }
                             });
                         } else {
                             $containers.hide();
                             $section.hide();
+                            $tab.hide();
                             $dataFields.add($fileFields).each(function() {
                                 if ($(this).prop('required')) {
                                     $(this).data('was-required', true);
@@ -905,7 +924,7 @@
                     if (data.valid) {
                         appliedPromoBonus = parseFloat(data.bonus);
                         appliedPromoCode = data.code;
-                        $('#promo-row').show();
+                        $('#promo-row').removeClass('d-none');
                         $('#applied-promo-name').text(data.code);
                         $('#promo-bonus-amount').text(appliedPromoBonus.toFixed(2));
                         calculateDynamicPrice();

@@ -39,7 +39,7 @@
             padding: 1rem 0.75rem;
             vertical-align: middle;
             font-weight: 700;
-            white-space: nowrap;
+            
         }
         
         .marketers-table tbody td {
@@ -55,81 +55,10 @@
         .marketers-table th:last-child,
         .marketers-table td:last-child {
             min-width: 100px;
-            white-space: nowrap !important;
+            
         }
 
-        /* ==========================================================================
-           🔥 MORPH TABLE INTO CARDS ON MOBILE & TABLET (Max 1024px) 🔥
-           ========================================================================== */
-        @media screen and (max-width: 1024px) {
-            
-            .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
-            .table-card { overflow: visible !important; border: none !important; background: transparent !important; box-shadow: none !important; }
-            
-            .marketers-table, 
-            .marketers-table tbody, 
-            .marketers-table tr, 
-            .marketers-table td {
-                display: block !important;
-                width: 100% !important;
-                min-width: 0 !important; 
-                white-space: normal !important; 
-            }
-
-            .marketers-table thead {
-                display: none !important;
-            }
-
-            .marketers-table tbody tr {
-                margin-bottom: 1.25rem !important;
-                border: 1px solid #e2e8f0 !important;
-                border-radius: 12px !important;
-                padding: 1rem !important;
-                background: #ffffff !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-            }
-
-            .marketers-table tbody td {
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                padding: 0.6rem 0 !important;
-                border-bottom: 1px dashed #e2e8f0 !important;
-                text-align: right !important; 
-                border-top: none !important;
-            }
-            
-            /* Action Buttons Row */
-            .marketers-table tbody td:last-child {
-                border-bottom: none !important;
-                padding-bottom: 0 !important;
-                margin-top: 0.5rem;
-                justify-content: flex-end !important;
-            }
-
-            .marketers-table tbody td::before {
-                font-weight: 700;
-                color: #64748b;
-                text-transform: uppercase;
-                font-size: 0.75rem;
-                letter-spacing: 0.05em;
-                text-align: left;
-                margin-right: 1rem;
-            }
-
-            /* Fix Bootstrap Hover Dark Shadow inside mobile cards */
-            .marketers-table tbody tr:nth-of-type(odd) td {
-                box-shadow: none !important;
-                background-color: transparent !important;
-            }
-
-            /* --- COLUMN MAP FOR MARKETERS TABLE --- */
-            .marketers-table tbody td:nth-child(1)::before { content: "ID"; }
-            .marketers-table tbody td:nth-child(2)::before { content: "Name & Contact"; }
-            .marketers-table tbody td:nth-child(3)::before { content: "Leads Generated"; }
-            .marketers-table tbody td:nth-child(4)::before { content: "Status"; }
-            .marketers-table tbody td:nth-child(5)::before { content: "Actions"; display: none; }
-        }
+        
     </style>
 @endsection
 
@@ -153,7 +82,7 @@
         <div class="card-body p-0">
             <div class="table-responsive p-4">
                 {{-- Added 'marketers-table' class to trigger our custom CSS --}}
-                <table id="marketersTable" class="table table-hover mb-0 w-100 marketers-table">
+                <table id="marketersTable" class="responsive-card-table table table-hover mb-0 w-100 marketers-table">
                     <thead>
                         <tr>
                             <th class="pl-3">ID</th>

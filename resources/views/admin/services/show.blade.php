@@ -178,7 +178,7 @@
                     <h3 class="dash-panel-title"><i class="fas fa-info-circle text-primary"></i> Service Details</h3>
                 </div>
                 <div class="dash-panel-body">
-                    <table class="info-table">
+                    <table class="responsive-card-table info-table">
                         <tr>
                             <td class="info-label">Status</td>
                             <td class="info-value">
@@ -217,7 +217,7 @@
                         @foreach($formConfig['sections'] as $sectionKey => $section)
                             <div class="schema-section">
                                 <h6 class="schema-title"><i class="fas fa-layer-group text-muted mr-1"></i> {{ $section['label'] }}</h6>
-                                <table class="schema-table">
+                                <table class="responsive-card-table schema-table">
                                     <thead>
                                         <tr>
                                             <th>Field Label</th>

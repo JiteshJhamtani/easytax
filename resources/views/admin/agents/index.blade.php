@@ -108,7 +108,7 @@
             padding: 0.75rem 0.5rem;
             vertical-align: middle;
             font-weight: 700;
-            white-space: nowrap;
+            
         }
         table.dataTable tbody td {
             white-space: normal !important; /* Allows long text (like emails) to wrap */
@@ -124,7 +124,7 @@
         table.dataTable th:last-child,
         table.dataTable td:last-child {
             min-width: 80px;
-            white-space: nowrap !important;
+            
         }
 
         table.dataTable tbody tr { transition: background 0.2s; }
@@ -178,75 +178,7 @@
             border: 1px solid var(--border);
         }
 
-        /* ==========================================================================
-           🔥 MORPH TABLE INTO CARDS ON MOBILE & TABLET (Max 1024px) 🔥
-           ========================================================================== */
-        @media screen and (max-width: 1024px) {
-            
-            .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
-            .table-card { overflow: visible !important; }
-            
-            table.dataTable, 
-            table.dataTable tbody, 
-            table.dataTable tr, 
-            table.dataTable td {
-                display: block !important;
-                width: 100% !important;
-                min-width: 0 !important; 
-                white-space: normal !important; 
-            }
 
-            table.dataTable thead {
-                display: none !important;
-            }
-
-            table.dataTable tbody tr {
-                margin-bottom: 1.25rem !important;
-                border: 1px solid var(--border) !important;
-                border-radius: 12px !important;
-                padding: 1rem !important;
-                background: var(--surface) !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-            }
-
-            table.dataTable tbody td {
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                padding: 0.6rem 0 !important;
-                border-bottom: 1px dashed var(--ink-100) !important;
-                text-align: right !important; 
-                border-top: none !important;
-            }
-            
-            table.dataTable tbody td:last-child {
-                border-bottom: none !important;
-                padding-bottom: 0 !important;
-                margin-top: 0.5rem;
-                justify-content: flex-end !important;
-            }
-
-            table.dataTable tbody td::before {
-                font-weight: 700;
-                color: var(--text-muted);
-                text-transform: uppercase;
-                font-size: 0.75rem;
-                letter-spacing: 0.05em;
-                text-align: left;
-                margin-right: 1rem;
-            }
-
-            /* --- COLUMN MAP FOR AGENTS TABLE --- */
-            table.dataTable tbody td:nth-child(1)::before { content: "ID"; }
-            table.dataTable tbody td:nth-child(2)::before { content: "Agent Code"; }
-            table.dataTable tbody td:nth-child(3)::before { content: "Name"; }
-            table.dataTable tbody td:nth-child(4)::before { content: "Email"; }
-            table.dataTable tbody td:nth-child(5)::before { content: "Apps"; }
-            table.dataTable tbody td:nth-child(6)::before { content: "Commission"; }
-            table.dataTable tbody td:nth-child(7)::before { content: "Payouts"; }
-            table.dataTable tbody td:nth-child(8)::before { content: "Status"; }
-            table.dataTable tbody td:nth-child(9)::before { content: "Action"; display: none; }
-        }
     </style>
 @endsection
 
@@ -261,7 +193,7 @@
     <div class="table-card">
         {{-- I added a table-responsive wrapper here as best practice for Bootstrap --}}
         <div class="table-responsive">
-            <table id="agentsTable" class="table w-100">
+            <table id="agentsTable" class="responsive-card-table table w-100">
                 <thead>
                     <tr>
                         <th class="pl-3">ID</th>

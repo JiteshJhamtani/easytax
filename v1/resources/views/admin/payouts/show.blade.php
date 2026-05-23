@@ -106,7 +106,7 @@
 
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table simple-line-table mb-0">
+                            <table class="responsive-card-table table simple-line-table mb-0">
                                 <thead>
                                     <tr>
                                         <th class="pl-4">App ID</th>

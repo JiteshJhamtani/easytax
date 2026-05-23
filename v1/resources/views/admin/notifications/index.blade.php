@@ -14,7 +14,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body p-0">
-                    <table class="table table-hover table-striped">
+                    <table class="responsive-card-table table table-hover table-striped">
                         <thead>
                             <tr>
                                 <th>Message</th>

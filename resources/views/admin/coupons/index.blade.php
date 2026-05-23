@@ -36,7 +36,7 @@
             padding: 1rem 0.75rem;
             vertical-align: middle;
             font-weight: 700;
-            white-space: nowrap;
+            
         }
         
         .promo-table tbody td {
@@ -52,76 +52,10 @@
         .promo-table th:last-child,
         .promo-table td:last-child {
             min-width: 100px;
-            white-space: nowrap !important;
+            
         }
 
-        /* ==========================================================================
-            MORPH TABLE INTO CARDS ON MOBILE & TABLET (Max 1024px) 
-           ========================================================================== */
-        @media screen and (max-width: 1024px) {
-            
-            .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
-            .table-card { overflow: visible !important; border: none !important; background: transparent !important; box-shadow: none !important; }
-            
-            .promo-table, 
-            .promo-table tbody, 
-            .promo-table tr, 
-            .promo-table td {
-                display: block !important;
-                width: 100% !important;
-                min-width: 0 !important; 
-                white-space: normal !important; 
-            }
-
-            .promo-table thead {
-                display: none !important;
-            }
-
-            .promo-table tbody tr {
-                margin-bottom: 1.25rem !important;
-                border: 1px solid #e2e8f0 !important;
-                border-radius: 12px !important;
-                padding: 1rem !important;
-                background: #ffffff !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-            }
-
-            .promo-table tbody td {
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                padding: 0.6rem 0 !important;
-                border-bottom: 1px dashed #e2e8f0 !important;
-                text-align: right !important; 
-                border-top: none !important;
-            }
-            
-            /* Action Buttons Row */
-            .promo-table tbody td:last-child {
-                border-bottom: none !important;
-                padding-bottom: 0 !important;
-                margin-top: 0.5rem;
-                justify-content: flex-end !important;
-            }
-
-            .promo-table tbody td::before {
-                font-weight: 700;
-                color: #64748b;
-                text-transform: uppercase;
-                font-size: 0.75rem;
-                letter-spacing: 0.05em;
-                text-align: left;
-                margin-right: 1rem;
-            }
-
-            /* --- COLUMN MAP FOR PROMO TABLE --- */
-            .promo-table tbody td:nth-child(1)::before { content: "Promo Code"; }
-            .promo-table tbody td:nth-child(2)::before { content: "Bonus (₹)"; }
-            .promo-table tbody td:nth-child(3)::before { content: "Target Agent"; }
-            .promo-table tbody td:nth-child(4)::before { content: "Usage Limit"; }
-            .promo-table tbody td:nth-child(5)::before { content: "Status"; }
-            .promo-table tbody td:nth-child(6)::before { content: "Actions"; display: none; }
-        }
+        
     </style>
 @endsection
 
@@ -157,7 +91,7 @@
     <div class="table-card">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0 promo-table">
+                <table class="responsive-card-table table table-hover mb-0 promo-table">
                     <thead>
                         <tr>
                             <th class="pl-4">Promo Code</th>

@@ -112,7 +112,7 @@
             </div>
 
             <div class="card-body">
-                <table id="payoutTable" class="table table-bordered table-striped modern-table w-100">
+                <table id="payoutTable" class="responsive-card-table table table-bordered table-striped modern-table w-100">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -146,7 +146,7 @@
                 </div>
 
                 <div class="modal-body p-0">
-                    <table class="table modern-table mb-0">
+                    <table class="responsive-card-table table modern-table mb-0">
                         <thead class="bg-white">
                             <tr>
                                 <th class="px-4">Agent</th>

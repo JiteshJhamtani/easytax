@@ -76,7 +76,7 @@
         .cond-header { padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
         .cond-body { padding: 1rem 1.25rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
         .cond-group-pill { display: flex; align-items: center; gap: 0.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; flex-wrap: wrap; }
-        .cond-item { font-size: 0.8rem; font-weight: 600; color: var(--slate-dark); background: var(--ink-100); border-radius: 4px; padding: 0.2rem 0.5rem; white-space: nowrap; }
+        .cond-item { font-size: 0.8rem; font-weight: 600; color: var(--slate-dark); background: var(--ink-100); border-radius: 4px; padding: 0.2rem 0.5rem;  }
         .cond-and { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); }
         .cond-or-sep { font-size: 0.7rem; font-weight: 800; color: var(--slate); padding: 0.2rem 0.6rem; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); }
 
@@ -100,7 +100,7 @@
         table.dataTable { border-collapse: collapse !important; width: 100% !important; margin-bottom: 1rem !important; border-bottom: 1px solid var(--border); }
         table.dataTable thead th {
             background: #f8fafc; color: var(--text-muted); font-size: 0.75rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--border) !important; border-top: none !important; padding: 1rem; white-space: nowrap;
+            text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--border) !important; border-top: none !important; padding: 1rem; 
         }
         table.dataTable tbody td { padding: 1rem; vertical-align: middle; color: var(--text); font-size: 0.9rem; border-bottom: 1px solid var(--ink-100); }
         table.dataTable tbody tr:hover { background: #f8fafc; }
@@ -195,7 +195,7 @@
                 </div>
             </div>
             <div>
-                <table id="eligibility-table" class="table w-100">
+                <table id="eligibility-table" class="responsive-card-table table w-100">
                     <thead></thead>
                     <tbody></tbody>
                 </table>

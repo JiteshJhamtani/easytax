@@ -98,7 +98,7 @@
                                 <i class="fas fa-table mr-2"></i> GST Pricing Matrix
                             </div>
                             <div class="card-body p-0 table-responsive">
-                                <table class="table table-bordered mb-0" id="pricing-matrix-table-gst">
+                                <table class="responsive-card-table table table-bordered mb-0" id="pricing-matrix-table-gst">
                                     <thead class="bg-light text-xs text-muted text-uppercase text-center">
                                         <tr>
                                             <th>GST Type</th><th>Turnover Range</th><th>Frequency</th><th>Plan</th>
@@ -162,7 +162,7 @@
                                 <i class="fas fa-file-invoice-dollar mr-2"></i> ITR Dynamic Pricing Rules
                             </div>
                             <div class="card-body p-0 table-responsive">
-                                <table class="table table-bordered mb-0" id="pricing-matrix-table-itr">
+                                <table class="responsive-card-table table table-bordered mb-0" id="pricing-matrix-table-itr">
                                     <thead class="bg-light text-xs text-muted text-uppercase text-center">
                                         <tr>
                                             <th>FY Type</th><th>User Type</th><th>Salary?</th><th>Business?</th><th>Turnover</th><th>Cap Gains?</th>
@@ -239,7 +239,7 @@
                                 <i class="fas fa-box-open mr-2"></i> Annual Package Pricing Rules
                             </div>
                             <div class="card-body p-0 table-responsive">
-                                <table class="table table-bordered mb-0" id="pricing-matrix-table-annual">
+                                <table class="responsive-card-table table table-bordered mb-0" id="pricing-matrix-table-annual">
                                     <thead class="bg-light text-xs text-muted text-uppercase text-center">
                                         <tr>
                                             <th>Total Bills</th>

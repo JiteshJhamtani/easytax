@@ -29,7 +29,7 @@
         .table-card { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
         .dataTables_wrapper { padding: 1.5rem; }
         table.dataTable { border-collapse: collapse !important; width: 100% !important; margin-bottom: 1rem !important; border-bottom: 1px solid var(--border); }
-        table.dataTable thead th { background: #f8fafc; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--border) !important; border-top: none !important; padding: 1rem; white-space: nowrap; }
+        table.dataTable thead th { background: #f8fafc; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--border) !important; border-top: none !important; padding: 1rem;  }
         table.dataTable tbody td { padding: 1rem; vertical-align: middle; color: var(--text); font-size: 0.9rem; border-bottom: 1px solid var(--ink-100); }
         table.dataTable tbody tr:hover { background: #f8fafc; }
 
@@ -122,7 +122,7 @@
 
     {{-- DATA TABLE --}}
     <div class="table-card">
-        <table id="teamTable" class="table w-100">
+        <table id="teamTable" class="responsive-card-table table w-100">
            <thead>
                 <tr>
                     <th>App ID</th>

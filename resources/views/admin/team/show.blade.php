@@ -101,7 +101,7 @@
                 
                 <div class="tab-pane fade show active p-4" id="tasks" role="tabpanel">
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="responsive-card-table table table-hover">
                             <thead class="bg-light text-muted text-uppercase small">
                                 <tr>
                                     <th>App ID</th>
@@ -162,7 +162,7 @@
                     <div class="row">
                         <div class="col-md-6 border-right">
                             <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-calendar-alt mr-1"></i> Month-wise Earnings</h6>
-                            <table class="table table-sm table-hover">
+                            <table class="responsive-card-table table table-sm table-hover">
                                 <thead class="bg-light text-muted small">
                                     <tr>
                                         <th>Month</th>
@@ -186,7 +186,7 @@
 
                         <div class="col-md-6">
                             <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-history mr-1"></i> Payout History</h6>
-                            <table class="table table-sm table-bordered">
+                            <table class="responsive-card-table table table-sm table-bordered">
                                 <thead class="bg-light text-muted small">
                                     <tr>
                                         <th>Date Paid</th>

@@ -72,7 +72,7 @@
                         </h3>
                     </div>
                     <div class="card-body pt-0">
-                        <table class="table table-borderless mb-0">
+                        <table class="responsive-card-table table table-borderless mb-0">
                             <tr>
                                 <td class="text-muted font-weight-bold" style="width: 40%;">Status</td>
                                 <td>
@@ -116,7 +116,7 @@
                                         <i class="fas fa-layer-group text-muted mr-1"></i> {{ $section['label'] }}
                                     </h6>
                                     <div class="table-responsive">
-                                        <table class="table table-sm table-borderless mb-0">
+                                        <table class="responsive-card-table table table-sm table-borderless mb-0">
                                             <thead>
                                                 <tr class="text-muted" style="font-size: 0.75rem; text-transform: uppercase;">
                                                     <th>Field</th>

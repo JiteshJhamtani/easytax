@@ -121,7 +121,7 @@
 
         .gm-dot-label { position: absolute; top: 55px; text-align: center; width: 90px; pointer-events: none; }
         .gm-dot-label__count { font-size: 0.85rem; font-weight: 800; display: block; color: var(--gm-accent); }
-        .gm-dot-label__name { font-size: 0.7rem; font-weight: 600; color: #6b7280; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gm-dot-label__name { font-size: 0.7rem; font-weight: 600; color: #6b7280; display: block;  overflow: hidden; text-overflow: ellipsis; }
 
         .gm-hint { font-size: 0.85rem; color: #6b7280; display: flex; align-items: center; }
         .gm-hint__pill { font-size: 0.75rem; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 20px; background: var(--gm-track); color: var(--gm-accent); margin-right: 0.5rem; }

@@ -267,7 +267,7 @@
         .stat-value {
             font-size: 0.95rem;
             font-weight: 800;
-            white-space: nowrap; /* Prevents values from breaking into two lines */
+             /* Prevents values from breaking into two lines */
         }
 
         .luxury-gift-action { flex-shrink: 0; }
@@ -306,7 +306,7 @@
         @media (max-width: 575px) {
             /* Mobile View */
             .premium-tabs { width: 100%; justify-content: space-between; overflow-x: auto; flex-wrap: nowrap; }
-            .premium-tabs .nav-link { padding: 0.4rem 0.8rem; white-space: nowrap; }
+            .premium-tabs .nav-link { padding: 0.4rem 0.8rem;  }
             
             .luxury-gift-card { flex-direction: column; align-items: flex-start; gap: 1rem; padding-top: 3rem;}
             

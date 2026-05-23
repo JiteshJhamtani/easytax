@@ -89,13 +89,13 @@
 
         .sb-section {
             padding: 1rem 1.5rem 0.5rem; font-size: 0.7rem; font-weight: 700; 
-            letter-spacing: 0.05em; text-transform: uppercase; color: var(--slate-muted); white-space: nowrap;
+            letter-spacing: 0.05em; text-transform: uppercase; color: var(--slate-muted); 
         }
         .sb-item {
             display: flex; align-items: center; gap: 1rem;
             padding: 0.8rem 1.5rem; margin: 0.2rem 0;
             color: var(--slate-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600;
-            transition: var(--t); position: relative; white-space: nowrap;
+            transition: var(--t); position: relative; 
         }
         .sb-item:hover { color: var(--slate-hi); text-decoration: none; }
         .sb-item.active { background: var(--surface); color: var(--text); border-radius: 0 25px 25px 0; margin-right: 1.5rem; }
@@ -188,7 +188,7 @@
             margin-bottom: 0 !important;
         }
         table.modern-responsive-table thead th {
-            white-space: nowrap;
+            
         }
         table.modern-responsive-table tbody td {
             white-space: normal !important; 
@@ -200,7 +200,7 @@
         table.modern-responsive-table th:last-child,
         table.modern-responsive-table td:last-child {
             min-width: 100px;
-            white-space: nowrap !important;
+            
         }
 
         /* ── MOBILE ── */
@@ -217,65 +217,7 @@
             .namaste-text { font-size: 1.1rem; }
         }
 
-        /* ── MOBILE CARDS (GLOBAL TABLES) ── */
-        @media screen and (max-width: 1024px) {
-            .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
-            
-            table.modern-responsive-table, 
-            table.modern-responsive-table tbody, 
-            table.modern-responsive-table tr, 
-            table.modern-responsive-table td {
-                display: block !important;
-                width: 100% !important;
-                min-width: 0 !important; 
-                white-space: normal !important; 
-            }
-
-            table.modern-responsive-table thead { display: none !important; }
-
-            table.modern-responsive-table tbody tr {
-                margin-bottom: 1.25rem !important;
-                border: 1px solid var(--border) !important;
-                border-radius: 12px !important;
-                padding: 1rem !important;
-                background: var(--surface) !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-            }
-
-            table.modern-responsive-table tbody td {
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                padding: 0.6rem 0 !important;
-                border-bottom: 1px dashed var(--ink-100) !important;
-                text-align: right !important; 
-                border-top: none !important;
-            }
-            
-            table.modern-responsive-table tbody td:last-child {
-                border-bottom: none !important;
-                padding-bottom: 0 !important;
-                margin-top: 0.5rem;
-                justify-content: flex-end !important;
-            }
-
-            /* The base style for the injected labels */
-            table.modern-responsive-table tbody td::before {
-                font-weight: 700;
-                color: var(--text-muted);
-                text-transform: uppercase;
-                font-size: 0.75rem;
-                letter-spacing: 0.05em;
-                text-align: left;
-                margin-right: 1rem;
-            }
-            
-            /* Fix odd row shadows from Bootstrap striped tables */
-            table.modern-responsive-table tbody tr:nth-of-type(odd) td {
-                box-shadow: none !important;
-                background-color: transparent !important;
-            }
-        }
+        
 
         /* ── EXTRA SMALL MOBILE TWEAKS (Phones < 576px) ── */
         @media (max-width: 575px) {
@@ -297,7 +239,7 @@
         .shell.sidebar-mini .sb-item.active { margin-right: 0.5rem; }
         .shell.sidebar-mini .sb-item__icon { margin: 0; width: auto; }
         .shell.sidebar-mini .main { margin-left: var(--sidebar-mini); }
-        .shell.sidebar-mini .sb-item::after { content: attr(data-label); position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); background: var(--slate-dark); color: #fff; font-size: 0.75rem; font-weight: 600; padding: 0.4rem 0.8rem; border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 9999; box-shadow: var(--shadow); }
+        .shell.sidebar-mini .sb-item::after { content: attr(data-label); position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); background: var(--slate-dark); color: #fff; font-size: 0.75rem; font-weight: 600; padding: 0.4rem 0.8rem; border-radius: 6px;  opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 9999; box-shadow: var(--shadow); }
         .shell.sidebar-mini .sb-item:hover::after { opacity: 1; }
     </style>
 </head>
@@ -414,5 +356,43 @@
 })();
 </script>
 @yield('js')
+
+<!-- GLOBAL RESPONSIVE TABLE SCRIPT -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function applyTableLabels() {
+            document.querySelectorAll('table.responsive-card-table').forEach(function(table) {
+                var headers = [];
+                table.querySelectorAll('thead th').forEach(function(th) {
+                    headers.push(th.textContent.trim());
+                });
+                
+                function applyLabels() {
+                    table.querySelectorAll('tbody tr').forEach(function(tr) {
+                        tr.querySelectorAll('td').forEach(function(td, index) {
+                            if(headers[index] && !td.hasAttribute('data-label')) {
+                                td.setAttribute('data-label', headers[index]);
+                            }
+                        });
+                    });
+                }
+                
+                applyLabels();
+                
+                if (window.jQuery && $(table).hasClass('dataTable')) {
+                    $(table).on('draw.dt', applyLabels);
+                }
+            });
+        }
+        
+        applyTableLabels();
+        
+        if (window.jQuery) {
+            $(document).on('init.dt', function() {
+                applyTableLabels();
+            });
+        }
+    });
+</script>
 </body>
 </html>

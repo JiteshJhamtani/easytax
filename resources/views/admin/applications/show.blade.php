@@ -104,7 +104,7 @@
                     </h3>
                 </div>
                 <div class="card-body p-0">
-                    <table class="table table-hover mb-0 detail-table">
+                    <table class="responsive-card-table table table-hover mb-0 detail-table">
                         <tbody>
                             <tr>
                                 <td class="text-muted text-uppercase text-xs font-weight-bold w-30 align-middle pl-4 border-top-0">Service Requested</td>

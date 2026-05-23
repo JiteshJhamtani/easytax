@@ -22,6 +22,44 @@
 
     <script src="{{ asset('assets/js/app.js') }}"></script>
     @stack('scripts')
+
+<!-- GLOBAL RESPONSIVE TABLE SCRIPT -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function applyTableLabels() {
+            document.querySelectorAll('table.responsive-card-table').forEach(function(table) {
+                var headers = [];
+                table.querySelectorAll('thead th').forEach(function(th) {
+                    headers.push(th.textContent.trim());
+                });
+                
+                function applyLabels() {
+                    table.querySelectorAll('tbody tr').forEach(function(tr) {
+                        tr.querySelectorAll('td').forEach(function(td, index) {
+                            if(headers[index] && !td.hasAttribute('data-label')) {
+                                td.setAttribute('data-label', headers[index]);
+                            }
+                        });
+                    });
+                }
+                
+                applyLabels();
+                
+                if (window.jQuery && $(table).hasClass('dataTable')) {
+                    $(table).on('draw.dt', applyLabels);
+                }
+            });
+        }
+        
+        applyTableLabels();
+        
+        if (window.jQuery) {
+            $(document).on('init.dt', function() {
+                applyTableLabels();
+            });
+        }
+    });
+</script>
 </body>
 
 </html>

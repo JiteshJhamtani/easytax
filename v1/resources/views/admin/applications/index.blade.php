@@ -140,7 +140,7 @@
 
             <div class="card-body p-0">
                 <div class="table-responsive px-4 py-3">
-                    <table id="applicationsTable" class="table modern-data-table w-100">
+                    <table id="applicationsTable" class="responsive-card-table table modern-data-table w-100">
                         <thead>
                             <tr>
                                 <th>App ID</th>

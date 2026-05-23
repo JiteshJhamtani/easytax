@@ -24,7 +24,7 @@
             <div class="card-body">
                 {{-- Added table-responsive wrapper for safety --}}
                 <div class="table-responsive">
-                    <table id="pagesTable" class="table table-bordered modern-table w-100">
+                    <table id="pagesTable" class="responsive-card-table table table-bordered modern-table w-100">
                         <thead>
                             <tr>
                                 <th class="pl-3">ID</th>
@@ -70,7 +70,7 @@
             border-top: none !important;
             padding: 1rem 0.75rem;
             vertical-align: middle;
-            white-space: nowrap;
+            
         }
         
         .modern-table tbody td {
@@ -87,7 +87,7 @@
         .modern-table th:last-child,
         .modern-table td:last-child {
             min-width: 80px;
-            white-space: nowrap !important;
+            
         }
 
         .modern-table tbody tr { transition: background 0.2s; }
@@ -102,7 +102,7 @@
             font-size: 0.8rem;
             font-weight: 700;
             letter-spacing: 0.3px;
-            white-space: nowrap;
+            
         }
         .badge-success-soft {
             background-color: #dcfce7;
@@ -128,75 +128,7 @@
             margin: 0 2px;
         }
 
-        /* ==========================================================================
-           🔥 MORPH TABLE INTO CARDS ON MOBILE & TABLET (Max 1024px) 🔥
-           ========================================================================== */
-        @media screen and (max-width: 1024px) {
-            
-            .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
-            .modern-card { overflow: visible !important; }
-            
-            table.dataTable.modern-table, 
-            .modern-table tbody, 
-            .modern-table tr, 
-            .modern-table td {
-                display: block !important;
-                width: 100% !important;
-                min-width: 0 !important; 
-                white-space: normal !important; 
-            }
-
-            .modern-table thead {
-                display: none !important;
-            }
-
-            .modern-table tbody tr {
-                margin-bottom: 1.25rem !important;
-                border: 1px solid #e2e8f0 !important;
-                border-radius: 12px !important;
-                padding: 1rem !important;
-                background: #ffffff !important;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-            }
-
-            .modern-table tbody td {
-                display: flex !important;
-                justify-content: space-between !important;
-                align-items: center !important;
-                padding: 0.6rem 0 !important;
-                border-bottom: 1px dashed #e2e8f0 !important;
-                text-align: right !important; 
-                border-top: none !important;
-                border-left: none !important;
-                border-right: none !important;
-            }
-            
-            /* Action Buttons Row */
-            .modern-table tbody td:last-child {
-                border-bottom: none !important;
-                padding-bottom: 0 !important;
-                margin-top: 0.5rem;
-                justify-content: flex-end !important;
-            }
-
-            .modern-table tbody td::before {
-                font-weight: 700;
-                color: #64748b;
-                text-transform: uppercase;
-                font-size: 0.75rem;
-                letter-spacing: 0.05em;
-                text-align: left;
-                margin-right: 1rem;
-            }
-
-            /* --- COLUMN MAP FOR PAGES TABLE --- */
-            .modern-table tbody td:nth-child(1)::before { content: "ID"; }
-            .modern-table tbody td:nth-child(2)::before { content: "Title"; }
-            .modern-table tbody td:nth-child(3)::before { content: "Slug"; }
-            .modern-table tbody td:nth-child(4)::before { content: "Status"; }
-            .modern-table tbody td:nth-child(5)::before { content: "Created"; }
-            .modern-table tbody td:nth-child(6)::before { content: "Action"; display: none; }
-        }
+        
     </style>
 @endsection
 

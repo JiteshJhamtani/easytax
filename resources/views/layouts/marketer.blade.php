@@ -89,13 +89,13 @@
 
         .sb-section {
             padding: 1rem 1.5rem 0.5rem; font-size: 0.7rem; font-weight: 700; 
-            letter-spacing: 0.05em; text-transform: uppercase; color: var(--slate-muted); white-space: nowrap;
+            letter-spacing: 0.05em; text-transform: uppercase; color: var(--slate-muted); 
         }
         .sb-item {
             display: flex; align-items: center; gap: 1rem;
             padding: 0.8rem 1.5rem; margin: 0.2rem 0;
             color: var(--slate-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600;
-            transition: var(--t); position: relative; white-space: nowrap;
+            transition: var(--t); position: relative; 
         }
         .sb-item:hover { color: var(--slate-hi); text-decoration: none; }
         .sb-item.active { background: var(--surface); color: var(--text); border-radius: 0 25px 25px 0; margin-right: 1.5rem; }
@@ -215,7 +215,7 @@
         .shell.sidebar-mini .sb-item.active { margin-right: 0.5rem; }
         .shell.sidebar-mini .sb-item__icon { margin: 0; width: auto; }
         .shell.sidebar-mini .main { margin-left: var(--sidebar-mini); }
-        .shell.sidebar-mini .sb-item::after { content: attr(data-label); position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); background: var(--slate-dark); color: #fff; font-size: 0.75rem; font-weight: 600; padding: 0.4rem 0.8rem; border-radius: 6px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 9999; box-shadow: var(--shadow); }
+        .shell.sidebar-mini .sb-item::after { content: attr(data-label); position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); background: var(--slate-dark); color: #fff; font-size: 0.75rem; font-weight: 600; padding: 0.4rem 0.8rem; border-radius: 6px;  opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 9999; box-shadow: var(--shadow); }
         .shell.sidebar-mini .sb-item:hover::after { opacity: 1; }
     </style>
 </head>
@@ -316,5 +316,43 @@
 })();
 </script>
 @yield('js')
+
+<!-- GLOBAL RESPONSIVE TABLE SCRIPT -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function applyTableLabels() {
+            document.querySelectorAll('table.responsive-card-table').forEach(function(table) {
+                var headers = [];
+                table.querySelectorAll('thead th').forEach(function(th) {
+                    headers.push(th.textContent.trim());
+                });
+                
+                function applyLabels() {
+                    table.querySelectorAll('tbody tr').forEach(function(tr) {
+                        tr.querySelectorAll('td').forEach(function(td, index) {
+                            if(headers[index] && !td.hasAttribute('data-label')) {
+                                td.setAttribute('data-label', headers[index]);
+                            }
+                        });
+                    });
+                }
+                
+                applyLabels();
+                
+                if (window.jQuery && $(table).hasClass('dataTable')) {
+                    $(table).on('draw.dt', applyLabels);
+                }
+            });
+        }
+        
+        applyTableLabels();
+        
+        if (window.jQuery) {
+            $(document).on('init.dt', function() {
+                applyTableLabels();
+            });
+        }
+    });
+</script>
 </body>
 </html>

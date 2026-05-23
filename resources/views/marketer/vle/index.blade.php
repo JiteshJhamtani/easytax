@@ -19,7 +19,7 @@
     <div class="card border-0 shadow-sm rounded-lg overflow-hidden">
         <div class="card-body p-4">
             <div class="table-responsive">
-                <table class="table table-hover w-100" id="vle-table">
+                <table class="responsive-card-table table table-hover w-100" id="vle-table">
                     <thead style="background: #f8fafc;">
                         <tr>
                             <th class="border-0 text-muted text-xs font-weight-bold text-uppercase pb-3 pt-3">Date</th>

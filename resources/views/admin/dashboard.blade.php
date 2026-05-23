@@ -129,7 +129,7 @@
         background: #f8fafc; color: var(--text-muted); font-size: 0.7rem;
         text-transform: uppercase; letter-spacing: 0.05em; padding: 0.75rem 1rem;
         font-weight: 700; border-bottom: 1px solid var(--border);
-        white-space: nowrap;
+        
     }
     .mini-table tbody td {
         padding: 0.85rem 1rem; vertical-align: middle; color: var(--text);
@@ -194,85 +194,7 @@
         }
     }
 
-    /* ==========================================================================
-       🔥 MORPH MINI-TABLES INTO CARDS ON MOBILE & TABLET (Max 1024px) 🔥
-       ========================================================================== */
-    @media screen and (max-width: 1024px) {
-        
-        .dash-panel-body.no-padding { padding: 1rem !important; }
-        .table-responsive { overflow-x: visible !important; -webkit-overflow-scrolling: auto; }
-        
-        .mini-table, 
-        .mini-table tbody, 
-        .mini-table tr, 
-        .mini-table td {
-            display: block !important;
-            width: 100% !important;
-            min-width: 0 !important; 
-            white-space: normal !important; 
-        }
-
-        .mini-table thead {
-            display: none !important;
-        }
-
-        .mini-table tbody tr {
-            margin-bottom: 1rem !important;
-            border: 1px solid var(--border) !important;
-            border-radius: 12px !important;
-            padding: 1rem !important;
-            background: var(--surface) !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-        }
-
-        .mini-table tbody td {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            padding: 0.5rem 0 !important;
-            border-bottom: 1px dashed var(--ink-100) !important;
-            text-align: right !important; 
-            border-top: none !important;
-        }
-        
-        .mini-table tbody td:last-child {
-            border-bottom: none !important;
-            padding-bottom: 0 !important;
-            margin-top: 0.25rem;
-            justify-content: flex-end !important;
-        }
-
-        .mini-table tbody td::before {
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-            text-align: left;
-            margin-right: 1rem;
-        }
-
-        /* --- COLUMN MAP FOR TOP AGENTS --- */
-        .agents-table tbody td:nth-child(1)::before { content: "#"; }
-        .agents-table tbody td:nth-child(2)::before { content: "Agent"; }
-        .agents-table tbody td:nth-child(3)::before { content: "Apps"; }
-        .agents-table tbody td:nth-child(4)::before { content: "Revenue"; }
-        .agents-table tbody td:nth-child(5)::before { content: "Commission"; }
-
-        /* --- COLUMN MAP FOR TOP SERVICES --- */
-        .services-table tbody td:nth-child(1)::before { content: "#"; }
-        .services-table tbody td:nth-child(2)::before { content: "Service"; }
-        .services-table tbody td:nth-child(3)::before { content: "Apps"; }
-        .services-table tbody td:nth-child(4)::before { content: "Revenue"; }
-
-        /* --- COLUMN MAP FOR RECENT APPLICATIONS --- */
-        .recent-table tbody td:nth-child(1)::before { content: "ID"; }
-        .recent-table tbody td:nth-child(2)::before { content: "Agent"; }
-        .recent-table tbody td:nth-child(3)::before { content: "Service"; }
-        .recent-table tbody td:nth-child(4)::before { content: "Amount"; }
-        .recent-table tbody td:nth-child(5)::before { content: "Status"; }
-        .recent-table tbody td:nth-child(6)::before { content: "Submitted"; }
-    }
+    
 </style>
 @endsection
 
@@ -415,7 +337,7 @@
                 </div>
                 <div class="dash-panel-body no-padding">
                     <div class="table-responsive">
-                        <table class="mini-table agents-table">
+                        <table class="responsive-card-table mini-table agents-table">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -456,7 +378,7 @@
                 </div>
                 <div class="dash-panel-body no-padding">
                     <div class="table-responsive">
-                        <table class="mini-table services-table">
+                        <table class="responsive-card-table mini-table services-table">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -495,7 +417,7 @@
                 </div>
                 <div class="dash-panel-body no-padding">
                     <div class="table-responsive">
-                        <table class="mini-table recent-table">
+                        <table class="responsive-card-table mini-table recent-table">
                             <thead>
                                 <tr>
                                     <th class="pl-4">ID</th>

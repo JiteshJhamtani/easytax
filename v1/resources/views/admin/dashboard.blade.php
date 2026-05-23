@@ -108,7 +108,7 @@
                 </div>
                 <div class="card-body pt-0">
                     <div class="table-responsive">
-                        <table class="table modern-table mb-0">
+                        <table class="responsive-card-table table modern-table mb-0">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -150,7 +150,7 @@
                 </div>
                 <div class="card-body pt-0">
                     <div class="table-responsive">
-                        <table class="table modern-table mb-0">
+                        <table class="responsive-card-table table modern-table mb-0">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -191,7 +191,7 @@
                 </div>
                 <div class="card-body pt-0">
                     <div class="table-responsive">
-                        <table class="table modern-table mb-0">
+                        <table class="responsive-card-table table modern-table mb-0">
                             <thead>
                                 <tr>
                                     <th>ID</th>

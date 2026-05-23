@@ -9,7 +9,7 @@
     </div>
     
     <div class="card-body p-0 table-responsive">
-        <table class="table table-hover modern-table mb-0">
+        <table class="responsive-card-table table table-hover modern-table mb-0">
             <thead class="bg-light">
                 <tr>
                     <th class="border-top-0 border-bottom-0 pl-4">App ID</th>

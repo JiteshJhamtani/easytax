@@ -51,7 +51,7 @@
 
         <div class="card border-0 shadow-sm rounded-lg overflow-hidden">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="responsive-card-table table table-hover mb-0">
                     <thead style="background: #f1f5f9;">
                         <tr>
                             <th class="border-0 text-muted text-xs font-weight-bold text-uppercase pb-3 pt-3 pl-4">Date</th>

@@ -45,7 +45,7 @@
             </div>
 
             <div class="card-body">
-                <table id="commissionTable" class="table table-bordered table-striped modern-table w-100">
+                <table id="commissionTable" class="responsive-card-table table table-bordered table-striped modern-table w-100">
                     <thead>
                         <tr>
                             <th class="pl-3">App ID</th>
