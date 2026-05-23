@@ -95,13 +95,13 @@
 
         .sb-section {
             padding: 1rem 1.5rem 0.5rem; font-size: 0.7rem; font-weight: 700; 
-            letter-spacing: 0.05em; text-transform: uppercase; color: var(--slate-muted); white-space: nowrap;
+            letter-spacing: 0.05em; text-transform: uppercase; color: var(--slate-muted); 
         }
         .sb-item {
             display: flex; align-items: center; gap: 1rem;
             padding: 0.8rem 1.5rem; margin: 0.2rem 0;
             color: var(--slate-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600;
-            transition: var(--t); position: relative; white-space: nowrap;
+            transition: var(--t); position: relative; 
         }
         .sb-item:hover { color: var(--slate-hi); text-decoration: none; }
         .sb-item.active { background: var(--surface); color: var(--text); border-radius: 0 25px 25px 0; margin-right: 1.5rem; }
@@ -229,7 +229,7 @@
             {{-- ========================================== --}}
             {{-- ADMIN ONLY SECTION (Hidden from Marketers) --}}
             {{-- ========================================== --}}
-            @if(strtoupper(auth()->user()->role) === 'ADMIN')
+            @if(auth()->user()->isAdmin())
                 <div class="sb-section">Core</div>
 
                 {{-- NATIVE PORTAL SWITCHER --}}
@@ -264,6 +264,7 @@
                     @if(request()->is('admin/dashboard*'))<span class="sb-item__dot"></span>@endif
                 </a>
 
+                @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
                 <div class="sb-section">Management</div>
 
                 <a href="{{ url('admin/services') }}" class="sb-item {{ request()->is('admin/services*') ? 'active' : '' }}" data-label="Services">
@@ -271,6 +272,7 @@
                     Services
                     @if(request()->is('admin/services*'))<span class="sb-item__dot"></span>@endif
                 </a>
+                @endif
 
             
 
@@ -358,7 +360,7 @@
             <div class="sb-section">Marketing CRM</div>
 
             {{-- Only Admins can manage the actual Marketer accounts --}}
-            @if(strtoupper(auth()->user()->role) === 'ADMIN')
+            @if(auth()->user()->isAdmin())
                 <a href="{{ route('crm.marketers.index') }}" class="sb-item {{ request()->is('crm/marketers*') ? 'active' : '' }}" data-label="Marketers">
                     <span class="sb-item__icon"><i class="fas fa-bullhorn"></i></span>
                     Marketers
@@ -438,14 +440,52 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+window.userRole = "{{ strtoupper(auth()->user()->role ?? '') }}";
 (function(){
     const shell=document.getElementById('shell'),sidebar=document.getElementById('sidebar'),overlay=document.getElementById('sb-overlay'),mBtn=document.getElementById('sb-toggle');
     mBtn&&mBtn.addEventListener('click',()=>{sidebar.classList.toggle('open');overlay.classList.toggle('open');});
     overlay&&overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('open');});
     if(localStorage.getItem('et_sb_mini')==='1')shell.classList.add('sidebar-mini');
 })();
-
 </script>
 @yield('js')
+
+<!-- GLOBAL RESPONSIVE TABLE SCRIPT -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function applyTableLabels() {
+            document.querySelectorAll('table.responsive-card-table').forEach(function(table) {
+                var headers = [];
+                table.querySelectorAll('thead th').forEach(function(th) {
+                    headers.push(th.textContent.trim());
+                });
+                
+                function applyLabels() {
+                    table.querySelectorAll('tbody tr').forEach(function(tr) {
+                        tr.querySelectorAll('td').forEach(function(td, index) {
+                            if(headers[index] && !td.hasAttribute('data-label')) {
+                                td.setAttribute('data-label', headers[index]);
+                            }
+                        });
+                    });
+                }
+                
+                applyLabels();
+                
+                if (window.jQuery && $(table).hasClass('dataTable')) {
+                    $(table).on('draw.dt', applyLabels);
+                }
+            });
+        }
+        
+        applyTableLabels();
+        
+        if (window.jQuery) {
+            $(document).on('init.dt', function() {
+                applyTableLabels();
+            });
+        }
+    });
+</script>
 </body>
 </html>

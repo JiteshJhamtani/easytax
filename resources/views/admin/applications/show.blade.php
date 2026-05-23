@@ -47,6 +47,7 @@
 
             {{-- QUICK STATS --}}
             <div class="row mb-4">
+                @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm h-100 summary-card rounded-lg elegant-border">
                         <div class="card-body d-flex align-items-center p-3">
@@ -60,6 +61,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
                 <div class="col-md-4">
                     <div class="card border-0 shadow-sm h-100 summary-card rounded-lg elegant-border">
                         <div class="card-body d-flex align-items-center p-3">

@@ -6,28 +6,27 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
-        web: __DIR__ . '/../routes/web.php',
-        commands: __DIR__ . '/../routes/console.php',
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
 
         $middleware->trustProxies(at: '*');
-        
+
         $middleware->alias([
-            'agent'   => \App\Http\Middleware\AgentMiddleware::class,
-            'admin'   => \App\Http\Middleware\AdminMiddleware::class,
+            'agent' => \App\Http\Middleware\AgentMiddleware::class,
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'sidebar' => \App\Http\Middleware\LoadSidebarMenu::class,
-            'team'    => \App\Http\Middleware\TeamMiddleware::class,
+            'team' => \App\Http\Middleware\TeamMiddleware::class,
         ]);
 
-       $middleware->redirectUsersTo(fn (\Illuminate\Http\Request $request) =>
-            match (strtoupper($request->user()->role ?? 'AGENT')) {
-                'ADMIN' => route('admin.dashboard'),
-                'TEAM' => route('team.dashboard'),
-                'MARKETER' => route('marketer.dashboard'), // Fixes your marketers too!
-                default => route('agent.dashboard'), // Agents and anyone else
-            }
+        $middleware->redirectUsersTo(fn (\Illuminate\Http\Request $request) => match (strtoupper($request->user()->role ?? 'AGENT')) {
+            'ADMIN', 'SUPER_ADMIN', 'SUB-ADMIN' => route('admin.dashboard'),
+            'TEAM' => route('team.dashboard'),
+            'MARKETER' => route('marketer.dashboard'), // Fixes your marketers too!
+            default => route('agent.dashboard'), // Agents and anyone else
+        }
         );
 
         $middleware->validateCsrfTokens(except: [

@@ -1,4 +1,4 @@
-@extends(auth()->user()->role === 'ADMIN' ? 'layouts.admin' : 'layouts.marketer')
+@extends(auth()->user()->isAdmin() ? 'layouts.admin' : 'layouts.marketer')
 @section('title', 'Add Lead | EasyTax')
 
 @section('content')
@@ -36,7 +36,7 @@
                         </select>
                     </div>
                     
-                    @if(strtoupper(auth()->user()->role) === 'ADMIN')
+                    @if(auth()->user()->isAdmin())
                     <div class="col-md-6 form-group mb-3">
                         <label class="text-xs font-weight-bold text-muted text-uppercase">Assign to Marketer</label>
                         <select name="marketer_id" class="form-control rounded-lg">

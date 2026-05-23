@@ -7,13 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Symfony\Component\HttpFoundation\Response;
 
-class LoadSidebarMenu  
+class LoadSidebarMenu
 {
-    public function handle(Request $request, Closure $next): Response 
+    public function handle(Request $request, Closure $next): Response
     {
         if (auth()->check()) {
 
-            if (auth()->user()->role === 'ADMIN') {
+            if (auth()->user()->isAdmin()) {
                 Config::set('adminlte.menu', config('menu_admin'));
             }
 

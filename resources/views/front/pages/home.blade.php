@@ -33,7 +33,7 @@
                             </svg>
                         </a>
                     @else
-                        <a href="{{ auth()->user()->role === 'ADMIN' ? route('admin.dashboard') : route('agent.dashboard') }}" class="btn btn-primary btn-lg shadow-primary">
+                        <a href="{{ auth()->user()->isAdmin() ? route('admin.dashboard') : route('agent.dashboard') }}" class="btn btn-primary btn-lg shadow-primary">
                             Dashboard
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="3" width="7" height="7"></rect>
@@ -248,7 +248,7 @@
                         @guest
                             <a href="{{ route('login') }}" class="btn btn-primary mt-6">Login to Portal</a>
                         @else
-                            <a href="{{ auth()->user()->role === 'ADMIN' ? route('admin.dashboard') : route('agent.dashboard') }}" class="btn btn-primary mt-6">Go to Dashboard</a>
+                            <a href="{{ auth()->user()->isAdmin() ? route('admin.dashboard') : route('agent.dashboard') }}" class="btn btn-primary mt-6">Go to Dashboard</a>
                         @endguest
                     </div>
                 </div>

@@ -282,7 +282,9 @@
                 <th>Primary Data</th> 
                 <th>Status</th>
                 <th>Payment</th>
+                @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
                 <th>Amount</th>
+                @endif
                 @if($type === 'itr-filing')
                     <th>ACK NO</th>
                     <th>COMPUTATION</th>
@@ -294,7 +296,7 @@
         <span>ASSIGN TO</span>
         <label style="font-size: 0.75rem; font-weight: 500; text-transform: none; letter-spacing: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: #64748b; margin: 0;">
             <input type="checkbox" id="autoAssignTenToggle" style="margin: 0; cursor: pointer;"> 
-            Auto-assign next 10
+            Auto-assign
         </label>
     </div>
 </th>             

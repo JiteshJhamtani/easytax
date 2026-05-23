@@ -56,7 +56,7 @@
                     @guest
                         <li><a href="{{ route('login') }}" class="footer__link highlight-link">Agent Portal Login</a></li>
                     @else
-                        <li><a href="{{ auth()->user()->role === 'ADMIN' ? route('admin.dashboard') : route('agent.dashboard') }}" class="footer__link highlight-link">Dashboard</a></li>
+                        <li><a href="{{ auth()->user()->isAdmin() ? route('admin.dashboard') : route('agent.dashboard') }}" class="footer__link highlight-link">Dashboard</a></li>
                     @endguest
                     <li><a href="{{ route('pages.show', 'about-us') }}" class="footer__link">About Us</a></li>
                     <li><a href="{{ route('pages.show', 'contact-us') }}" class="footer__link">Contact Support</a></li>

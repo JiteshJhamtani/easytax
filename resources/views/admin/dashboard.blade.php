@@ -275,6 +275,7 @@
                     <div class="funnel-value" id="kpi-total_agents">{{ $kpis['total_agents'] }}</div>
                 </div>
             </div>
+            @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
             <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
                     <div class="funnel-icon"><i class="fas fa-rupee-sign"></i></div>
@@ -290,6 +291,7 @@
                     <div class="funnel-value" id="kpi-total_commission">₹{{ number_format($kpis['total_commission'], 2) }}</div>
                 </div>
             </div>
+            @endif
 
             <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 mb-3 mb-xl-0">
                 <div class="funnel-card">
@@ -304,7 +306,7 @@
 
     {{-- ═══════ CHARTS ═══════ --}}
     <div class="row mb-4">
-        <div class="col-lg-6 mb-4 mb-lg-0">
+        <div class="{{ strtoupper(auth()->user()->role) === 'SUB-ADMIN' ? 'col-lg-12' : 'col-lg-6' }} mb-4 mb-lg-0">
             <div class="dash-panel">
                 <div class="dash-panel-header">
                     <h3 class="dash-panel-title"><i class="fas fa-chart-bar text-primary"></i> Applications Overview</h3>
@@ -315,6 +317,7 @@
             </div>
         </div>
         
+        @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
         <div class="col-lg-6">
             <div class="dash-panel">
                 <div class="dash-panel-header">
@@ -325,6 +328,7 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
 
@@ -343,8 +347,10 @@
                                     <th>#</th>
                                     <th>Agent</th>
                                     <th class="text-center">Apps</th>
+                                    @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
                                     <th class="text-right">Revenue</th>
                                     <th class="text-right">Commission</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -358,8 +364,10 @@
                                     <td class="text-center">
                                         <span class="custom-badge badge-info-soft">{{ $agent->applications_count }}</span>
                                     </td>
+                                    @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
                                     <td class="text-right font-weight-bold" style="color: var(--green);">₹{{ number_format($agent->total_revenue, 2) }}</td>
                                     <td class="text-right font-weight-bold" style="color: var(--slate);">₹{{ number_format($agent->commission_earned, 2) }}</td>
+                                    @endif
                                 </tr>
                                 @empty
                                 <tr><td colspan="5" class="text-center text-muted py-4">No data available</td></tr>
@@ -384,7 +392,9 @@
                                     <th>#</th>
                                     <th>Service</th>
                                     <th class="text-center">Apps</th>
+                                    @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
                                     <th class="text-right">Revenue</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -395,7 +405,9 @@
                                     <td class="text-center">
                                         <span class="custom-badge badge-info-soft">{{ $svc->applications_count }}</span>
                                     </td>
+                                    @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
                                     <td class="text-right font-weight-bold" style="color: var(--green);">₹{{ number_format($svc->revenue, 2) }}</td>
+                                    @endif
                                 </tr>
                                 @empty
                                 <tr><td colspan="4" class="text-center text-muted py-4">No data available</td></tr>
@@ -423,7 +435,9 @@
                                     <th class="pl-4">ID</th>
                                     <th>Agent</th>
                                     <th>Service</th>
+                                    @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
                                     <th class="text-right">Amount</th>
+                                    @endif
                                     <th class="text-center">Status</th>
                                     <th class="text-right pr-4">Submitted</th>
                                 </tr>
@@ -434,7 +448,9 @@
                                     <td class="font-weight-bold pl-4" style="color: var(--slate-dark);">#{{ $app->id }}</td>
                                     <td class="font-weight-bold text-dark">{{ $app->agent->name ?? '—' }}</td>
                                     <td>{{ $app->service->name ?? '—' }}</td>
+                                    @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
                                     <td class="text-right font-weight-bold" style="color: var(--green);">₹{{ number_format($app->amount, 2) }}</td>
+                                    @endif
                                     <td class="text-center">
                                         @php
                                             $statusColors = [

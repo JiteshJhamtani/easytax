@@ -2,19 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Enums\ApplicationStatus;
 use App\Enums\PaymentStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Application extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, LogsActivity;
+    use \App\Traits\MasksSensitiveData, HasFactory, InteractsWithMedia, LogsActivity;
 
+    protected $maskable = ['email', 'mobile_number', 'whatsapp_no', 'pan_number', 'aadhaar_number'];
 
     protected $fillable = [
         'agent_id',
@@ -37,13 +38,13 @@ class Application extends Model implements HasMedia
     ];
 
     protected $casts = [
-        'form_data'         => 'array',
-        'status'            => ApplicationStatus::class,
-        'payment_status'    => PaymentStatus::class,
-        'started_at'        => 'datetime',
-        'submitted_at'      => 'datetime',
-        'completed_at'      => 'datetime',
-        'amount'            => 'decimal:2',
+        'form_data' => 'array',
+        'status' => ApplicationStatus::class,
+        'payment_status' => PaymentStatus::class,
+        'started_at' => 'datetime',
+        'submitted_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'amount' => 'decimal:2',
         'commission_amount' => 'decimal:2',
     ];
 
@@ -60,7 +61,7 @@ class Application extends Model implements HasMedia
 
     public function service()
     {
-return $this->belongsTo(Service::class, 'service_id');
+        return $this->belongsTo(Service::class, 'service_id');
     }
 
     /*
@@ -79,7 +80,7 @@ return $this->belongsTo(Service::class, 'service_id');
             'moa_document',
             'aoa_document',
             'final_deliverables',
-            'balance_sheet'
+            'balance_sheet',
         ];
 
         foreach ($collections as $collection) {
@@ -96,7 +97,7 @@ return $this->belongsTo(Service::class, 'service_id');
     public function markAsSubmitted(): void
     {
         $this->update([
-            'status'       => ApplicationStatus::SUBMITTED,
+            'status' => ApplicationStatus::SUBMITTED,
             'submitted_at' => now(),
         ]);
     }
@@ -104,7 +105,7 @@ return $this->belongsTo(Service::class, 'service_id');
     public function markAsCompleted(): void
     {
         $this->update([
-            'status'       => ApplicationStatus::COMPLETED,
+            'status' => ApplicationStatus::COMPLETED,
             'completed_at' => now(),
         ]);
     }

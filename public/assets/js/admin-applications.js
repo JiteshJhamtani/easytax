@@ -17,9 +17,12 @@ $(document).ready(function () {
         { data: "service", name: "service.name" },
         { data: 'dynamic_data', name: 'dynamic_data', orderable: false, searchable: false },
         { data: "status", name: "status" },
-        { data: "payment", name: "payment_status" },
-        { data: "amount", name: "amount" }
+        { data: "payment", name: "payment_status" }
     ];
+
+    if (window.userRole !== 'SUB-ADMIN') {
+        tableColumns.push({ data: "amount", name: "amount" });
+    }
 
     // 3. Inject ITR specific columns ONLY if we are on the ITR page
     if (pageType === 'itr-filing') {

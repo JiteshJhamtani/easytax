@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Lead extends Model
 {
-    use HasFactory;
+    use \App\Traits\MasksSensitiveData, HasFactory;
+
+    protected $maskable = ['email', 'phone', 'amount'];
 
     protected $fillable = [
-        'name', 'email', 'phone', 'service_interested', 
-        'source', 'status', 'notes', 'marketer_id','amount'
+        'name', 'email', 'phone', 'service_interested',
+        'source', 'status', 'notes', 'marketer_id', 'amount',
     ];
 
     // A lead belongs to the marketer who generated it

@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\MasksSensitiveData;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, MasksSensitiveData, Notifiable;
 
     protected $fillable = [
         'name',
@@ -19,6 +20,17 @@ class User extends Authenticatable
         'mobile_number',
         'whatsapp_no',
         'address',
+    ];
+
+    /**
+     * The attributes that should be masked for sub-admins.
+     *
+     * @var array<string>
+     */
+    protected array $maskable = [
+        'email',
+        'mobile_number',
+        'whatsapp_no',
     ];
 
     protected $hidden = [
@@ -55,7 +67,7 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === 'ADMIN';
+        return in_array(strtoupper($this->role), ['ADMIN', 'SUPER_ADMIN', 'SUB-ADMIN']);
     }
 
     public function isAgent(): bool

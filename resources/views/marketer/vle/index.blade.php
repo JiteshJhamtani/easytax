@@ -1,4 +1,4 @@
-@extends(auth()->user()->role === 'ADMIN' ? 'layouts.admin' : 'layouts.marketer')
+@extends(auth()->user()->isAdmin() ? 'layouts.admin' : 'layouts.marketer')
 @section('title', 'VLE Customers | EasyTax')
 
 @section('content')

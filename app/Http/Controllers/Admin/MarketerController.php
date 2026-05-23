@@ -16,7 +16,7 @@ class MarketerController extends Controller implements HasMiddleware
     {
         return [
             new Middleware(function ($request, $next) {
-                if (strtoupper(auth()->user()->role) !== 'ADMIN') {
+                if (! auth()->user()->isAdmin()) {
                     abort(403, 'Unauthorized action.');
                 }
 

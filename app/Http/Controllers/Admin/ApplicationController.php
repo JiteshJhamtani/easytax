@@ -589,7 +589,7 @@ class ApplicationController extends Controller
     public function deleteDocument($mediaId)
     {
         $media = Media::findOrFail($mediaId);
-        if (strtoupper(auth()->user()->role) !== 'ADMIN') {
+        if (! auth()->user()->isAdmin()) {
             abort(403, 'Unauthorized action.');
         }
         $media->delete();
@@ -616,7 +616,7 @@ class ApplicationController extends Controller
     public function viewDocument($mediaId)
     {
         $media = Media::findOrFail($mediaId);
-        if (auth()->user()->role !== 'ADMIN') {
+        if (! auth()->user()->isAdmin()) {
             abort(403, 'Unauthorized');
         }
         $path = storage_path('app/private/'.$media->id.'/'.$media->file_name);
@@ -630,7 +630,7 @@ class ApplicationController extends Controller
     public function downloadDocument($mediaId)
     {
         $media = Media::findOrFail($mediaId);
-        if (auth()->user()->role !== 'ADMIN') {
+        if (! auth()->user()->isAdmin()) {
             abort(403, 'Unauthorized');
         }
         $path = storage_path('app/private/'.$media->id.'/'.$media->file_name);
