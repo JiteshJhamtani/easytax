@@ -38,4 +38,3 @@ resources/views/welcome.blade.php
 /storage/framework/
 restore_correct_db.php
 restore_db.php
-public/upgrade-rbac.php
