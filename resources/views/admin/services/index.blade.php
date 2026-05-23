@@ -56,7 +56,8 @@
         /* ── DATATABLES OVERRIDES ── */
         .dataTables_wrapper .row { align-items: center; }
         
-        .dataTables_filter label { font-weight: 600; color: var(--text-muted); font-size: 0.85rem; width: 100%; }
+        .dataTables_filter { text-align: right; }
+        .dataTables_filter label { font-weight: 600; color: var(--text-muted); font-size: 0.85rem; width: 100%; text-align: right; display: flex; justify-content: flex-end; align-items: center; }
         .dataTables_filter input {
             border: 1px solid var(--border); border-radius: 8px;
             padding: 0.4rem 0.75rem; margin-left: 0.5rem; outline: none; transition: all 0.2s;

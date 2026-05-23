@@ -6,10 +6,11 @@ use App\Traits\MasksSensitiveData;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, MasksSensitiveData, Notifiable;
+    use HasFactory, HasRoles, MasksSensitiveData, Notifiable;
 
     protected $fillable = [
         'name',
@@ -54,9 +55,22 @@ class User extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
+    protected static function booted()
+    {
+        static::deleting(function ($user) {
+            $user->applications()->delete();
+            $user->assignedApplications()->delete();
+        });
+    }
+
     public function applications()
     {
         return $this->hasMany(Application::class, 'agent_id');
+    }
+
+    public function assignedApplications()
+    {
+        return $this->hasMany(Application::class, 'assigned_to');
     }
 
     /*

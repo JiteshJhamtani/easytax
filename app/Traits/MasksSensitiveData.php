@@ -7,6 +7,53 @@ use Illuminate\Support\Facades\Auth;
 trait MasksSensitiveData
 {
     /**
+     * Boot the trait to prevent saving masked strings.
+     */
+    public static function bootMasksSensitiveData()
+    {
+        static::saving(function ($model) {
+            if (! property_exists($model, 'maskable')) {
+                return;
+            }
+
+            // Prevent direct attributes from being saved as asterisks
+            foreach ($model->maskable as $key) {
+                if (isset($model->$key) && is_string($model->$key) && str_contains($model->$key, '*')) {
+                    $original = $model->getOriginal($key);
+                    if ($original !== null) {
+                        $model->$key = $original;
+                    } else {
+                        unset($model->$key);
+                    }
+                }
+            }
+
+            // Prevent JSON form_data attributes from being saved as asterisks
+            if (isset($model->form_data) && is_array($model->form_data)) {
+                $formData = $model->form_data;
+                $originalFormData = $model->getOriginal('form_data');
+                if (is_string($originalFormData)) {
+                    $originalFormData = json_decode($originalFormData, true);
+                }
+
+                $modified = false;
+                foreach ($model->maskable as $key) {
+                    if (isset($formData[$key]) && is_string($formData[$key]) && str_contains($formData[$key], '*')) {
+                        if (is_array($originalFormData) && isset($originalFormData[$key])) {
+                            $formData[$key] = $originalFormData[$key];
+                            $modified = true;
+                        }
+                    }
+                }
+
+                if ($modified) {
+                    $model->form_data = $formData;
+                }
+            }
+        });
+    }
+
+    /**
      * Override Eloquent's getAttributeValue to intercept and mask sensitive data.
      *
      * @param  string  $key

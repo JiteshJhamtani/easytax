@@ -130,7 +130,7 @@
         .sb-illustration svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
 
         /* ── MAIN ──  */
-        .main { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-width: 0; transition: margin-left .28s cubic-bezier(.4,0,.2,1); overflow-x: hidden; }
+        .main { flex: 1; margin-left: var(--sidebar-w); display: flex; flex-direction: column; min-width: 0; transition: margin-left .28s cubic-bezier(.4,0,.2,1); }
 
         .topbar {
             height: var(--topbar-h); background: var(--surface);
@@ -191,6 +191,13 @@
             .user-pill__logout { width: 32px; height: 32px; }
             .user-pill__divider { margin: 0 0.3rem; }
             .content-body { padding: 0.75rem; }
+        }
+
+        /* ── DESKTOP 80% ZOOM ── */
+        @media (min-width: 1200px) {
+            body {
+                zoom: 0.83;
+            }
         }
 
         .shell.sidebar-mini .sidebar { width: var(--sidebar-mini); }
@@ -390,7 +397,7 @@
 
     <div class="main" id="main">
         <header class="topbar">
-            <div style="display: flex; align-items: center; gap: 1rem; min-width: 0; overflow: hidden;">
+            <div style="display: flex; align-items: center; gap: 1rem; min-width: 0;">
                 <button class="topbar__toggle" id="sb-toggle">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </button>
@@ -487,5 +494,78 @@ window.userRole = "{{ strtoupper(auth()->user()->role ?? '') }}";
         }
     });
 </script>
+<!-- GLOBAL ACTION CONFIRMATION MODAL -->
+<div x-data="{ 
+        open: false, 
+        formElement: null,
+        title: 'Are you sure?',
+        message: 'This action cannot be undone.',
+        confirmText: 'Confirm',
+        confirmColor: 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
+     }" 
+     @confirm-action.window="
+        open = true; 
+        formElement = $event.detail.form;
+        if($event.detail.title) title = $event.detail.title;
+        if($event.detail.message) message = $event.detail.message;
+        if($event.detail.confirmText) confirmText = $event.detail.confirmText;
+        if($event.detail.confirmColor) confirmColor = $event.detail.confirmColor;
+     "
+     @keydown.escape.window="open = false"
+     class="relative z-[9999]"
+     x-cloak
+     x-show="open">
+    
+    <!-- Backdrop Overlay -->
+    <div x-show="open"
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" 
+         @click="open = false"></div>
+
+    <!-- Modal Panel Container -->
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center">
+            <div x-show="open"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-gray-100">
+                
+                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <div class="flex flex-col items-center">
+                        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 mb-4">
+                            <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div class="text-center">
+                            <h3 class="text-lg font-semibold leading-6 text-gray-900" id="modal-title" x-text="title"></h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500" x-text="message"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 flex justify-center gap-3 sm:px-6 border-t border-gray-100">
+                    <button type="button" 
+                            @click="open = false" 
+                            class="inline-flex w-full justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:w-auto">Cancel</button>
+                    <button type="button" 
+                            @click="formElement ? formElement.submit() : open = false" 
+                            :class="'inline-flex w-full justify-center rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm sm:w-auto ' + confirmColor"
+                            x-text="confirmText"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

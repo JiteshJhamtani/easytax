@@ -391,7 +391,7 @@
                                                 class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
                                             <form action="{{ route('admin.applications.deleteDocument', $ackDoc->id) }}"
                                                 method="POST" class="d-inline"
-                                                onsubmit="return confirm('Delete this document?');">
+                                                onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('confirm-action', { detail: { form: this, title: 'Delete document?', message: 'Are you sure you want to delete this document?' } }));">
                                                 @csrf @method('DELETE')
                                                 <button type="submit"
                                                     class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
@@ -426,7 +426,7 @@
                                                 class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
                                             <form action="{{ route('admin.applications.deleteDocument', $compDoc->id) }}"
                                                 method="POST" class="d-inline"
-                                                onsubmit="return confirm('Delete this document?');">
+                                                onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('confirm-action', { detail: { form: this, title: 'Delete document?', message: 'Are you sure you want to delete this document?' } }));">
                                                 @csrf @method('DELETE')
                                                 <button type="submit"
                                                     class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
@@ -467,7 +467,7 @@
                                                 class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
                                             <form action="{{ route('admin.applications.deleteDocument', $moaDoc->id) }}"
                                                 method="POST" class="d-inline"
-                                                onsubmit="return confirm('Delete this document?');">
+                                                onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('confirm-action', { detail: { form: this, title: 'Delete document?', message: 'Are you sure you want to delete this document?' } }));">
                                                 @csrf @method('DELETE')
                                                 <button type="submit"
                                                     class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
@@ -502,7 +502,7 @@
                                                 class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
                                             <form action="{{ route('admin.applications.deleteDocument', $aoaDoc->id) }}"
                                                 method="POST" class="d-inline"
-                                                onsubmit="return confirm('Delete this document?');">
+                                                onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('confirm-action', { detail: { form: this, title: 'Delete document?', message: 'Are you sure you want to delete this document?' } }));">
                                                 @csrf @method('DELETE')
                                                 <button type="submit"
                                                     class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>

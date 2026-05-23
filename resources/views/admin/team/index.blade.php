@@ -137,7 +137,7 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
 
-                                    <form action="{{ route('admin.team.destroy', $member->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Permanently delete this operator?');">
+                                    <form action="{{ route('admin.team.destroy', $member->id) }}" method="POST" class="d-inline" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('confirm-action', { detail: { form: this, title: 'Delete operator?', message: 'Are you sure you want to permanently delete this operator?' } }));">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                                             <i class="fas fa-trash"></i>

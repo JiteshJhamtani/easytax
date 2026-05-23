@@ -33,7 +33,7 @@ $(document).ready(function () {
 
     // 4. Add the final columns that go at the end
     tableColumns.push({ data: "date", name: "created_at" });
-    tableColumns.push({ data: "assign_to", name: "assign_to", orderable: false, searchable: false });
+    tableColumns.push({ data: "assign_to", name: "assign_to", orderable: false, searchable: false, className: "text-center" });
     tableColumns.push({ data: "actions", name: "actions", orderable: false, searchable: false, className: "text-right text-nowrap" });
 
 
@@ -60,6 +60,7 @@ $(document).ready(function () {
                 d.payment = $("#filterPayment").val();
                 d.date_from = $("#filterDateFrom").val();
                 d.date_to = $("#filterDateTo").val();
+                d.is_trashed = window.isTrashedView || false;
             }
         },
           
@@ -75,7 +76,7 @@ $(document).ready(function () {
         // SaaS-style language overrides
         language: {
             search: "_INPUT_",
-            searchPlaceholder: "Search ID, Agent, or Service...",
+            searchPlaceholder: "Search ID or Service...",
             lengthMenu: "Show _MENU_ entries",
             info: "Showing _START_ to _END_ of _TOTAL_ entries",
             paginate: {
@@ -98,6 +99,20 @@ $(document).ready(function () {
 
         // Clear global search and reload the table
         table.search('').draw();
+    });
+
+    // 8. Trash Toggle Logic
+    window.isTrashedView = false;
+    $('#toggleTrashBtn').click(function() {
+        window.isTrashedView = !window.isTrashedView;
+        if (window.isTrashedView) {
+            $(this).html('<i class="fas fa-arrow-left"></i> Back to Active');
+            $(this).css({ 'color': '#2563eb', 'border-color': '#93c5fd' });
+        } else {
+            $(this).html('<i class="fas fa-trash"></i> View Trash');
+            $(this).css({ 'color': '#dc2626', 'border-color': '#fca5a5' });
+        }
+        table.draw();
     });
 
 }); // <--- THIS IS THE CLOSING BRACKET FOR DOCUMENT.READY. EVERYTHING BELOW IS NOW GLOBAL!

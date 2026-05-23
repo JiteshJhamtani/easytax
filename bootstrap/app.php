@@ -13,12 +13,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
 
         $middleware->trustProxies(at: '*');
+        $middleware->append(\App\Http\Middleware\SetTenantContext::class);
 
         $middleware->alias([
             'agent' => \App\Http\Middleware\AgentMiddleware::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'sidebar' => \App\Http\Middleware\LoadSidebarMenu::class,
             'team' => \App\Http\Middleware\TeamMiddleware::class,
+            'b2b.only' => \App\Http\Middleware\RestrictToB2BDomains::class,
         ]);
 
         $middleware->redirectUsersTo(fn (\Illuminate\Http\Request $request) => match (strtoupper($request->user()->role ?? 'AGENT')) {

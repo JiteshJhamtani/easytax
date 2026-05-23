@@ -2,11 +2,9 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // 
+        //
     }
 
     /**
@@ -49,6 +47,24 @@ class AppServiceProvider extends ServiceProvider
                     'email' => $notifiable->getEmailForPasswordReset(),
                 ], false)))
                 ->line('If you did not request this, please ignore this email. Your account is safe.');
+        });
+
+        // 4. Implicitly grant "admin" role all permissions
+        \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
+            return $user->hasRole('admin') ? true : null;
+        });
+
+        // 5. Custom @tenant Blade directive
+        \Illuminate\Support\Facades\Blade::if('tenant', function ($tenant) {
+            return config('app.tenant') === $tenant;
+        });
+
+        // 6. Custom @b2bOnly Blade directive
+        \Illuminate\Support\Facades\Blade::if('b2bOnly', function () {
+            if (app()->environment('local')) {
+                return true;
+            }
+            return in_array(request()->getHost(), ['uat.easytax.live', 'b2b.easytax.live']);
         });
     }
 }

@@ -297,7 +297,7 @@ body,
     color: #1e293b;
     outline: none;
     transition: all 0.2s ease;
-    width: 250px;
+    width: 320px;
 }
 
 .dataTables_filter input:focus {

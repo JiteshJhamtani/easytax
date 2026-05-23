@@ -133,7 +133,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($applications as $app)
+                @forelse($applications as $app)
                 <tr>
                     <td class="font-weight-bold text-muted">#{{ $app->id }}</td>
                     <td class="font-weight-bold text-dark">{{ $app->service->name ?? 'Unknown Service' }}</td>
@@ -156,7 +156,14 @@
                         </a>
                     </td>
                 </tr>
-                @endforeach
+                @empty
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2 text-light"></i><br>
+                        You have no assigned tasks at the moment! 🎉
+                    </td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

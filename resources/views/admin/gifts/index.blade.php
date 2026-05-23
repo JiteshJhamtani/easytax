@@ -266,7 +266,7 @@
                     </a>
                     
                     <form action="{{ route('admin.gifts.destroy', $gift) }}" method="POST" class="d-inline ml-auto"
-                        onsubmit="return confirm('Are you sure you want to delete {{ $gift->name }}?')">
+                        onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('confirm-action', { detail: { form: this, title: 'Delete Gift?', message: 'Are you sure you want to delete {{ $gift->name }}?' } }));">
                         @csrf @method('DELETE')
                         <button type="submit" class="btn-gaction btn-gaction--delete" title="Delete Gift">
                             <i class="fas fa-trash"></i>

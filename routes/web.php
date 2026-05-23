@@ -237,6 +237,12 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
     Route::get('/applications/{application}', [AdminApplicationController::class, 'show'])
         ->name('applications.show');
 
+    Route::delete('/applications/{application}', [AdminApplicationController::class, 'destroy'])
+        ->name('applications.destroy');
+
+    Route::post('/applications/{id}/restore', [AdminApplicationController::class, 'restore'])
+        ->name('applications.restore');
+
     Route::patch('/applications/{application}/status', [AdminApplicationController::class, 'updateStatus'])
         ->name('applications.updateStatus');
 
@@ -321,51 +327,30 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
 
     /*
     |--------------------------------------------------------------------------
-    | Services
+    | B2B Only Modules (Services, Pages, Gifts)
     |--------------------------------------------------------------------------
     */
+    Route::middleware(['b2b.only'])->group(function () {
+        // Services
+        Route::get('/services', [AdminServiceController::class, 'index'])->name('services.index');
+        Route::get('/services/datatable', [AdminServiceController::class, 'datatable'])->name('services.datatable');
+        Route::get('/services/create', [AdminServiceController::class, 'create'])->name('services.create');
+        Route::post('/services', [AdminServiceController::class, 'store'])->name('services.store');
+        Route::get('/services/{service}', [AdminServiceController::class, 'show'])->name('services.show');
+        Route::get('/services/{service}/edit', [AdminServiceController::class, 'edit'])->name('services.edit');
+        Route::put('/services/{service}', [AdminServiceController::class, 'update'])->name('services.update');
+        Route::patch('/services/{service}/toggle-status', [AdminServiceController::class, 'toggleStatus'])->name('services.toggle-status');
+        
+        // Static Pages
+        Route::get('/pages/datatable', [\App\Http\Controllers\Admin\PageController::class, 'datatable'])->name('pages.datatable');
+        Route::resource('pages', \App\Http\Controllers\Admin\PageController::class)->except(['show']);
+        Route::patch('/pages/{page}/toggle', [\App\Http\Controllers\Admin\PageController::class, 'toggle'])->name('pages.toggle');
 
-    Route::get('/services', [AdminServiceController::class, 'index'])
-        ->name('services.index');
-
-    Route::get('/services/datatable', [AdminServiceController::class, 'datatable'])
-        ->name('services.datatable');
-
-    Route::get('/services/create', [AdminServiceController::class, 'create'])
-        ->name('services.create');
-
-    Route::post('/services', [AdminServiceController::class, 'store'])
-        ->name('services.store');
-
-    Route::get('/services/{service}', [AdminServiceController::class, 'show'])
-        ->name('services.show');
-
-    Route::get('/services/{service}/edit', [AdminServiceController::class, 'edit'])
-        ->name('services.edit');
-
-    Route::put('/services/{service}', [AdminServiceController::class, 'update'])
-        ->name('services.update');
-
-    Route::patch('/services/{service}/toggle-status', [AdminServiceController::class, 'toggleStatus'])
-        ->name('services.toggle-status');
-    /*
-    |--------------------------------------------------------------------------
-    | Static Pages
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get('/pages/datatable', [\App\Http\Controllers\Admin\PageController::class, 'datatable'])->name('pages.datatable');
-    Route::resource('pages', \App\Http\Controllers\Admin\PageController::class)->except(['show']);
-
-    Route::patch('/pages/{page}/toggle', [\App\Http\Controllers\Admin\PageController::class, 'toggle'])->name('pages.toggle');
-
-    // Inside your existing Route::middleware([...])->prefix('admin')->group(...)
-
-    Route::get('gifts/eligibility', [\App\Http\Controllers\Admin\GiftEligibilityController::class, 'hub'])
-        ->name('gifts.eligibility.hub');
-    Route::resource('gifts', \App\Http\Controllers\Admin\GiftController::class)->except(['show']);
-    Route::get('gifts/{gift}/eligibility', [\App\Http\Controllers\Admin\GiftEligibilityController::class, 'index'])
-        ->name('gifts.eligibility');
+        // Gifts
+        Route::get('gifts/eligibility', [\App\Http\Controllers\Admin\GiftEligibilityController::class, 'hub'])->name('gifts.eligibility.hub');
+        Route::resource('gifts', \App\Http\Controllers\Admin\GiftController::class)->except(['show']);
+        Route::get('gifts/{gift}/eligibility', [\App\Http\Controllers\Admin\GiftEligibilityController::class, 'index'])->name('gifts.eligibility');
+    });
 
     Route::get('/documents/{media}', [AdminApplicationController::class, 'viewDocument'])
         ->name('documents.view');

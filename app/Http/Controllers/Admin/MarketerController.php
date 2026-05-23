@@ -70,7 +70,7 @@ class MarketerController extends Controller implements HasMiddleware
                 $btn .= '<a href="'.route('crm.marketers.edit', $row->id).'" class="btn btn-sm btn-outline-primary mr-1" title="Edit"><i class="fas fa-edit"></i></a>';
 
                 // Delete Button
-                $btn .= '<form action="'.route('crm.marketers.destroy', $row->id).'" method="POST" class="d-inline" onsubmit="return confirm(\'Permanently delete this marketer?\');">';
+                $btn .= '<form action="'.route('crm.marketers.destroy', $row->id).'" method="POST" class="d-inline" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent(\'confirm-action\', { detail: { form: this, title: \'Delete Marketer?\', message: \'Are you sure you want to permanently delete this marketer?\' } }));">';
                 $btn .= csrf_field().method_field('DELETE');
                 $btn .= '<button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button></form>';
 

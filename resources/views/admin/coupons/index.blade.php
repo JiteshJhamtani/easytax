@@ -69,7 +69,7 @@
             <h3 class="font-weight-bold text-dark mb-0">🎟️ Promo Codes & Campaigns</h3>
             <p class="text-muted mb-0">Create and manage bonus commissions for your agents.</p>
         </div>
-        <button class="btn btn-primary font-weight-bold shadow-sm" data-toggle="modal" data-target="#createPromoModal" style="border-radius: 8px;">
+        <button class="btn btn-primary font-weight-bold shadow-sm" onclick="window.dispatchEvent(new CustomEvent('open-coupon-modal'))" style="border-radius: 8px;">
             <i class="fas fa-plus mr-1"></i> Create New Coupon
         </button>
     </div>
@@ -150,7 +150,7 @@
                                             <i class="fas {{ $coupon->is_active ? 'fa-ban' : 'fa-check' }}"></i>
                                         </button>
                                     </form>
-                                    <form action="{{ route('admin.coupons.destroy', $coupon->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this promo permanently?');">
+                                    <form action="{{ route('admin.coupons.destroy', $coupon->id) }}" method="POST" class="d-inline" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('confirm-action', { detail: { form: this, title: 'Delete Promo?', message: 'Are you sure you want to permanently delete this promo?' } }));">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-secondary" title="Delete">
                                             <i class="fas fa-trash"></i>
@@ -175,74 +175,108 @@
     </div>
 </div>
 
-<div class="modal fade" id="createPromoModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content" style="border-radius: 12px; border: none;">
-            <div class="modal-header bg-light" style="border-radius: 12px 12px 0 0;">
-                <h5 class="modal-title font-weight-bold text-dark">Create New Promo Campaign</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form action="{{ route('admin.coupons.store') }}" method="POST">
-                @csrf
-                <div class="modal-body p-4">
+<!-- NEW ALPINE COUPON MODAL -->
+<div x-data="{ open: false }" 
+     id="createPromoModal"
+     @open-coupon-modal.window="open = true"
+     @keydown.escape.window="open = false"
+     class="relative z-[9999]"
+     x-cloak
+     x-show="open">
+    
+    <!-- Backdrop Overlay -->
+    <div x-show="open"
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" 
+         @click="open = false"></div>
+
+    <!-- Modal Panel Container -->
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center">
+            <div x-show="open"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-2xl transition-all sm:my-8 w-full sm:max-w-lg border border-gray-100">
+                
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-900 m-0">Create New Promo Campaign</h3>
+                    <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-500 transition-colors focus:outline-none">
+                        <span class="sr-only">Close</span>
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <form action="{{ route('admin.coupons.store') }}" method="POST">
+                    @csrf
+                    <div class="px-6 py-5">
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Promo Code <span class="text-red-500">*</span></label>
+                            <input type="text" name="code" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 uppercase px-3 py-2 border" placeholder="e.g. ITR50-XJ9" required>
+                            <p class="mt-1 text-xs text-gray-500">Agents will type this exactly at checkout.</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Bonus Commission (₹) <span class="text-red-500">*</span></label>
+                            <input type="number" step="0.01" name="bonus_amount" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border" placeholder="50.00" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Target Specific Agents (Optional)</label>
+                            <div wire:ignore>
+                                <select name="target_agents[]" class="form-control select2-agents w-full" multiple="multiple">
+                                    @foreach($agents as $agent)
+                                        <option value="{{ $agent->id }}">{{ $agent->name }} (ID: {{ $agent->id }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Leave blank so ALL agents can use it.</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Applicable Services (Optional)</label>
+                            <div wire:ignore>
+                                <select name="target_services[]" class="form-control select2-services w-full" multiple="multiple">
+                                    @if(isset($services))
+                                        @foreach($services as $service)
+                                            <option value="{{ $service->id }}">{{ $service->name }}</option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Leave blank so it applies to ALL services.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mt-2">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Total Uses</label>
+                                <input type="number" name="global_max_uses" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border" placeholder="e.g. 50">
+                                <p class="mt-1 text-xs text-gray-500">Auto-expires after X uses.</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Max Uses Per Agent</label>
+                                <input type="number" name="max_uses_per_agent" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 border" value="1" required>
+                                <p class="mt-1 text-xs text-gray-500">Usually 1 time per agent.</p>
+                            </div>
+                        </div>
+                    </div>
                     
-                    <div class="form-group">
-                        <label class="font-weight-bold">Promo Code <span class="text-danger">*</span></label>
-                        <input type="text" name="code" class="form-control text-uppercase" placeholder="e.g. ITR50-XJ9" required style="border-radius: 8px;">
-                        <small class="text-muted">Agents will type this exactly at checkout.</small>
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-end gap-3 rounded-b-xl">
+                        <button type="button" @click="open = false" class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Create Coupon</button>
                     </div>
-
-                    <div class="form-group">
-                        <label class="font-weight-bold">Bonus Commission (₹) <span class="text-danger">*</span></label>
-                        <input type="number" step="0.01" name="bonus_amount" class="form-control" placeholder="50.00" required style="border-radius: 8px;">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="font-weight-bold">Target Specific Agents (Optional)</label>
-                        <select name="target_agents[]" class="form-control select2-agents" multiple="multiple" style="width: 100%;">
-                            @foreach($agents as $agent)
-                                <option value="{{ $agent->id }}">{{ $agent->name }} (ID: {{ $agent->id }})</option>
-                            @endforeach
-                        </select>
-                        <small class="text-muted">Leave blank so ALL agents can use it.</small>
-                    </div>
-
-                    {{-- NEW: Target Specific Services --}}
-                    <div class="form-group mt-3">
-                        <label class="font-weight-bold">Applicable Services (Optional)</label>
-                        <select name="target_services[]" class="form-control select2-services" multiple="multiple" style="width: 100%;">
-                            {{-- Assuming you pass $services from your controller --}}
-                            @if(isset($services))
-                                @foreach($services as $service)
-                                    <option value="{{ $service->id }}">{{ $service->name }}</option>
-                                @endforeach
-                            @endif
-                        </select>
-                        <small class="text-muted">Leave blank so it applies to ALL services.</small>
-                    </div>
-                    {{-- END NEW --}}
-
-                    <div class="row mt-3">
-                        <div class="col-md-6 form-group">
-                            <label class="font-weight-bold">Total Campaign Uses</label>
-                            <input type="number" name="global_max_uses" class="form-control" placeholder="e.g. 50" style="border-radius: 8px;">
-                            <small class="text-muted">Auto-expires after X uses.</small>
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label class="font-weight-bold">Max Uses Per Agent</label>
-                            <input type="number" name="max_uses_per_agent" class="form-control" value="1" required style="border-radius: 8px;">
-                            <small class="text-muted">Usually 1 time per agent.</small>
-                        </div>
-                    </div>
-
-                </div>
-                <div class="modal-footer bg-light" style="border-radius: 0 0 12px 12px;">
-                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal" style="border-radius: 8px;">Cancel</button>
-                    <button type="submit" class="btn btn-primary shadow-sm" style="border-radius: 8px;">Create Coupon</button>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>

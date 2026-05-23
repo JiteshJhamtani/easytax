@@ -276,7 +276,7 @@
                                         <div class="text-truncate flex-grow-1 text-xs font-weight-bold mr-2 text-dark" title="{{ $ackDoc->name }}">{{ $ackDoc->name }}</div>
                                         <div class="d-flex gap-1">
                                             <a href="{{ route('team.documents.view', $ackDoc->id) }}" target="_blank" class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
-                                            <form action="{{ route('team.applications.deleteDocument', $ackDoc->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this document?');">
+                                            <form action="{{ route('team.applications.deleteDocument', $ackDoc->id) }}" method="POST" class="d-inline" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('confirm-action', { detail: { form: this, title: 'Delete document?', message: 'Are you sure you want to delete this document?' } }));">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
                                             </form>
@@ -288,6 +288,9 @@
                                         <input type="file" name="ack_file" class="form-control border-light shadow-sm" style="height:auto;padding:0.35rem 0.5rem;font-size:0.8rem;border-radius:6px;" accept=".pdf" onchange="this.form.submit()">
                                     </form>
                                 @endif
+                                @error('ack_file')
+                                    <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             <div class="col-12">
@@ -300,7 +303,7 @@
                                         <div class="text-truncate flex-grow-1 text-xs font-weight-bold mr-2 text-dark" title="{{ $compDoc->name }}">{{ $compDoc->name }}</div>
                                         <div class="d-flex gap-1">
                                             <a href="{{ route('team.documents.view', $compDoc->id) }}" target="_blank" class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
-                                            <form action="{{ route('team.applications.deleteDocument', $compDoc->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this document?');">
+                                            <form action="{{ route('team.applications.deleteDocument', $compDoc->id) }}" method="POST" class="d-inline" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('confirm-action', { detail: { form: this, title: 'Delete document?', message: 'Are you sure you want to delete this document?' } }));">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
                                             </form>
@@ -312,6 +315,9 @@
                                         <input type="file" name="computation_file" class="form-control border-light shadow-sm" style="height:auto;padding:0.35rem 0.5rem;font-size:0.8rem;border-radius:6px;" accept=".pdf" onchange="this.form.submit()">
                                     </form>
                                 @endif
+                                @error('computation_file')
+                                    <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span>
+                                @enderror
                             </div>
                         </div>
                     @endif
@@ -329,7 +335,7 @@
                                         <div class="text-truncate flex-grow-1 text-xs font-weight-bold mr-2 text-dark" title="{{ $moaDoc->name }}">{{ $moaDoc->name }}</div>
                                         <div class="d-flex gap-1">
                                             <a href="{{ route('team.documents.view', $moaDoc->id) }}" target="_blank" class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
-                                            <form action="{{ route('team.applications.deleteDocument', $moaDoc->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this document?');">
+                                            <form action="{{ route('team.applications.deleteDocument', $moaDoc->id) }}" method="POST" class="d-inline" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('confirm-action', { detail: { form: this, title: 'Delete document?', message: 'Are you sure you want to delete this document?' } }));">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
                                             </form>
@@ -341,6 +347,9 @@
                                         <input type="file" name="moa_file" class="form-control border-light shadow-sm" style="height:auto;padding:0.35rem 0.5rem;font-size:0.8rem;border-radius:6px;" accept=".pdf,.doc,.docx" onchange="this.form.submit()">
                                     </form>
                                 @endif
+                                @error('moa_file')
+                                    <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span>
+                                @enderror
                             </div>
 
                             <div class="col-12">
@@ -353,7 +362,7 @@
                                         <div class="text-truncate flex-grow-1 text-xs font-weight-bold mr-2 text-dark" title="{{ $aoaDoc->name }}">{{ $aoaDoc->name }}</div>
                                         <div class="d-flex gap-1">
                                             <a href="{{ route('team.documents.view', $aoaDoc->id) }}" target="_blank" class="btn btn-sm btn-light border text-primary px-2 py-1"><i class="fas fa-eye"></i></a>
-                                            <form action="{{ route('team.applications.deleteDocument', $aoaDoc->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this document?');">
+                                            <form action="{{ route('team.applications.deleteDocument', $aoaDoc->id) }}" method="POST" class="d-inline" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('confirm-action', { detail: { form: this, title: 'Delete document?', message: 'Are you sure you want to delete this document?' } }));">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></button>
                                             </form>
@@ -365,6 +374,9 @@
                                         <input type="file" name="aoa_file" class="form-control border-light shadow-sm" style="height:auto;padding:0.35rem 0.5rem;font-size:0.8rem;border-radius:6px;" accept=".pdf,.doc,.docx" onchange="this.form.submit()">
                                     </form>
                                 @endif
+                                @error('aoa_file')
+                                    <span class="text-danger text-xs font-weight-bold mt-1 d-block">{{ $message }}</span>
+                                @enderror
                             </div>
                         </div>
                     @endif
@@ -401,7 +413,7 @@
                                         <a href="'.route('team.documents.view', $doc->id).'" target="_blank" class="btn btn-sm btn-light border text-primary action-btn shadow-sm"><i class="fas fa-eye"></i></a>
                                         <a href="'.route('team.documents.download', $doc->id).'" class="btn btn-sm btn-primary action-btn shadow-sm"><i class="fas fa-download"></i></a>
                                     </div>
-                                    <form action="'.route('team.applications.deleteDocument', $doc->id).'" method="POST" onsubmit="return confirm(\'Delete this document?\');">'.csrf_field().method_field('DELETE').'
+                                    <form action="'.route('team.applications.deleteDocument', $doc->id).'" method="POST" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent(\'confirm-action\', { detail: { form: this, title: \'Delete document?\', message: \'Are you sure you want to delete this document?\' } }));">'.csrf_field().method_field('DELETE').'
                                         <button type="submit" class="btn btn-sm btn-outline-danger w-100 shadow-sm" style="height: 28px; padding: 0;"><i class="fas fa-trash"></i></button>
                                     </form>
                                 </div>

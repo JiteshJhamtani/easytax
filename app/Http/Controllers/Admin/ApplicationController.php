@@ -9,11 +9,8 @@ use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-
-
 
 class ApplicationController extends Controller
 {
@@ -33,7 +30,7 @@ class ApplicationController extends Controller
 
         // --- NEW DYNAMIC KPI LOGIC ---
 
-        $query = Application::query();
+        $query = Application::with(['service', 'agent']);
 
         if ($type === 'incomplete') {
             $query->where(function ($q) {
@@ -68,7 +65,11 @@ class ApplicationController extends Controller
 
         // -----------------------------
 
-        $teamMembers = \App\Models\User::whereIn('role', ['TEAM', 'team', 'ADMIN', 'admin'])->where('is_active', true)->get();
+        // Exclude 'Super Admin' and 'Rahul Sharma' since they are not operators
+        $teamMembers = \App\Models\User::whereIn('role', ['TEAM', 'team', 'ADMIN', 'admin'])
+            ->where('is_active', true)
+            ->whereNotIn('name', ['Super Admin', 'Rahul Sharma'])
+            ->get();
 
         return view('admin.applications.index', compact(
             'services', 'agents', 'stats', 'type', 'pageTitle', 'teamMembers'
@@ -141,7 +142,15 @@ class ApplicationController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        $teamMembers = \App\Models\User::whereIn('role', ['TEAM', 'team', 'ADMIN', 'admin'])->where('is_active', true)->get();
+        if ($request->is_trashed == 'true') {
+            $query->onlyTrashed();
+        }
+
+        // Exclude 'Super Admin' and 'Rahul Sharma' since they are not operators
+        $teamMembers = \App\Models\User::whereIn('role', ['TEAM', 'team', 'ADMIN', 'admin'])
+            ->where('is_active', true)
+            ->whereNotIn('name', ['Super Admin', 'Rahul Sharma'])
+            ->get();
 
         return datatables()->of($query)
             ->filterColumn('agent', function ($query, $keyword) {
@@ -254,7 +263,7 @@ class ApplicationController extends Controller
             ->addColumn('amount', fn ($a) => '₹'.number_format($a->amount, 2))
             ->addColumn('date', fn ($a) => $a->created_at->format('d M Y'))
             ->addColumn('assign_to', function ($a) use ($teamMembers) {
-                $html = '<select class="form-select form-select-sm d-inline-block w-auto assign-team-select"  data-app-id="'.$a->id.'" style="border-radius: 6px; font-size: 0.85rem; height: 31px; border: 1px solid #cbd5e1; outline: none;">';
+                $html = '<select class="form-select form-select-sm d-inline-block assign-team-select"  data-app-id="'.$a->id.'" style="border-radius: 6px; font-size: 0.85rem; height: 31px; border: 1px solid #cbd5e1; outline: none; min-width: 150px;">';
                 $html .= '<option value="">Unassigned</option>';
                 foreach ($teamMembers as $member) {
                     $selected = $a->assigned_to == $member->id ? 'selected' : '';
@@ -264,8 +273,26 @@ class ApplicationController extends Controller
 
                 return $html;
             })
-            ->addColumn('actions', function ($a) {
-                return '<a href="'.route('admin.applications.show', $a).'" class="btn btn-sm btn-primary">View</a>';
+            ->addColumn('actions', function ($a) use ($request) {
+                if ($request->is_trashed == 'true') {
+                    return '
+                        <form action="'.route('admin.applications.restore', $a->id).'" method="POST" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent(\'confirm-action\', { detail: { form: this, title: \'Restore Application?\', message: \'Are you sure you want to restore this application?\' } }));" style="display:inline;">
+                            '.csrf_field().'
+                            <button type="submit" class="btn btn-sm btn-success">Restore</button>
+                        </form>
+                    ';
+                }
+
+                $html = '<a href="'.route('admin.applications.show', $a).'" class="btn btn-sm btn-primary">View</a>';
+                $html .= '
+                    <form action="'.route('admin.applications.destroy', $a->id).'" method="POST" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent(\'confirm-action\', { detail: { form: this, title: \'Move to trash?\', message: \'Are you sure you want to delete this application?\' } }));" style="display:inline; margin-left: 4px;">
+                        '.csrf_field().'
+                        '.method_field('DELETE').'
+                        <button type="submit" class="btn btn-sm btn-danger" style="padding: 0.25rem 0.5rem;"><i class="fas fa-trash"></i></button>
+                    </form>
+                ';
+
+                return $html;
             })
             ->rawColumns(['checkbox', 'dynamic_data', 'status', 'payment', 'ack_no', 'computation', 'balance_sheet', 'assign_to', 'actions'])
             ->make(true);
@@ -401,11 +428,20 @@ class ApplicationController extends Controller
             'status' => 'required|string|in:IN_PROGRESS,E_FILING,OTP_VERIFICATION,COMPLETED',
         ]);
 
-        $application->update(['status' => $request->status]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($application, $request) {
+            $application->update(['status' => $request->status]);
+
+            if ($request->status === 'COMPLETED') {
+                $application->update(['completed_at' => now()]);
+            }
+
+            activity('application')
+                ->performedOn($application)
+                ->causedBy(auth()->user())
+                ->log('Status updated to '.$request->status);
+        });
 
         if ($request->status === 'COMPLETED') {
-            $application->update(['completed_at' => now()]);
-
             // --- DYNAMIC EMAIL AUTOMATION ---
             $emailKey = $application->service->applicant_email_field;
 
@@ -422,7 +458,7 @@ class ApplicationController extends Controller
 
                 if ($clientEmail && filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
                     try {
-                        Mail::send('emails.application_completed', [
+                        \Illuminate\Support\Facades\Mail::send('emails.application_completed', [
                             'application' => $application,
                             'clientName' => $clientName,
                             'trackingUrl' => $trackingUrl,
@@ -438,11 +474,6 @@ class ApplicationController extends Controller
                 }
             }
         }
-
-        activity('application')
-            ->performedOn($application)
-            ->causedBy(auth()->user())
-            ->log('Status updated to '.$request->status);
 
         return back()->with('success', 'Application status updated successfully.');
     }
@@ -477,11 +508,11 @@ class ApplicationController extends Controller
     public function uploadDocument(Request $request, Application $application)
     {
         $request->validate([
-            'document' => 'nullable|file|mimes:pdf,png,jpg,jpeg|max:5120',
-            'ack_file' => 'nullable|file|mimes:pdf|max:5120',
-            'computation_file' => 'nullable|file|mimes:pdf|max:5120',
-            'moa_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // New validation
-            'aoa_file' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // New validation
+            'document' => 'nullable|file|mimetypes:application/pdf,application/octet-stream,image/jpeg,image/png|extensions:pdf,png,jpg,jpeg|max:5120',
+            'ack_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream|extensions:pdf|max:5120',
+            'computation_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream|extensions:pdf|max:5120',
+            'moa_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|extensions:pdf,doc,docx|max:5120',
+            'aoa_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|extensions:pdf,doc,docx|max:5120',
         ]);
 
         $uploaded = false;
@@ -790,5 +821,20 @@ class ApplicationController extends Controller
             'success' => true,
             'message' => 'Application assigned successfully!',
         ]);
+    }
+
+    public function destroy(\App\Models\Application $application)
+    {
+        $application->delete();
+
+        return redirect()->back()->with('success', 'Application moved to trash successfully.');
+    }
+
+    public function restore($id)
+    {
+        $application = \App\Models\Application::onlyTrashed()->findOrFail($id);
+        $application->restore();
+
+        return redirect()->back()->with('success', 'Application restored successfully.');
     }
 }

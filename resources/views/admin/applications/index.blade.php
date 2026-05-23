@@ -145,6 +145,9 @@
             <p class="page-subtitle">Monitor, filter, and manage all agent submissions.</p>
         </div>
         <div>
+            <button id="toggleTrashBtn" class="export-btn mr-2" type="button" style="color: #dc2626; border-color: #fca5a5;">
+                <i class="fas fa-trash"></i> View Trash
+            </button>
             {{-- THE NEW EXPORT DROPDOWN --}}
             <div class="dropdown d-inline-block">
                 <button class="export-btn dropdown-toggle" type="button" id="exportMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -291,8 +294,8 @@
                     <th>BALANCE SHEET</th>
                 @endif
                 <th>Date Submitted</th>
-<th style="min-width: 160px; vertical-align: top;">
-    <div style="display: flex; flex-direction: column; gap: 6px;">
+<th style="min-width: 160px; vertical-align: top;" class="text-center">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
         <span>ASSIGN TO</span>
         <label style="font-size: 0.75rem; font-weight: 500; text-transform: none; letter-spacing: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: #64748b; margin: 0;">
             <input type="checkbox" id="autoAssignTenToggle" style="margin: 0; cursor: pointer;"> 

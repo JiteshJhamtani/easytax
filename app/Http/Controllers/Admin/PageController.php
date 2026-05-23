@@ -83,7 +83,7 @@ class PageController extends Controller
                             <i class="fas '.($page->is_active ? 'fa-ban' : 'fa-check').'"></i>
                         </button>
                     </form>
-                    <form action="'.$deleteUrl.'" method="POST" class="d-inline" style="margin: 0;" onsubmit="return confirm(\'Delete this page?\');">
+                    <form action="'.$deleteUrl.'" method="POST" class="d-inline" style="margin: 0;" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent(\'confirm-action\', { detail: { form: this, title: \'Delete Page?\', message: \'Are you sure you want to delete this page?\' } }));">
                         <input type="hidden" name="_token" value="'.$csrf.'">
                         <input type="hidden" name="_method" value="DELETE">
                         <button type="submit" class="btn btn-outline-danger shadow-sm delete-btn" title="Delete">

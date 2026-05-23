@@ -6,14 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
 
 class DashboardController extends Controller
 {
     // 1. The Main Dashboard List
     public function index()
     {
-        // Fetch ONLY applications assigned to the logged-in team member 
+        // Fetch ONLY applications assigned to the logged-in team member
         $applications = Application::with('service')
             ->where('assigned_to', Auth::id())
             ->orderBy('created_at', 'desc')
@@ -22,21 +21,21 @@ class DashboardController extends Controller
         // NEW: Calculate Financial Summary for the Operator
         $totalEarned = \App\Models\Application::where('assigned_to', Auth::id())
             ->where('status', 'COMPLETED')
-            ->join('operator_service_rates', function($join) {
+            ->join('operator_service_rates', function ($join) {
                 $join->on('applications.service_id', '=', 'operator_service_rates.service_id')
-                     ->where('operator_service_rates.operator_id', '=', Auth::id());
+                    ->where('operator_service_rates.operator_id', '=', Auth::id());
             })
             ->sum('operator_service_rates.price');
 
         $totalPaid = \Illuminate\Support\Facades\DB::table('operator_payouts')
-                        ->where('operator_id', Auth::id())
-                        ->sum('amount');
+            ->where('operator_id', Auth::id())
+            ->sum('amount');
 
         $balanceDue = $totalEarned - $totalPaid;
 
         return view('team.dashboard', compact('applications', 'totalEarned', 'totalPaid', 'balanceDue'));
     }
-   
+
     // 2. The Detailed View Page (Privacy Enforced!)
     public function show($id)
     {
@@ -49,7 +48,7 @@ class DashboardController extends Controller
         return view('team.applications.show', compact('application'));
     }
 
-   // 3. Update Status (Now handles pending_reason AND sends emails!) 
+    // 3. Update Status (Now handles pending_reason AND sends emails!)
     public function updateStatus(Request $request, $id)
     {
         $application = Application::with('service')->where('id', $id)
@@ -63,28 +62,38 @@ class DashboardController extends Controller
 
         $request->validate([
             'status' => 'required|string|in:IN_PROGRESS,E_FILING,OTP_VERIFICATION,COMPLETED',
-            'pending_reason' => 'nullable|string|max:1000'
+            'pending_reason' => 'nullable|string|max:1000',
         ]);
 
         $status = $request->status;
 
         // 1. Save the new status and note
-        $application->update([
-            'status' => $status,
-            'pending_reason' => $request->pending_reason
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($application, $status, $request) {
+            $application->update([
+                'status' => $status,
+                'pending_reason' => $request->pending_reason,
+            ]);
+
+            if ($status === 'COMPLETED') {
+                $application->update(['completed_at' => now()]);
+            }
+
+            // 2. Log Activity
+            activity('application')
+                ->performedOn($application)
+                ->causedBy(auth()->user())
+                ->log('Operator updated status to '.$status.($request->pending_reason ? ' - '.$request->pending_reason : ''));
+        });
 
         if ($status === 'COMPLETED') {
-            $application->update(['completed_at' => now()]);
+            $emailKey = $application->service->applicant_email_field ?? null;
 
-            $emailKey = $application->service->applicant_email_field ?? null; 
-            
-            if (!empty($application->form_data)) {
+            if (! empty($application->form_data)) {
                 $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
-                
+
                 // SMART FALLBACK: If emailKey is missing in DB, try common email fields
-                $clientEmail = (!empty($emailKey) && isset($formData[$emailKey])) 
-                    ? $formData[$emailKey] 
+                $clientEmail = (! empty($emailKey) && isset($formData[$emailKey]))
+                    ? $formData[$emailKey]
                     : ($formData['email'] ?? $formData['email_id'] ?? $formData['applicant_email'] ?? null);
 
                 $clientName = $formData['applicant_name'] ?? $formData['name'] ?? $formData['full_name'] ?? $formData['company_name'] ?? $formData['firm_name'] ?? 'Valued Client';
@@ -92,29 +101,24 @@ class DashboardController extends Controller
 
                 if ($clientEmail && filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
                     try {
-                        Mail::send('emails.application_completed', [
+                        \Illuminate\Support\Facades\Mail::send('emails.application_completed', [
                             'application' => $application,
-                            'clientName'  => $clientName,
-                            'trackingUrl' => $trackingUrl
-                        ], function($message) use ($clientEmail, $application) {
+                            'clientName' => $clientName,
+                            'trackingUrl' => $trackingUrl,
+                        ], function ($message) use ($clientEmail, $application) {
                             $serviceName = $application->service->name ?? 'Service';
                             $message->to($clientEmail)
-                                    ->subject("Completed: Your {$serviceName} Application");
+                                ->subject("Completed: Your {$serviceName} Application");
                         });
-                        \Log::info("Completion email sent to {$clientEmail} for App #{$application->id} by Operator");
+                        \Log::info("Completion email sent to {$clientEmail} for App #{$application->id}");
                     } catch (\Exception $e) {
-                        \Log::error("Email failed for App #{$application->id}: " . $e->getMessage());
+                        \Log::error("Email failed for App #{$application->id}: ".$e->getMessage());
                     }
                 }
             }
         }
 
-        activity('application')
-            ->performedOn($application)
-            ->causedBy(Auth::user())
-            ->log('Status updated to ' . $status);
-
-        return back()->with('success', 'Application status and notes updated successfully!');
+        return back()->with('success', 'Application status updated successfully.');
     }
     // ==========================================
     // DOCUMENT MANAGEMENT
@@ -126,11 +130,11 @@ class DashboardController extends Controller
         $application = Application::where('id', $id)->where('assigned_to', Auth::id())->firstOrFail();
 
         $request->validate([
-            'document'         => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'ack_file'         => 'nullable|file|mimes:pdf|max:5120',
-            'computation_file' => 'nullable|file|mimes:pdf|max:5120',
-            'moa_file'         => 'nullable|file|mimes:pdf,doc,docx|max:5120',
-            'aoa_file'         => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+            'document' => 'nullable|file|mimetypes:application/pdf,application/octet-stream,image/jpeg,image/png|extensions:pdf,png,jpg,jpeg|max:5120',
+            'ack_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream|extensions:pdf|max:5120',
+            'computation_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream|extensions:pdf|max:5120',
+            'moa_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|extensions:pdf,doc,docx|max:5120',
+            'aoa_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|extensions:pdf,doc,docx|max:5120',
         ]);
 
         if ($request->hasFile('document')) {
@@ -156,13 +160,14 @@ class DashboardController extends Controller
     {
         $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);
         $application = Application::findOrFail($media->model_id);
-        
+
         // Security: Only the assigned operator can delete docs
         if ($application->assigned_to !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
         $media->delete();
+
         return back()->with('success', 'Document removed.');
     }
 
@@ -170,7 +175,7 @@ class DashboardController extends Controller
     {
         $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);
         $application = Application::findOrFail($media->model_id);
-        
+
         if ($application->assigned_to !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
@@ -182,7 +187,7 @@ class DashboardController extends Controller
     {
         $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);
         $application = Application::findOrFail($media->model_id);
-        
+
         if ($application->assigned_to !== Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
@@ -198,33 +203,33 @@ class DashboardController extends Controller
     {
         // Security Check
         $application = Application::with('service')->where('id', $id)->where('assigned_to', Auth::id())->firstOrFail();
-        
+
         $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : ($application->form_data ?? []);
-        
+
         // Extract basic data for the interactive form
         $sales = floatval($formData['sales'] ?? $formData['turnover'] ?? 0);
         $otherIncome = floatval($formData['other_income'] ?? 0);
         $netProfit = floatval($formData['target_net_profit'] ?? $formData['net_profit'] ?? 0);
 
         return view('team.applications.balance_sheet', [
-            'application'  => $application,
-            'sales'        => $sales,
-            'otherIncome'  => $otherIncome,
-            'netProfit'    => $netProfit,
-            'extractedData'=> $formData
+            'application' => $application,
+            'sales' => $sales,
+            'otherIncome' => $otherIncome,
+            'netProfit' => $netProfit,
+            'extractedData' => $formData,
         ]);
     }
 
     public function generateBalanceSheet(Request $request, $id)
     {
         $application = Application::where('id', $id)->where('assigned_to', Auth::id())->firstOrFail();
-        
+
         $data = $request->all();
 
         // 1. Calculate P&L Totals
         $grossProfit = ($data['sales'] + $data['closing_stock']) - ($data['opening_stock'] + $data['purchases'] + $data['direct_expenses']);
         $tradingTotal = $data['sales'] + $data['closing_stock'];
-        
+
         $expenses = $data['salaries'] + $data['electricity'] + $data['shop_rent'] + $data['telephone_internet'] + $data['printing_stationery'] + $data['repairs_maintenance'] + $data['interest_on_loan'] + $data['other_expenses'];
         $netProfit = ($grossProfit + $data['interest_income'] + $data['other_income']) - $expenses;
         $pnlTotal = $expenses + $netProfit;
@@ -234,7 +239,7 @@ class DashboardController extends Controller
         $capitalTotal = $data['drawings'] + $closingCapital;
 
         $bsTotal = $closingCapital + $data['bank_loan'] + $data['other_loans'] + $data['sundry_creditors'] + $data['other_current_liabilities'];
-        
+
         // Retrieve Applicant Name/PAN safely from JSON
         $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : ($application->form_data ?? []);
         $applicantName = $formData['applicant_name'] ?? $formData['name'] ?? 'Client';
@@ -242,12 +247,12 @@ class DashboardController extends Controller
 
         // 3. Generate PDF
         $pdf = \PDF::loadView('team.applications.pdf.balance_sheet', compact(
-            'application', 'data', 'grossProfit', 'tradingTotal', 
-            'netProfit', 'pnlTotal', 'closingCapital', 'capitalTotal', 
+            'application', 'data', 'grossProfit', 'tradingTotal',
+            'netProfit', 'pnlTotal', 'closingCapital', 'capitalTotal',
             'bsTotal', 'applicantName', 'panNumber'
         ));
 
         // Return inline view or force download
-        return $pdf->stream('Balance_Sheet_' . $applicantName . '.pdf');
+        return $pdf->stream('Balance_Sheet_'.$applicantName.'.pdf');
     }
 }

@@ -1,0 +1,28 @@
+1: sub_admin didnt need total revenue and commission generated kpi div in dashboard so hide them for them and hide them from every table 
+2: sub_admin dashboard didnt need service tab so hide it also 
+3: hide service amount from applications also sub_admin dint need to see them 
+
+browsers 80% size is ideal for our dashtops layout see the difference see your self fist one is 100 size second is 80 
+
+
+
+
+
+
+
+
+
+creating and sub_admin role that is same as admin level access have to zero access over data mean he can process and do admin level functionaliest but dont see any data. research.
+
+
+
+
+
+
+
+
+
+
+
+
+let me tell you my workflow fir
