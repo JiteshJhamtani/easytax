@@ -24,6 +24,7 @@ return new class extends Migration
                 if (strpos($e->getMessage(), 'already exists') === false) throw $e;
             }
         }
+    }
 
     /**
      * Reverse the migrations.
