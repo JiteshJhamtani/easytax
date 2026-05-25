@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'cross_server' => [
+        'secret' => env('CROSS_SERVER_SECRET'),
+    ],
+
 ];

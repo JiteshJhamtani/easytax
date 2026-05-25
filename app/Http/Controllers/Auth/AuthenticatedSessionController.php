@@ -75,7 +75,7 @@ class AuthenticatedSessionController extends Controller
 
         try {
             // 1. Decrypt the token using the shared secret
-            $encrypter = new \Illuminate\Encryption\Encrypter(env('CROSS_SERVER_SECRET'), config('app.cipher'));
+            $encrypter = new \Illuminate\Encryption\Encrypter(config('services.cross_server.secret'), config('app.cipher'));
             $decrypted = $encrypter->decryptString($request->token);
             $payload = json_decode($decrypted, true);
 

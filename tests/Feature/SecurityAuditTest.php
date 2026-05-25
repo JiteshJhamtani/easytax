@@ -9,7 +9,7 @@ use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\patch;
 
-uses(RefreshDatabase::class);
+// uses(RefreshDatabase::class);
 
 it('cannot process the same razorpay webhook twice', function () {
     // 1. Arrange: Create a pending application

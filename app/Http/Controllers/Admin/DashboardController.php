@@ -164,7 +164,7 @@ class DashboardController extends Controller
         ]);
 
         // 3. Encrypt the payload using your custom shared secret
-        $encrypter = new \Illuminate\Encryption\Encrypter(env('CROSS_SERVER_SECRET'), config('app.cipher'));
+        $encrypter = new \Illuminate\Encryption\Encrypter(config('services.cross_server.secret'), config('app.cipher'));
         $token = $encrypter->encryptString($payload);
 
         // 4. Redirect them to the auto-login route on the other server
@@ -189,7 +189,7 @@ class DashboardController extends Controller
 
         try {
             // Securely fetch the KPIs from the target server
-            $response = Http::withToken(env('CROSS_SERVER_SECRET'))
+            $response = Http::withToken(config('services.cross_server.secret'))
                 ->timeout(5) // Don't hang forever if the server is offline
                 ->get($servers[$server].'/api/dashboard-kpis');
 

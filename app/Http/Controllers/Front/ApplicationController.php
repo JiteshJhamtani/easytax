@@ -38,7 +38,11 @@ class ApplicationController extends Controller
 
         foreach ($request->all() as $key => $value) {
             if (str_starts_with($key, 'director_') || str_starts_with($key, 'member_') || str_starts_with($key, 'partner_')) {
-                $validated[$key] = $value;
+                if (is_string($value)) {
+                    $validated[$key] = strip_tags(trim($value));
+                } else {
+                    $validated[$key] = $value;
+                }
             }
         }
 

@@ -137,9 +137,6 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
     Route::patch('/applications/{application}/cancel', [AgentApplicationController::class, 'cancel'])
         ->name('applications.cancel');
 
-    Route::patch('/applications/{application}/cancel', [AgentApplicationController::class, 'cancel'])
-        ->name('applications.cancel');
-
     Route::get('/commissions', [CommissionController::class, 'commissions'])
         ->name('commissions');
 

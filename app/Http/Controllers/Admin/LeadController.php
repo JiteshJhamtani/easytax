@@ -92,7 +92,7 @@ class LeadController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $leadData = $request->all();
+        $leadData = $request->validated();
 
         // If a marketer submits it, automatically assign them.
         // If an admin submits it, check if they selected a marketer in the dropdown.
@@ -122,7 +122,7 @@ class LeadController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $leadData = $request->all();
+        $leadData = $request->validated();
         $leadData['source'] = 'VLE'; // HARDCODED: Automatically tags as VLE
         $leadData['marketer_id'] = auth()->id(); // Assigned to the logged-in marketer
 
