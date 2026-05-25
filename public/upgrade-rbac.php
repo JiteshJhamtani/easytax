@@ -4,32 +4,44 @@ require __DIR__.'/../vendor/autoload.php';
 $app = require_once __DIR__.'/../bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-if (($_GET['key'] ?? '') !== env('DEPLOYMENT_KEY', 'easytax123')) {
-    die('Unauthorized access to deployment script.');
+// FIXED: Hardcoded secure key since we cannot edit the server .env file
+if (($_GET['key'] ?? '') !== 'easytax_admin_2026') {
+    die('<h1 style="color:red; font-family:sans-serif; text-align:center; margin-top:50px;">Unauthorized access.</h1>');
 }
 
 try {
-    // 1. Run the new Spatie permission migrations
+    // 1. Run Migrations
     \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
     $output1 = \Illuminate\Support\Facades\Artisan::output();
 
-    // 2. Execute the Seeder safely
+    // 2. Run Seeder
     \Illuminate\Support\Facades\Artisan::call('db:seed', [
         '--class' => 'RolesAndPermissionsSeeder',
         '--force' => true,
     ]);
     $output2 = \Illuminate\Support\Facades\Artisan::output();
 
-    // 3. Clear permission cache across the server
+    // 3. Clear Spatie Cache
     \Illuminate\Support\Facades\Artisan::call('permission:cache-reset');
     $output3 = \Illuminate\Support\Facades\Artisan::output();
 
-    echo '<h1>RBAC Upgrade Successful</h1>';
-    echo "<pre>Migration Output:\n$output1</pre>";
-    echo "<pre>Seeder Output:\n$output2</pre>";
-    echo "<pre>Cache Output:\n$output3</pre>";
+    // 4. FIXED: Clear Blade/UI Caches so your @b2bOnly tags work instantly
+    \Illuminate\Support\Facades\Artisan::call('view:clear');
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    $output4 = \Illuminate\Support\Facades\Artisan::output();
+
+    // Beautiful Green Success Output
+    echo '<div style="font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background-color: #dcfce7; border: 1px solid #166534; border-radius: 8px; color: #166534;">';
+    echo '<h1 style="margin-top: 0;">✅ RBAC Upgrade Successful</h1>';
+    echo '<h3>Migration Output:</h3><pre style="background:#fff; padding:10px; border-radius:4px;">' . htmlspecialchars($output1) . '</pre>';
+    echo '<h3>Seeder Output:</h3><pre style="background:#fff; padding:10px; border-radius:4px;">' . htmlspecialchars($output2) . '</pre>';
+    echo '<h3>Cache Output:</h3><pre style="background:#fff; padding:10px; border-radius:4px;">' . htmlspecialchars($output3) . "\n" . htmlspecialchars($output4) . '</pre>';
+    echo '</div>';
 
 } catch (\Exception $e) {
-    echo '<h1>Error</h1>';
-    echo '<pre>'.$e->getMessage().'</pre>';
+    // Red Error Output
+    echo '<div style="font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background-color: #fee2e2; border: 1px solid #991b1b; border-radius: 8px; color: #991b1b;">';
+    echo '<h1 style="margin-top: 0;">❌ Deployment Error</h1>';
+    echo '<pre style="background:#fff; padding:10px; border-radius:4px; overflow-x:auto;">' . htmlspecialchars($e->getMessage()) . '</pre>';
+    echo '</div>';
 }
