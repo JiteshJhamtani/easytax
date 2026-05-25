@@ -10,12 +10,18 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('settings', function (Blueprint $table) {
-            $table->id();
-            $table->string('key')->unique();
-            $table->text('value')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('settings')) {
+            try {
+                Schema::create('settings', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('key')->unique();
+                    $table->text('value')->nullable();
+                    $table->timestamps();
+                });
+            } catch (\Exception $e) {
+                if (strpos($e->getMessage(), 'already exists') === false) throw $e;
+            }
+        }
     }
 
     /**

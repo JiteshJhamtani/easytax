@@ -11,14 +11,20 @@ return new class extends Migration {
     // database/migrations/xxxx_create_gifts_table.php
     public function up(): void
     {
-        Schema::create('gifts', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->string('period_type'); // 'monthly', 'quarterly', 'yearly'
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('gifts')) {
+            try {
+                Schema::create('gifts', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('name');
+                    $table->text('description')->nullable();
+                    $table->string('period_type'); // 'monthly', 'quarterly', 'yearly'
+                    $table->boolean('is_active')->default(true);
+                    $table->timestamps();
+                });
+            } catch (\Exception $e) {
+                if (strpos($e->getMessage(), 'already exists') === false) throw $e;
+            }
+        }
     }
 
     /**

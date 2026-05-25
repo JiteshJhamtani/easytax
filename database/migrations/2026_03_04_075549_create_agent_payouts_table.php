@@ -7,24 +7,30 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('agent_payouts', function (Blueprint $table) {
-            $table->id();
+        if (!Schema::hasTable('agent_payouts')) {
+            try {
+                Schema::create('agent_payouts', function (Blueprint $table) {
+                    $table->id();
 
-            $table->foreignId('agent_id')
-                ->constrained('users')
-                ->cascadeOnDelete();
+                    $table->foreignId('agent_id')
+                        ->constrained('users')
+                        ->cascadeOnDelete();
 
-            $table->decimal('amount', 12, 2);
+                    $table->decimal('amount', 12, 2);
 
-            $table->date('period_start');
-            $table->date('period_end');
-            $table->enum('status', ['pending', 'paid'])->default('pending');
-            $table->timestamp('paid_at')->nullable();
+                    $table->date('period_start');
+                    $table->date('period_end');
+                    $table->enum('status', ['pending', 'paid'])->default('pending');
+                    $table->timestamp('paid_at')->nullable();
 
-            $table->text('notes')->nullable();
+                    $table->text('notes')->nullable();
 
-            $table->timestamps();
-        });
+                    $table->timestamps();
+                });
+            } catch (\Exception $e) {
+                if (strpos($e->getMessage(), 'already exists') === false) throw $e;
+            }
+        }
     }
 
     public function down(): void

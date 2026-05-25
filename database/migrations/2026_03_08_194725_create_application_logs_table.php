@@ -10,26 +10,32 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('application_logs', function (Blueprint $table) {
+        if (!Schema::hasTable('application_logs')) {
+            try {
+                Schema::create('application_logs', function (Blueprint $table) {
 
-            $table->id();
+                    $table->id();
 
-            $table->foreignId('application_id')
-                ->constrained()
-                ->cascadeOnDelete();
+                    $table->foreignId('application_id')
+                        ->constrained()
+                        ->cascadeOnDelete();
 
-            $table->foreignId('user_id')
-                ->nullable()
-                ->constrained()
-                ->nullOnDelete();
+                    $table->foreignId('user_id')
+                        ->nullable()
+                        ->constrained()
+                        ->nullOnDelete();
 
-            $table->string('event');
+                    $table->string('event');
 
-            $table->json('meta')->nullable();
+                    $table->json('meta')->nullable();
 
-            $table->timestamps();
+                    $table->timestamps();
 
-        });
+                });
+            } catch (\Exception $e) {
+                if (strpos($e->getMessage(), 'already exists') === false) throw $e;
+            }
+        }
     }
 
     /**

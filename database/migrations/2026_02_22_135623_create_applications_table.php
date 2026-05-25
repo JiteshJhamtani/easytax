@@ -10,28 +10,34 @@ return new class extends Migration {
      */
     public function up()
     {
-        Schema::create('applications', function (Blueprint $table) {
-            $table->id();
+        if (!Schema::hasTable('applications')) {
+            try {
+                Schema::create('applications', function (Blueprint $table) {
+                    $table->id();
 
-            $table->foreignId('agent_id')->constrained()->restrictOnDelete();
-            $table->foreignId('service_id')->constrained()->restrictOnDelete();
+                    $table->foreignId('agent_id')->constrained()->restrictOnDelete();
+                    $table->foreignId('service_id')->constrained()->restrictOnDelete();
 
-            $table->json('form_data')->nullable();
+                    $table->json('form_data')->nullable();
 
-            $table->decimal('amount', 10, 2)->nullable();
-            $table->decimal('commission_amount', 10, 2)->nullable();
+                    $table->decimal('amount', 10, 2)->nullable();
+                    $table->decimal('commission_amount', 10, 2)->nullable();
 
-            $table->string('payment_status')->default('PENDING');
-            $table->string('payment_reference')->nullable();
+                    $table->string('payment_status')->default('PENDING');
+                    $table->string('payment_reference')->nullable();
 
-            $table->string('status')->default('DRAFT');
+                    $table->string('status')->default('DRAFT');
 
-            $table->timestamp('started_at')->nullable();
-            $table->timestamp('submitted_at')->nullable();
-            $table->timestamp('completed_at')->nullable();
+                    $table->timestamp('started_at')->nullable();
+                    $table->timestamp('submitted_at')->nullable();
+                    $table->timestamp('completed_at')->nullable();
 
-            $table->timestamps();
-        });
+                    $table->timestamps();
+                });
+            } catch (\Exception $e) {
+                if (strpos($e->getMessage(), 'already exists') === false) throw $e;
+            }
+        }
     }
 
     /**
