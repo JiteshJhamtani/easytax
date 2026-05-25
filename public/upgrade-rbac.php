@@ -2,12 +2,10 @@
 
 require __DIR__.'/../vendor/autoload.php';
 $app = require_once __DIR__.'/../bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
-$request = Illuminate\Http\Request::capture();
-$kernel->handle($request);
+$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-if ($request->query('key') !== env('DEPLOYMENT_KEY', 'easytax123')) {
-    abort(403, 'Unauthorized access to deployment script.');
+if (($_GET['key'] ?? '') !== env('DEPLOYMENT_KEY', 'easytax123')) {
+    die('Unauthorized access to deployment script.');
 }
 
 try {
