@@ -62,6 +62,17 @@ try {
         echo "<p style='color: #0056b3;'>ℹ️ 'operator_payouts' table already exists.</p>";
     }
 
+    // --- STEP 4: Add 'deleted_at' (Soft Deletes) to applications ---
+    echo "<h3>Step 4: Add Soft Deletes to Applications</h3>";
+    if (!Schema::hasColumn('applications', 'deleted_at')) {
+        Schema::table('applications', function (Blueprint $table) {
+            $table->softDeletes();
+        });
+        echo "<p style='color: green;'>✅ Successfully added 'deleted_at' column to applications table.</p>";
+    } else {
+        echo "<p style='color: #0056b3;'>ℹ️ 'deleted_at' column already exists.</p>";
+    }
+
     // --- SUCCESS MESSAGE ---
     echo "<br><div style='background: #e6f4ea; border: 1px solid #ceead6; padding: 15px; color: #137333; border-radius: 8px;'>";
     echo "<strong>🎉 Database Upgrade Complete!</strong><br>";
