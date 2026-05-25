@@ -6,11 +6,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()// does our structure has option for subagent to open sevices and fill them up and there should be view
+    public function up()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('marketer_id')->nullable()->constrained('users')->onDelete('set null');
-        });
+        if (!Schema::hasColumn('users', 'marketer_id')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->foreignId('marketer_id')->nullable()->constrained('users')->onDelete('set null');
+            });
+        }
     }
 
     public function down()

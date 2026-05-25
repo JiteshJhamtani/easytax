@@ -8,9 +8,11 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('coupons', function (Blueprint $table) {
-            $table->json('target_services')->nullable()->after('target_agents');
-        });
+        if (!Schema::hasColumn('coupons', 'target_services')) {
+            Schema::table('coupons', function (Blueprint $table) {
+                $table->json('target_services')->nullable()->after('target_agents');
+            });
+        }
     }
 
     public function down()

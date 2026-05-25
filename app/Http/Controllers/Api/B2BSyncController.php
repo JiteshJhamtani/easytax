@@ -13,7 +13,7 @@ class B2BSyncController extends Controller
     public function exportAgents(Request $request)
     {
         $token = (string) $request->bearerToken();
-        $secret = config('b2b.sync_secret');
+        $secret = config('b2b.sync_secret', 'EasyTax_Super_Secret_Key_2026!');
 
         if (! $token || ! hash_equals($secret, $token)) {
             return response()->json(['error' => 'Unauthorized'], 401);
@@ -38,7 +38,7 @@ class B2BSyncController extends Controller
     public function export(Request $request)
     {
         $token = (string) $request->bearerToken();
-        $secret = config('b2b.sync_secret');
+        $secret = config('b2b.sync_secret', 'EasyTax_Super_Secret_Key_2026!');
 
         if (! $token || ! hash_equals($secret, $token)) {
             return response()->json(['error' => 'Unauthorized'], 401);

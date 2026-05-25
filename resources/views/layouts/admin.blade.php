@@ -55,6 +55,8 @@
             --t:            all .22s cubic-bezier(.4,0,.2,1);
         }
 
+        [x-cloak] { display: none !important; }
+
         *, *::before, *::after { box-sizing: border-box; }
         html, body {
             margin: 0; padding: 0;
