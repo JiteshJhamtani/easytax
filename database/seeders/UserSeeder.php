@@ -27,6 +27,16 @@ class UserSeeder extends Seeder
             'is_active' => true,
         ]);
 
+        // SUB-ADMIN
+        $subadmin = User::forceCreate([
+            'name' => 'Sub Admin',
+            'email' => 'subadmin@easytax.test',
+            'password' => Hash::make('password123'),
+            'role' => 'SUB-ADMIN',
+            'is_active' => true,
+        ]);
+        $subadmin->assignRole('sub-admin');
+
         // AGENT
         User::forceCreate([
             'name' => 'Test Agent',
