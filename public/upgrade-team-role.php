@@ -69,12 +69,12 @@ try {
     echo "</div>";
 
     echo "<br><div style='background: #fff3f3; border: 1px solid #fce8e6; padding: 15px; color: #c5221f; border-radius: 8px;'>";
-    echo "<strong>🚨 CRITICAL SECURITY STEP:</strong><br>";
+    echo "<strong> CRITICAL SECURITY STEP:</strong><br>";
     echo "Please delete this file from your server after running it.";
     echo "</div>";
 
 } catch (\Exception $e) {
-    echo "<h2 style='color: #c5221f;'>❌ Error Occurred</h2>";
+    echo "<h2 style='color: #c5221f;'> Error Occurred</h2>";
     echo "<pre style='background: #f1f3f4; padding: 10px; border-radius: 5px;'>" . $e->getMessage() . "</pre>";
 }
 
