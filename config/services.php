@@ -39,4 +39,11 @@ return [
         'secret' => env('CROSS_SERVER_SECRET'),
     ],
 
+    'bank' => [
+        'api_url' => env('BANK_API_URL'),
+        'client_id' => env('BANK_CLIENT_ID'),
+        'secret_key' => env('BANK_API_SECRET_KEY'),
+        'partner_code' => env('BANK_PARTNER_CODE'),
+    ],
+
 ];
