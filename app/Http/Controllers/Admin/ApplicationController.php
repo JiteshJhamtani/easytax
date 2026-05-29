@@ -655,7 +655,12 @@ class ApplicationController extends Controller
             abort(404, 'File not found');
         }
 
-        return response()->file($path);
+        $headers = [];
+        if (\Illuminate\Support\Str::endsWith(strtolower($media->file_name), '.pdf')) {
+            $headers['Content-Type'] = 'application/pdf';
+        }
+
+        return response()->file($path, $headers)->setContentDisposition('inline', $media->file_name);
     }
 
     public function downloadDocument($mediaId)
