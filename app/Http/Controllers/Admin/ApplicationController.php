@@ -509,7 +509,7 @@ class ApplicationController extends Controller
     {
         $request->validate([
             'document' => 'nullable|file|mimetypes:application/pdf,application/octet-stream,image/jpeg,image/png|extensions:pdf,png,jpg,jpeg|max:5120',
-            'ack_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream|extensions:pdf|max:5120',
+            'ack_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream,image/jpeg,image/png|extensions:pdf,png,jpg,jpeg|max:5120',
             'computation_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream|extensions:pdf|max:5120',
             'moa_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|extensions:pdf,doc,docx|max:5120',
             'aoa_file' => 'nullable|file|mimetypes:application/pdf,application/octet-stream,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document|extensions:pdf,doc,docx|max:5120',
@@ -575,7 +575,7 @@ class ApplicationController extends Controller
         $request->validate([
             'admin_username' => 'nullable|string',
             'admin_password' => 'nullable|string',
-            'final_document' => 'nullable|file|mimes:pdf|max:5120',
+            'final_document' => 'nullable|file|mimetypes:application/pdf,image/jpeg,image/png|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         // Safely decode JSON if it comes out as a string
