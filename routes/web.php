@@ -116,8 +116,6 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('services')->group(funct
 
 Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')->group(function () {
 
-    Route::post('/bank-leads', [\App\Http\Controllers\BankIntegrationController::class, 'store'])->name('bank-leads.store');
-
     Route::get('/dashboard', [AgentDashboardController::class, 'index'])
         ->name('dashboard');
 
@@ -339,7 +337,7 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
         Route::get('/services/{service}/edit', [AdminServiceController::class, 'edit'])->name('services.edit');
         Route::put('/services/{service}', [AdminServiceController::class, 'update'])->name('services.update');
         Route::patch('/services/{service}/toggle-status', [AdminServiceController::class, 'toggleStatus'])->name('services.toggle-status');
-
+        
         // Static Pages
         Route::get('/pages/datatable', [\App\Http\Controllers\Admin\PageController::class, 'datatable'])->name('pages.datatable');
         Route::resource('pages', \App\Http\Controllers\Admin\PageController::class)->except(['show']);

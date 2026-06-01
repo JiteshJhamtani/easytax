@@ -1,8 +1,8 @@
 <?php
 
 // 1. Security check
-if (! isset($_GET['token']) || $_GET['token'] !== 'superadmin123') {
-    exit('Unauthorized access.');
+if (!isset($_GET['token']) || $_GET['token'] !== 'superadmin123') {
+    die('Unauthorized access.');
 }
 
 // 2. Boot up Laravel's engine
@@ -10,18 +10,19 @@ require __DIR__.'/../vendor/autoload.php';
 $app = require_once __DIR__.'/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 
 echo "<div style='font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;'>";
-echo '<h2>🚀 Operator Payment System Upgrade...</h2>';
+echo "<h2>🚀 Operator Payment System Upgrade...</h2>";
 
 try {
-    // --- STEP 1: Add 'pending_reason' to applications ---
-    echo '<h3>Step 1: Applications Table</h3>';
+    // --- STEP 1: Add 'pending_reason' to applications --- 
+    echo "<h3>Step 1: Applications Table</h3>";
     try {
         if (Schema::hasTable('applications')) {
-            if (! Schema::hasColumn('applications', 'pending_reason')) {
+            if (!Schema::hasColumn('applications', 'pending_reason')) {
                 Schema::table('applications', function (Blueprint $table) {
                     $table->text('pending_reason')->nullable()->after('status');
                 });
@@ -32,14 +33,12 @@ try {
         } else {
             echo "<p style='color: orange;'>⚠️ 'applications' table is missing, skipping column add.</p>";
         }
-    } catch (\Exception $e) {
-        echo "<p style='color: red;'>❌ Error: ".$e->getMessage().'</p>';
-    }
+    } catch (\Exception $e) { echo "<p style='color: red;'>❌ Error: ".$e->getMessage()."</p>"; }
 
     // --- STEP 2: Create 'operator_service_rates' table ---
-    echo '<h3>Step 2: Operator Service Rates Table</h3>';
+    echo "<h3>Step 2: Operator Service Rates Table</h3>";
     try {
-        if (! Schema::hasTable('operator_service_rates')) {
+        if (!Schema::hasTable('operator_service_rates')) {
             Schema::create('operator_service_rates', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('operator_id');
@@ -53,14 +52,12 @@ try {
         } else {
             echo "<p style='color: #0056b3;'>ℹ️ 'operator_service_rates' table already exists.</p>";
         }
-    } catch (\Exception $e) {
-        echo "<p style='color: red;'>❌ Error: ".$e->getMessage().'</p>';
-    }
+    } catch (\Exception $e) { echo "<p style='color: red;'>❌ Error: ".$e->getMessage()."</p>"; }
 
     // --- STEP 3: Create 'operator_payouts' table ---
-    echo '<h3>Step 3: Operator Payouts Table</h3>';
+    echo "<h3>Step 3: Operator Payouts Table</h3>";
     try {
-        if (! Schema::hasTable('operator_payouts')) {
+        if (!Schema::hasTable('operator_payouts')) {
             Schema::create('operator_payouts', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('operator_id');
@@ -73,15 +70,13 @@ try {
         } else {
             echo "<p style='color: #0056b3;'>ℹ️ 'operator_payouts' table already exists.</p>";
         }
-    } catch (\Exception $e) {
-        echo "<p style='color: red;'>❌ Error: ".$e->getMessage().'</p>';
-    }
+    } catch (\Exception $e) { echo "<p style='color: red;'>❌ Error: ".$e->getMessage()."</p>"; }
 
     // --- STEP 4: Add 'deleted_at' (Soft Deletes) to applications ---
-    echo '<h3>Step 4: Add Soft Deletes to Applications</h3>';
+    echo "<h3>Step 4: Add Soft Deletes to Applications</h3>";
     try {
         if (Schema::hasTable('applications')) {
-            if (! Schema::hasColumn('applications', 'deleted_at')) {
+            if (!Schema::hasColumn('applications', 'deleted_at')) {
                 Schema::table('applications', function (Blueprint $table) {
                     $table->softDeletes();
                 });
@@ -92,15 +87,13 @@ try {
         } else {
             echo "<p style='color: orange;'>⚠️ 'applications' table is missing, skipping column add.</p>";
         }
-    } catch (\Exception $e) {
-        echo "<p style='color: red;'>❌ Error: ".$e->getMessage().'</p>';
-    }
+    } catch (\Exception $e) { echo "<p style='color: red;'>❌ Error: ".$e->getMessage()."</p>"; }
 
     // --- STEP 5: Add 'marketer_id' to users ---
     echo "<h3>Step 5: Add 'marketer_id' to Users</h3>";
     try {
         if (Schema::hasTable('users')) {
-            if (! Schema::hasColumn('users', 'marketer_id')) {
+            if (!Schema::hasColumn('users', 'marketer_id')) {
                 Schema::table('users', function (Blueprint $table) {
                     $table->foreignId('marketer_id')->nullable()->constrained('users')->onDelete('set null');
                 });
@@ -111,15 +104,13 @@ try {
         } else {
             echo "<p style='color: orange;'>⚠️ 'users' table is missing, skipping column add.</p>";
         }
-    } catch (\Exception $e) {
-        echo "<p style='color: red;'>❌ Error: ".$e->getMessage().'</p>';
-    }
+    } catch (\Exception $e) { echo "<p style='color: red;'>❌ Error: ".$e->getMessage()."</p>"; }
 
     // --- STEP 6: Add 'target_services' to coupons ---
     echo "<h3>Step 6: Add 'target_services' to Coupons</h3>";
     try {
         if (Schema::hasTable('coupons')) {
-            if (! Schema::hasColumn('coupons', 'target_services')) {
+            if (!Schema::hasColumn('coupons', 'target_services')) {
                 Schema::table('coupons', function (Blueprint $table) {
                     $table->json('target_services')->nullable()->after('target_agents');
                 });
@@ -130,14 +121,12 @@ try {
         } else {
             echo "<p style='color: orange;'>⚠️ 'coupons' table is missing, skipping column add.</p>";
         }
-    } catch (\Exception $e) {
-        echo "<p style='color: red;'>❌ Error: ".$e->getMessage().'</p>';
-    }
+    } catch (\Exception $e) { echo "<p style='color: red;'>❌ Error: ".$e->getMessage()."</p>"; }
 
     // --- STEP 7: Create 'gifts' tables ---
-    echo '<h3>Step 7: Create Gifts Tables</h3>';
+    echo "<h3>Step 7: Create Gifts Tables</h3>";
     try {
-        if (! Schema::hasTable('gifts')) {
+        if (!Schema::hasTable('gifts')) {
             Schema::create('gifts', function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
@@ -150,12 +139,10 @@ try {
         } else {
             echo "<p style='color: #0056b3;'>ℹ️ 'gifts' table already exists.</p>";
         }
-    } catch (\Exception $e) {
-        echo "<p style='color: red;'>❌ Error: ".$e->getMessage().'</p>';
-    }
+    } catch (\Exception $e) { echo "<p style='color: red;'>❌ Error: ".$e->getMessage()."</p>"; }
 
     try {
-        if (! Schema::hasTable('gift_condition_groups')) {
+        if (!Schema::hasTable('gift_condition_groups')) {
             Schema::create('gift_condition_groups', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('gift_id')->constrained()->cascadeOnDelete();
@@ -166,12 +153,10 @@ try {
         } else {
             echo "<p style='color: #0056b3;'>ℹ️ 'gift_condition_groups' table already exists.</p>";
         }
-    } catch (\Exception $e) {
-        echo "<p style='color: red;'>❌ Error: ".$e->getMessage().'</p>';
-    }
+    } catch (\Exception $e) { echo "<p style='color: red;'>❌ Error: ".$e->getMessage()."</p>"; }
 
     try {
-        if (! Schema::hasTable('gift_conditions')) {
+        if (!Schema::hasTable('gift_conditions')) {
             Schema::create('gift_conditions', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('gift_condition_group_id')->constrained()->cascadeOnDelete();
@@ -183,14 +168,12 @@ try {
         } else {
             echo "<p style='color: #0056b3;'>ℹ️ 'gift_conditions' table already exists.</p>";
         }
-    } catch (\Exception $e) {
-        echo "<p style='color: red;'>❌ Error: ".$e->getMessage().'</p>';
-    }
+    } catch (\Exception $e) { echo "<p style='color: red;'>❌ Error: ".$e->getMessage()."</p>"; }
 
     // --- STEP 8: Create 'leads' table ---
-    echo '<h3>Step 8: Create Leads Table</h3>';
+    echo "<h3>Step 8: Create Leads Table</h3>";
     try {
-        if (! Schema::hasTable('leads')) {
+        if (!Schema::hasTable('leads')) {
             Schema::create('leads', function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
@@ -207,12 +190,10 @@ try {
         } else {
             echo "<p style='color: #0056b3;'>ℹ️ 'leads' table already exists.</p>";
         }
-    } catch (\Exception $e) {
-        echo "<p style='color: red;'>❌ Error: ".$e->getMessage().'</p>';
-    }
+    } catch (\Exception $e) { echo "<p style='color: red;'>❌ Error: ".$e->getMessage()."</p>"; }
 
     // --- STEP 9: Create Permission Tables ---
-    echo '<h3>Step 9: Create Permission Tables</h3>';
+    echo "<h3>Step 9: Create Permission Tables</h3>";
     try {
         $tableNames = config('permission.table_names') ?: [
             'roles' => 'roles',
@@ -231,7 +212,7 @@ try {
         $pivotRole = $columnNames['role_pivot_key'] ?? 'role_id';
         $pivotPermission = $columnNames['permission_pivot_key'] ?? 'permission_id';
 
-        if (! Schema::hasTable($tableNames['permissions'])) {
+        if (!Schema::hasTable($tableNames['permissions'])) {
             Schema::create($tableNames['permissions'], static function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
@@ -262,7 +243,7 @@ try {
                 $table->unsignedBigInteger($columnNames['model_morph_key']);
                 $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_permissions_model_id_model_type_index');
                 $table->foreign($pivotPermission)->references('id')->on($tableNames['permissions'])->cascadeOnDelete();
-
+                
                 if ($teams) {
                     $table->unsignedBigInteger($columnNames['team_foreign_key']);
                     $table->index($columnNames['team_foreign_key'], 'model_has_permissions_team_foreign_key_index');
@@ -278,7 +259,7 @@ try {
                 $table->unsignedBigInteger($columnNames['model_morph_key']);
                 $table->index([$columnNames['model_morph_key'], 'model_type'], 'model_has_roles_model_id_model_type_index');
                 $table->foreign($pivotRole)->references('id')->on($tableNames['roles'])->cascadeOnDelete();
-
+                
                 if ($teams) {
                     $table->unsignedBigInteger($columnNames['team_foreign_key']);
                     $table->index($columnNames['team_foreign_key'], 'model_has_roles_team_foreign_key_index');
@@ -299,43 +280,22 @@ try {
         } else {
             echo "<p style='color: #0056b3;'>ℹ️ Permission tables already exist.</p>";
         }
-    } catch (\Exception $e) {
-        echo "<p style='color: red;'>❌ Error: ".$e->getMessage().'</p>';
-    }
-
-    // --- STEP 10: Add 'bank_lead_reference' to applications ---
-    echo "<h3>Step 10: Add 'bank_lead_reference' to Applications</h3>";
-    try {
-        if (Schema::hasTable('applications')) {
-            if (! Schema::hasColumn('applications', 'bank_lead_reference')) {
-                Schema::table('applications', function (Blueprint $table) {
-                    $table->string('bank_lead_reference')->nullable()->after('payment_reference');
-                });
-                echo "<p style='color: green;'>✅ Successfully added 'bank_lead_reference' column to applications table.</p>";
-            } else {
-                echo "<p style='color: #0056b3;'>ℹ️ 'bank_lead_reference' column already exists.</p>";
-            }
-        } else {
-            echo "<p style='color: orange;'>⚠️ 'applications' table is missing, skipping column add.</p>";
-        }
-    } catch (\Exception $e) {
-        echo "<p style='color: red;'>❌ Error: ".$e->getMessage().'</p>';
-    }
+    } catch (\Exception $e) { echo "<p style='color: red;'>❌ Error: ".$e->getMessage()."</p>"; }
 
     // --- SUCCESS MESSAGE ---
     echo "<br><div style='background: #e6f4ea; border: 1px solid #ceead6; padding: 15px; color: #137333; border-radius: 8px;'>";
-    echo '<strong>🎉 Database Upgrade Complete!</strong><br>';
-    echo 'The database is now ready for the new Operator Payment System.';
-    echo '</div>';
+    echo "<strong>🎉 Database Upgrade Complete!</strong><br>";
+    echo "The database is now ready for the new Operator Payment System.";
+    echo "</div>";
 
     echo "<br><div style='background: #fff3f3; border: 1px solid #fce8e6; padding: 15px; color: #c5221f; border-radius: 8px;'>";
-    echo '<strong> CRITICAL SECURITY STEP:</strong><br>';
-    echo 'Please delete this file from your server after running it.';
-    echo '</div>';
+    echo "<strong> CRITICAL SECURITY STEP:</strong><br>";
+    echo "Please delete this file from your server after running it.";
+    echo "</div>";
 
 } catch (\Exception $e) {
     echo "<h2 style='color: #c5221f;'> Critical Error Occurred</h2>";
-    echo "<pre style='background: #f1f3f4; padding: 10px; border-radius: 5px;'>".$e->getMessage().'</pre>';
+    echo "<pre style='background: #f1f3f4; padding: 10px; border-radius: 5px;'>" . $e->getMessage() . "</pre>";
 }
 
-echo '</div>';
+echo "</div>";

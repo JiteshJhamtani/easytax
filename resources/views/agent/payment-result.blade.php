@@ -31,7 +31,7 @@
         .payment-card {
             background: #ffffff;
             width: 100%;
-            max-width: 650px;
+            max-width: 480px;
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
             border: 1px solid rgba(0, 0, 0, 0.05);
@@ -197,18 +197,6 @@
         }
         @keyframes stroke { 100% { stroke-dashoffset: 0; } }
         @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
-
-        /* Custom Scrollbar for Bank List */
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        .bank-hover-card:hover {
-            border-color: var(--brand-green) !important;
-            box-shadow: 0 4px 12px rgba(30,156,93,0.1) !important;
-            transform: translateY(-2px);
-        }
     </style>
 @endsection
 
@@ -220,18 +208,6 @@
             </div>
 
             <div class="card-body">
-                @if(session('success'))
-                    <div style="background: #EDF7F4; color: var(--brand-green); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 600; text-align: left; font-size: 0.9rem;">
-                        ✅ {{ session('success') }}
-                    </div>
-                @endif
-                
-                @if(session('error'))
-                    <div style="background: #FEE2E2; color: var(--brand-red); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 600; text-align: left; font-size: 0.9rem;">
-                        ❌ {{ session('error') }}
-                    </div>
-                @endif
-
                 <div id="statusIcon" class="status-icon processing">
                     <div class="spinner"></div>
                 </div>
@@ -255,49 +231,6 @@
                 @endif
 
                 <div class="action-area" id="actionArea" style="display:none;">
-                    @if (isset($application) && $application->service->slug === 'gst-registration' && empty($application->bank_lead_reference))
-                        <!-- BANK ACCOUNT LEAD UPSELL -->
-                        <div x-data="bankSelector()" style="background: #ffffff; border-radius: 12px; padding: 1.5rem; text-align: left; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e5e7eb;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-                                <span style="font-size: 1.75rem;">🏦</span>
-                                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #111827; letter-spacing: -0.02em;">Open a Current Account Instantly</h3>
-                            </div>
-                            <p style="font-size: 0.95rem; color: #6b7280; margin-bottom: 1.5rem; line-height: 1.5;">
-                                The GST registration has been processed successfully. You can now instantly push this client's details to open a zero-balance business current account.
-                            </p>
-                            
-                            <!-- SEARCH BAR -->
-                            <div x-show="allBanks.length > 4" style="position: relative; margin-bottom: 1.25rem;">
-                                <svg style="position: absolute; left: 12px; top: 12px; width: 18px; height: 18px; color: #9CA3AF;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                <input type="text" x-model="searchQuery" placeholder="Search partner banks..." style="width: 100%; padding: 0.75rem 0.75rem 0.75rem 2.5rem; border-radius: 8px; border: 1px solid #d1d5db; background: #f9fafb; color: #111827; font-size: 0.95rem; font-weight: 500; outline: none; box-sizing: border-box; transition: all 0.2s;">
-                            </div>
-
-                            <!-- BANK GRID -->
-                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 0.5rem; max-height: 250px; overflow-y: auto; padding-right: 4px;" class="custom-scrollbar">
-                                <template x-for="bank in filteredBanks" :key="bank.name">
-                                    <div 
-                                        @click="selectedBank = bank.name; $nextTick(() => { $refs.bankForm.submit() })"
-                                        class="bank-hover-card"
-                                        style="padding: 1rem; border-radius: 10px; border: 1px solid #e5e7eb; background: #ffffff; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);"
-                                    >
-                                        <img :src="bank.logo" :alt="bank.name" onerror="this.style.display='none'" style="width: 36px; height: 36px; object-fit: contain; border-radius: 6px;">
-                                        <span x-text="bank.name" style="font-size: 0.95rem; font-weight: 700; color: #111827;"></span>
-                                    </div>
-                                </template>
-                                <div x-show="filteredBanks.length === 0" style="grid-column: span 2; text-align: center; color: #6b7280; font-size: 0.95rem; padding: 1.5rem 0;">
-                                    No banks found matching your search.
-                                </div>
-                            </div>
-                            
-                            <!-- HIDDEN SUBMIT FORM -->
-                            <form x-ref="bankForm" action="{{ route('agent.bank-leads.store') }}" method="POST" style="display:none;">
-                                @csrf
-                                <input type="hidden" name="application_id" value="{{ $application->id }}">
-                                <input type="hidden" name="bank_name" :value="selectedBank">
-                            </form>
-                        </div>
-                    @endif
-
                     <a href="{{ route('agent.dashboard') }}" class="primary-btn">
                         <span>Return to Dashboard</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
@@ -310,25 +243,6 @@
 
 @section('js')
     <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('bankSelector', () => ({
-                searchQuery: '',
-                selectedBank: null,
-                allBanks: [
-                    { name: 'HDFC Bank', logo: 'https://logo.clearbit.com/hdfcbank.com' },
-                    { name: 'Kotak Mahindra Bank', logo: 'https://logo.clearbit.com/kotak.com' },
-                    { name: 'AU Small Finance Bank', logo: 'https://logo.clearbit.com/aubank.in' },
-                    { name: 'ICICI Bank', logo: 'https://logo.clearbit.com/icicibank.com' }
-                ],
-                get filteredBanks() {
-                    if (this.searchQuery.trim() === '') {
-                        return this.allBanks;
-                    }
-                    return this.allBanks.filter(b => b.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
-                }
-            }));
-        });
-
         const transactionId = "{{ request()->query('txn') }}";
         const urlStatus = "{{ request()->query('status') }}";
 
