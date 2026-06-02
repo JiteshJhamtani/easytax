@@ -170,37 +170,4 @@ class DashboardController extends Controller
         // 4. Redirect them to the auto-login route on the other server
         return redirect()->away($destinations[$target].'/auto-login?token='.urlencode($token));
     }
-
-    public function fetchRemoteKpis(\Illuminate\Http\Request $request)
-    {
-        $server = $request->query('server');
-
-        // Define your server API URLs here
-        $servers = [
-            'upwest' => 'https://upwest.easytax.live',
-            'b2b' => 'https://b2b.easytax.live',
-            'marketing' => 'https://marketing.easytax.live',
-            'uat' => 'https://uat.easytax.live',
-        ];
-
-        if (! array_key_exists($server, $servers)) {
-            return response()->json(['error' => 'Server not found'], 404);
-        }
-
-        try {
-            // Securely fetch the KPIs from the target server
-            $response = Http::withToken(config('services.cross_server.secret'))
-                ->timeout(5) // Don't hang forever if the server is offline
-                ->get($servers[$server].'/api/dashboard-kpis');
-
-            if ($response->successful()) {
-                return response()->json($response->json());
-            }
-
-            return response()->json(['error' => 'Failed to fetch data from remote server. HTTP Status: '.$response->status()], 500);
-
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Server unreachable'], 500);
-        }
-    }
 }

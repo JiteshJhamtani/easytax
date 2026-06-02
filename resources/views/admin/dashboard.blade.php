@@ -59,7 +59,7 @@
     }
     .dash-panel-body {
         padding: 1.5rem;
-        flex: 1;
+        flex: 1 1 auto;
     }
     .dash-panel-body.no-padding {
         padding: 0;
@@ -220,17 +220,6 @@
     <div class="funnel-container">
         <div class="d-flex justify-content-between align-items-center mb-4 funnel-header-wrapper">
             <h2 class="funnel-container-title mb-0">Application Funnels</h2>
-            
-            @if(in_array(request()->getHost(), ['b2b.easytax.live', 'uat.easytax.live']))
-            <div class="form-group mb-0 server-dropdown-wrapper" style="width: 250px;">
-                <select id="serverSelector" class="form-control font-weight-bold border-primary shadow-sm">
-                    <option value="local" selected>📍 Local Data (This Server)</option>
-                    <option value="b2b">☁️ B2B Server</option>
-                    <option value="upwest">☁️ Upwest Server</option>
-                    <option value="marketing">☁️ Marketing Server</option>
-                </select>
-            </div>
-            @endif
         </div>
         
         <div class="row mb-4">
@@ -537,51 +526,5 @@
             }
         }
     });
-</script>
-<script>
-let serverSelector = document.getElementById('serverSelector');
-if (serverSelector) {
-    serverSelector.addEventListener('change', function() {
-        let server = this.value;
-        let funnelCards = document.querySelectorAll('.funnel-value');
-        
-        if (server === 'local') {
-            window.location.reload(); // Quickest way to reset to local data
-            return;
-        }
-    
-        // Add a fast loading spinner visually!
-        funnelCards.forEach(card => {
-            card.innerHTML = '<i class="fas fa-spinner fa-spin text-muted" style="font-size: 1.2rem;"></i>';
-        });
-    
-        // Fetch the remote data via our proxy
-        fetch(`/admin/fetch-remote-kpis?server=${server}`)
-            .then(response => response.json())
-            .then(data => {
-                if(data.error) {
-                    alert('Could not load data: ' + data.error);
-                    window.location.reload(); 
-                    return;
-                }
-                
-                document.getElementById('kpi-total_applications').innerText = data.total_applications;
-                document.getElementById('kpi-completed_applications').innerText = data.completed_applications;
-                document.getElementById('kpi-pending_applications').innerText = data.pending_applications;
-                document.getElementById('kpi-processed_applications').innerText = data.processed_applications;
-                document.getElementById('kpi-total_agents').innerText = data.total_agents;
-                document.getElementById('kpi-total_marketers').innerText = data.total_marketers;
-                
-                // Auto-format Indian Rupee currency with commas and 2 decimals
-                document.getElementById('kpi-total_revenue').innerText = '₹' + parseFloat(data.total_revenue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                document.getElementById('kpi-total_commission').innerText = '₹' + parseFloat(data.total_commission).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            })
-            .catch(error => {
-                alert('Failed to connect to the server.');
-                console.error(error);
-                window.location.reload();
-            });
-    });
-}
 </script>
 @endsection

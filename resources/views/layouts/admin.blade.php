@@ -241,37 +241,58 @@
             @if(auth()->user()->isAdmin())
                 <div class="sb-section">Core</div>
 
-                {{-- NATIVE PORTAL SWITCHER --}}
-                <div class="sb-has-submenu">
-                    <div class="sb-submenu-toggle" onclick="this.parentElement.classList.toggle('open')">
-                        <span class="sb-item__icon"><i class="fas fa-server" style="color: #1E9C5D;"></i></span>
-                        Switch Portal
-                        <i class="fas fa-chevron-down sb-submenu-arrow"></i>
-                    </div>
-                    <div class="sb-submenu">
-                       
-                        <a href="{{ route('admin.switch_server', ['target' => 'b2b']) }}" class="sb-subitem">
-                            <i class="fas fa-external-link-alt text-info mr-2"></i> B2B
-                        </a>
-
-                        <a href="{{ route('admin.switch_server', ['target' => 'upwest']) }}" class="sb-subitem">
-                            <i class="fas fa-external-link-alt text-info mr-2"></i> Upwest
-                        </a>
-                        
-                        <a href="{{ route('admin.switch_server', ['target' => 'marketing']) }}" class="sb-subitem">
-                            <i class="fas fa-external-link-alt text-info mr-2"></i> Marketing
-                        </a>
-
-                       
-                    </div>
-                </div>
-                {{-- END PORTAL SWITCHER --}}
-                
                 <a href="{{ url('admin/dashboard') }}" class="sb-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" data-label="Dashboard">
                     <span class="sb-item__icon"><i class="fas fa-chart-pie"></i></span>
-                    Dashboad
+                    Dashboard
                     @if(request()->is('admin/dashboard*'))<span class="sb-item__dot"></span>@endif
                 </a>
+
+                {{-- NATIVE PORTAL SWITCHER --}}
+                @if(in_array(request()->getHost(), ['b2b.easytax.live', 'uat.easytax.live', 'localhost', '127.0.0.1']))
+                    <div class="sb-has-submenu" x-data="{ 
+                        search: '', 
+                        servers: [
+                            { id: 'upwest', name: 'Upwest' },
+                            { id: 'marketing', name: 'Marketing' },
+                            { id: 'uat', name: 'UAT' },
+                            { id: 'b2b', name: 'B2B Master' },
+                            { id: 'finance', name: 'Finance (Coming Soon)' }
+                        ],
+                        get filteredServers() {
+                            return this.servers
+                                .filter(s => s.name.toLowerCase().includes(this.search.toLowerCase()))
+                                .slice(0, 3);
+                        }
+                    }">
+                        <div class="sb-submenu-toggle" onclick="this.parentElement.classList.toggle('open')">
+                            <span class="sb-item__icon"><i class="fas fa-server"></i></span>
+                            Switch Portal
+                            <i class="fas fa-chevron-down sb-submenu-arrow"></i>
+                        </div>
+                        <div class="sb-submenu">
+                            <div style="padding: 0.5rem 1.5rem 0.5rem 2.8rem;">
+                                <div style="position: relative;">
+                                    <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.7rem;"></i>
+                                    <input type="text" x-model="search" placeholder="Search servers..." style="width: 100%; padding: 0.35rem 0.5rem 0.35rem 1.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.75rem; outline: none;">
+                                </div>
+                            </div>
+                            <template x-for="server in filteredServers" :key="server.id">
+                                <a :href="'/admin/switch-server/' + server.id" class="sb-subitem" style="padding-left: 2.8rem;">
+                                    <span x-text="server.name"></span>
+                                </a>
+                            </template>
+                            <div x-show="filteredServers.length === 0" style="padding: 0.5rem 1.5rem 0.5rem 2.8rem; color: var(--text-muted); font-size: 0.8rem;">
+                                No portals found.
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ route('admin.switch_server', ['target' => 'b2b']) }}" class="sb-item" data-label="Return to Master">
+                        <span class="sb-item__icon"><i class="fas fa-arrow-left text-danger"></i></span>
+                        Return to B2B
+                    </a>
+                @endif
+                {{-- END PORTAL SWITCHER --}}
 
                 @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
                 <div class="sb-section">Management</div>

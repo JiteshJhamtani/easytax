@@ -19,10 +19,7 @@ use App\Http\Controllers\Front\ServiceController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/api/dashboard-kpis', [KpiController::class, 'getKpis']);
-
-Route::get('/admin/switch-server/{target}', [\App\Http\Controllers\Admin\DashboardController::class, 'switchServer'])->name('admin.switch_server');
-
+// Deprecated KPI and Switch Server routes moved/removed
 /*
 |--------------------------------------------------------------------------
 | Public
@@ -196,6 +193,9 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])
         ->name('dashboard');
 
+    Route::get('/switch-server/{target}', [AdminDashboardController::class, 'switchServer'])
+        ->name('switch_server');
+
     // ==========================================
     // ADMIN: TEAM / OPERATOR MANAGEMENT
     // ==========================================
@@ -216,8 +216,7 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
     Route::get('/team/{id}/payout/create', [\App\Http\Controllers\Admin\TeamController::class, 'createPayout'])->name('team.create-payout');
     Route::post('/team/{id}/payout', [\App\Http\Controllers\Admin\TeamController::class, 'addPayout'])->name('team.add-payout');
 
-    Route::get('/fetch-remote-kpis', [AdminDashboardController::class, 'fetchRemoteKpis'])
-        ->name('fetch_remote_kpis');
+    // Remote KPIs removed as requested
 
     Route::get('/applications', [AdminApplicationController::class, 'index'])
         ->name('applications.index');
@@ -354,15 +353,15 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
 
     Route::get('/documents/{media}/download', [AdminApplicationController::class, 'downloadDocument'])
         ->name('documents.download');
+    Route::post('/applications/{id}/assign-team', [\App\Http\Controllers\Admin\ApplicationController::class, 'assignTeam'])->name('applications.assign-team');
+
+    // Promo & Coupon Management
+    Route::get('/coupons', [\App\Http\Controllers\Admin\CouponController::class, 'index'])->name('coupons.index');
+    Route::post('/coupons', [\App\Http\Controllers\Admin\CouponController::class, 'store'])->name('coupons.store');
+    Route::post('/coupons/{id}/toggle', [\App\Http\Controllers\Admin\CouponController::class, 'toggle'])->name('coupons.toggle');
+    Route::delete('/coupons/{id}', [\App\Http\Controllers\Admin\CouponController::class, 'destroy'])->name('coupons.destroy');
+
 });
-
-Route::post('/admin/applications/{id}/assign', [\App\Http\Controllers\Admin\ApplicationController::class, 'assignTeam'])->name('admin.applications.assign');
-
-// Promo & Coupon Management
-Route::get('/admin/coupons', [\App\Http\Controllers\Admin\CouponController::class, 'index'])->name('admin.coupons.index');
-Route::post('/admin/coupons', [\App\Http\Controllers\Admin\CouponController::class, 'store'])->name('admin.coupons.store');
-Route::post('/admin/coupons/{id}/toggle', [\App\Http\Controllers\Admin\CouponController::class, 'toggle'])->name('admin.coupons.toggle');
-Route::delete('/admin/coupons/{id}', [\App\Http\Controllers\Admin\CouponController::class, 'destroy'])->name('admin.coupons.destroy');
 
 /*
 |--------------------------------------------------------------------------
@@ -481,8 +480,7 @@ Route::middleware('auth')->group(function () {
 Route::post('/payment/webhook', [ApplicationController::class, 'webhook'])
     ->name('payment.webhook');
 
-Route::get('/b2b/export-applications', [\App\Http\Controllers\Api\B2BSyncController::class, 'export']);
-Route::get('/b2b/export-agents', [\App\Http\Controllers\Api\B2BSyncController::class, 'exportAgents']);
+// B2B Sync routes removed as requested
 
 /*
 |--------------------------------------------------------------------------
