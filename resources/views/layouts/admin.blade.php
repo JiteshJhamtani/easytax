@@ -170,6 +170,12 @@
         /* ── SMOOTH PAGE TRANSITION ── */
         .content-body { flex: 1; padding: 2rem; opacity: 0; animation: pageFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes pageFadeIn { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
+        
+        /* Fade Out for Native SPA feel */
+        body.is-leaving .content-body {
+            animation: pageFadeOut 0.2s forwards;
+        }
+        @keyframes pageFadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(10px); } }
 
         /* ── MOBILE & MINI MODE ── */
         @media (max-width: 991px) {
@@ -478,6 +484,7 @@ window.userRole = "{{ strtoupper(auth()->user()->role ?? '') }}";
     if(localStorage.getItem('et_sb_mini')==='1')shell.classList.add('sidebar-mini');
 })();
 </script>
+
 @yield('js')
 
 <!-- GLOBAL RESPONSIVE TABLE SCRIPT -->
@@ -507,13 +514,10 @@ window.userRole = "{{ strtoupper(auth()->user()->role ?? '') }}";
                 }
             });
         }
-        
         applyTableLabels();
         
         if (window.jQuery) {
-            $(document).on('init.dt', function() {
-                applyTableLabels();
-            });
+            $(document).on('draw.dt', function() { applyTableLabels(); });
         }
     });
 </script>
@@ -590,5 +594,20 @@ window.userRole = "{{ strtoupper(auth()->user()->role ?? '') }}";
         </div>
     </div>
 </div>
+
+<script>
+    // Smooth native page transitions
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript"])').forEach(link => {
+            link.addEventListener('click', e => {
+                if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+                let href = link.getAttribute('href');
+                if (href && href !== '#' && !href.startsWith('javascript')) {
+                    document.body.classList.add('is-leaving');
+                }
+            });
+        });
+    });
+</script>
 </body>
 </html>
