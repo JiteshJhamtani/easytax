@@ -10,8 +10,9 @@ class TeamMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        // Check if user is logged in AND their role is 'team' (or 'TEAM' / 'ADMIN' for testing)
-        if (Auth::check() && in_array(strtolower(Auth::user()->role), ['team', 'admin'])) {
+        // Check if user is logged in AND their role is 'team' (or admins)
+        $allowedRoles = ['team', 'admin', 'sub-admin', 'super-admin', 'super_admin'];
+        if (Auth::check() && in_array(strtolower(Auth::user()->role), $allowedRoles)) {
             return $next($request);
         }
 

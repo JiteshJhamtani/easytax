@@ -90,6 +90,7 @@ class LeadController extends Controller
             'service_interested' => 'nullable|string',
             'source' => 'nullable|string',
             'notes' => 'nullable|string',
+            'marketer_id' => 'nullable|exists:users,id',
         ]);
 
         $leadData = $request->validated();
