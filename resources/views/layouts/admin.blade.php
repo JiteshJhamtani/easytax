@@ -171,11 +171,11 @@
         .content-body { flex: 1; padding: 2rem; opacity: 0; animation: pageFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes pageFadeIn { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
         
-        /* Fade Out for Native SPA feel */
-        body.is-leaving .content-body {
-            animation: pageFadeOut 0.2s forwards;
+        /* Fade Out ENTIRE PAGE for Native SPA feel (prevents sidebar flick) */
+        body.is-leaving {
+            animation: bodyFadeOut 0.2s forwards;
         }
-        @keyframes pageFadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(10px); } }
+        @keyframes bodyFadeOut { from { opacity: 1; } to { opacity: 0; } }
 
         /* ── MOBILE & MINI MODE ── */
         @media (max-width: 991px) {
