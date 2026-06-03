@@ -17,8 +17,9 @@ trait MasksSensitiveData
             }
 
             // Prevent direct attributes from being saved as asterisks
+            $attributes = $model->getAttributes();
             foreach ($model->maskable as $key) {
-                if (isset($model->$key) && is_string($model->$key) && str_contains($model->$key, '*')) {
+                if (array_key_exists($key, $attributes) && is_string($attributes[$key]) && str_contains($attributes[$key], '*')) {
                     $original = $model->getOriginal($key);
                     if ($original !== null) {
                         $model->$key = $original;
