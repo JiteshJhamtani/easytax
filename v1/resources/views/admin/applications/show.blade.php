@@ -12,7 +12,7 @@
         <a href="{{ route('admin.applications.index') }}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left mr-1"></i> Back to List
         </a>
-    </div>
+    </div>     
 @stop
 
 @section('content')

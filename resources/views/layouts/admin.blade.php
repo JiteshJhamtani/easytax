@@ -220,6 +220,7 @@
 </head>
 <body>
 <div class="shell" id="shell">
+    <script>if(localStorage.getItem('et_sb_mini')==='1') document.getElementById('shell').classList.add('sidebar-mini');</script>
 
     <aside class="sidebar" id="sidebar">
         <a href="{{ url('admin/dashboard') }}" class="sb-brand">
@@ -481,7 +482,6 @@ window.userRole = "{{ strtoupper(auth()->user()->role ?? '') }}";
     const shell=document.getElementById('shell'),sidebar=document.getElementById('sidebar'),overlay=document.getElementById('sb-overlay'),mBtn=document.getElementById('sb-toggle');
     mBtn&&mBtn.addEventListener('click',()=>{sidebar.classList.toggle('open');overlay.classList.toggle('open');});
     overlay&&overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('open');});
-    if(localStorage.getItem('et_sb_mini')==='1')shell.classList.add('sidebar-mini');
 })();
 </script>
 

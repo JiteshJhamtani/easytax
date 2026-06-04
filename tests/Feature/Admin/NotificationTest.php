@@ -20,24 +20,27 @@ beforeEach(function () {
     ]);
 
     // Setup mocked credentials
-    config(['phonepe.webhook_username' => 'testuser']);
-    config(['phonepe.webhook_password' => 'testpass']);
-    config(['phonepe.salt_key' => 'testsalt']);
-    config(['phonepe.salt_index' => '1']);
+    config(['razorpay.webhook_secret' => 'testsecret']);
+
+    $expectedAmount = (int) round(max(0, $this->application->amount - $this->application->commission_amount) * 100);
 
     $this->payloadString = json_encode([
-        'data' => [
-            'merchantTransactionId' => 'TXN123',
-            'state' => 'COMPLETED'
+        'event' => 'payment.captured',
+        'payload' => [
+            'payment' => [
+                'entity' => [
+                    'id' => 'pay_123',
+                    'order_id' => 'TXN123',
+                    'amount' => $expectedAmount,
+                ]
+            ]
         ]
     ]);
 
-    $this->checksum = hash('sha256', $this->payloadString . 'testsalt') . '###1';
+    $this->signature = hash_hmac('sha256', $this->payloadString, 'testsecret');
 
     $this->headers = [
-        'PHP_AUTH_USER' => 'testuser',
-        'PHP_AUTH_PW' => 'testpass',
-        'HTTP_X_VERIFY' => $this->checksum,
+        'HTTP_X_RAZORPAY_SIGNATURE' => $this->signature,
         'CONTENT_TYPE' => 'application/json'
     ];
 });

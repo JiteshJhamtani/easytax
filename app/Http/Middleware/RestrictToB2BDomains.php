@@ -15,8 +15,8 @@ class RestrictToB2BDomains
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Do not block anything on local development environments
-        if (app()->environment('local')) {
+        // Do not block anything on local or testing environments
+        if (app()->environment('local', 'testing')) {
             return $next($request);
         }
 

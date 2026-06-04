@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return redirect()->route('services.index');
+    return redirect()->route('admin.dashboard');
 })->name('home');
 
 // --- NEW PUBLIC TRACKING ROUTE ---

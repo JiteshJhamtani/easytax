@@ -58,7 +58,11 @@ it('cannot process the same razorpay webhook twice', function () {
     expect($application->fresh()->payment_status)->toBe(PaymentStatus::PAID);
 
     // Assert only one webhook_captured event exists for this payment
-    $this->assertDatabaseCount('payment_logs', 1);
+    $logsCount = \App\Models\PaymentLog::where('application_id', $application->id)
+        ->where('event', 'webhook_captured')
+        ->count();
+
+    expect($logsCount)->toBe(1);
 });
 
 it('cannot escalate role via profile update mass assignment', function () {
