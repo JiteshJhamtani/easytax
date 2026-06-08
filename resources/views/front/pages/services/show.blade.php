@@ -256,13 +256,8 @@
         }
 
         /* ── WIZARD UI STYLES ── */
-        .wizard-step { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .wizard-step { display: none; }
         .wizard-step.active { display: block; }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
 
         .wizard-header {
             display: flex; 
@@ -863,18 +858,23 @@
                 let $itPasswordContainer = $itPasswordInput.closest('.form-group');
                 let dropdownHtml = `
                     <div class="form-group mb-3" id="it_password_toggle_container">
-                        <label class="form-label fw-bold">Do you have an Income Tax Portal Password? <span class="text-danger">*</span></label>
-                        <select id="has_it_password" class="form-control form-select" required>
-                            <option value="">-- Select an Option --</option>
-                            <option value="yes">Yes, I have my password</option>
-                            <option value="no">No, create a new application</option>
-                        </select>
+                        <label class="form-label fw-bold" style="font-size: 0.8rem; color: #374151;">Do you have an Income Tax Portal Password? <span class="text-danger">*</span></label>
+                        <div class="mt-2 d-flex flex-wrap" style="gap: 1.5rem;">
+                            <div class="custom-control custom-radio">
+                                <input type="radio" id="has_it_password_yes" name="has_it_password" value="yes" class="custom-control-input" required>
+                                <label class="custom-control-label" for="has_it_password_yes" style="cursor: pointer; font-weight: 500; font-size: 0.9rem; color: #374151; padding-top: 2px;">Yes, I have my password</label>
+                            </div>
+                            <div class="custom-control custom-radio">
+                                <input type="radio" id="has_it_password_no" name="has_it_password" value="no" class="custom-control-input" required>
+                                <label class="custom-control-label" for="has_it_password_no" style="cursor: pointer; font-weight: 500; font-size: 0.9rem; color: #374151; padding-top: 2px;">No, create a new application</label>
+                            </div>
+                        </div>
                     </div>`;
                 $itPasswordContainer.before(dropdownHtml);
                 $itPasswordContainer.hide();
                 $itPasswordInput.prop('required', false);
                 
-                $('#has_it_password').on('change', function() {
+                $('input[name="has_it_password"]').on('change', function() {
                     let val = $(this).val();
                     if (val === 'yes') {
                         $itPasswordContainer.slideDown(200);
@@ -882,9 +882,6 @@
                     } else if (val === 'no') {
                         $itPasswordContainer.slideUp(200);
                         $itPasswordInput.prop('required', false).prop('type', 'text').val('NEW_APPLICATION');
-                    } else {
-                        $itPasswordContainer.slideUp(200);
-                        $itPasswordInput.prop('required', false).val('');
                     }
                 });
             }

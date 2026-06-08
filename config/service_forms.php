@@ -145,17 +145,7 @@ return [
                             'user' => 'User / Citizen',
                         ],
                     ],
-                    [
-                        'name' => 'turnover',
-                        'label' => 'Business Turnover',
-                        'type' => 'select',
-                        'required' => false,
-                        'validation' => '',
-                        'options' => [
-                            'less_than_20l' => 'Less than 20 Lakh Sales',
-                            'more_than_20l' => 'More than 20 Lakh Sales',
-                        ],
-                    ],
+
                     [
                         'name' => 'has_salary',
                         'label' => 'Salary Income?',
@@ -225,6 +215,17 @@ return [
                         'options' => [
                             'yes' => 'Yes',
                             'no' => 'No',
+                        ],
+                    ],
+                    [
+                        'name' => 'turnover',
+                        'label' => 'Business Turnover',
+                        'type' => 'select',
+                        'required' => false,
+                        'validation' => '',
+                        'options' => [
+                            'less_than_20l' => 'Less than 20 Lakh Sales',
+                            'more_than_20l' => 'More than 20 Lakh Sales',
                         ],
                     ],
                     [

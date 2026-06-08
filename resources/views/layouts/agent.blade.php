@@ -172,13 +172,7 @@
 
         /* ── SMOOTH PAGE TRANSITION ── */
         .content-body { 
-            flex: 1; padding: 2rem; opacity: 0; 
-            animation: pageFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes pageFadeIn {
-            0% { opacity: 0; transform: translateY(15px); }
-            100% { opacity: 1; transform: translateY(0); }
+            flex: 1; padding: 2rem;
         }
 
         /* ── GLOBAL RESPONSIVE DATA-TABLES ── */
@@ -241,6 +235,7 @@
         .shell.sidebar-mini .main { margin-left: var(--sidebar-mini); }
         .shell.sidebar-mini .sb-item::after { content: attr(data-label); position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); background: var(--slate-dark); color: #fff; font-size: 0.75rem; font-weight: 600; padding: 0.4rem 0.8rem; border-radius: 6px;  opacity: 0; pointer-events: none; transition: opacity .15s; z-index: 9999; box-shadow: var(--shadow); }
         .shell.sidebar-mini .sb-item:hover::after { opacity: 1; }
+        @livewireStyles
     </style>
 </head>
 <body>
@@ -254,7 +249,7 @@
         <nav class="sb-nav">
             <div class="sb-section">Applications</div>
             
-            <a href="{{ url('agent/dashboard') }}" class="sb-item {{ request()->routeIs('agent.dashboard') ? 'active' : '' }}" data-label="Dashboard">
+            <a href="{{ url('agent/dashboard') }}" wire:navigate class="sb-item {{ request()->routeIs('agent.dashboard') ? 'active' : '' }}" data-label="Dashboard">
                 <span class="sb-item__icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 </span>
@@ -263,7 +258,7 @@
             </a>
             
             
-            <a href="{{ url('services') }}" class="sb-item {{ request()->is('services') ? 'active' : '' }}" data-label="More Applications">
+            <a href="{{ url('services') }}" wire:navigate class="sb-item {{ request()->is('services') ? 'active' : '' }}" data-label="More Applications">
                 <span class="sb-item__icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                 </span>
@@ -272,22 +267,22 @@
        <div class="sb-section">Application Types</div>
 
 
-            <a href="{{ route('agent.applications.index', ['type' => 'itr-filing']) }}" class="sb-item {{ request()->query('type') === 'itr-filing' ? 'active' : '' }}" data-label="ITR Filing">
+            <a href="{{ route('agent.applications.index', ['type' => 'itr-filing']) }}" wire:navigate class="sb-item {{ request()->query('type') === 'itr-filing' ? 'active' : '' }}" data-label="ITR Filing">
                 <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar"></i></span>
                 ITR Filing
             </a>
 
-            <a href="{{ route('agent.applications.index', ['type' => 'gst-registration']) }}" class="sb-item {{ request()->query('type') === 'gst-registration' ? 'active' : '' }}" data-label="GST Registration">
+            <a href="{{ route('agent.applications.index', ['type' => 'gst-registration']) }}" wire:navigate class="sb-item {{ request()->query('type') === 'gst-registration' ? 'active' : '' }}" data-label="GST Registration">
                 <span class="sb-item__icon"><i class="fas fa-id-card"></i></span>
                 GST Registration
             </a>
             
-            <a href="{{ route('agent.applications.index', ['type' => 'gst-return-filing']) }}" class="sb-item {{ request()->query('type') === 'gst-return-filing' ? 'active' : '' }}" data-label="GST Return">
+            <a href="{{ route('agent.applications.index', ['type' => 'gst-return-filing']) }}" wire:navigate class="sb-item {{ request()->query('type') === 'gst-return-filing' ? 'active' : '' }}" data-label="GST Return">
                 <span class="sb-item__icon"><i class="fas fa-file-invoice"></i></span>
                 GST Return
             </a>
 
-            <a href="{{ route('agent.applications.index', ['type' => 'other']) }}" class="sb-item {{ request()->query('type', 'other') === 'other' ? 'active' : '' }}" data-label="Other Apps">
+            <a href="{{ route('agent.applications.index', ['type' => 'other']) }}" wire:navigate class="sb-item {{ request()->query('type', 'other') === 'other' ? 'active' : '' }}" data-label="Other Apps">
                 <span class="sb-item__icon"><i class="fas fa-folder"></i></span>
                 Other Apps
             </a>
@@ -394,5 +389,6 @@
         }
     });
 </script>
+@livewireScripts
 </body>
 </html>
