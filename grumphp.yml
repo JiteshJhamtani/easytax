@@ -1,0 +1,10 @@
+grumphp:
+    tasks:
+        pest:
+            config_file: ~
+            testsuite: ~
+        shell:
+            scripts:
+                - ["vendor/bin/pint", "--dirty", "--format", "agent"]
+    testsuites: []
+    extensions: []
