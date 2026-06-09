@@ -265,7 +265,7 @@ class ApplicationController extends Controller
             abort(403, 'Unauthorized access to this document.');
         }
 
-        $path = storage_path('app/private/'.$media->id.'/'.$media->file_name);
+        $path = $media->getPath();
 
         if (! file_exists($path)) {
             abort(404, 'File not found');
@@ -287,7 +287,7 @@ class ApplicationController extends Controller
             abort(403, 'Unauthorized access to this document.');
         }
 
-        $path = storage_path('app/private/'.$media->id.'/'.$media->file_name);
+        $path = $media->getPath();
 
         if (! file_exists($path)) {
             abort(404, 'File not found');
