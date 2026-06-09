@@ -47,7 +47,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'email',
@@ -510,7 +510,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_1_email',
@@ -536,7 +536,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_2_email',
@@ -562,7 +562,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_3_email',
@@ -588,7 +588,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_4_email',
@@ -614,7 +614,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_5_email',
@@ -640,7 +640,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_6_email',
@@ -666,7 +666,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_7_email',
@@ -692,7 +692,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_8_email',
@@ -1170,7 +1170,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'member_1_email',
@@ -1196,7 +1196,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'member_2_email',
@@ -1222,7 +1222,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'member_3_email',
@@ -1248,7 +1248,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'member_4_email',
@@ -1274,7 +1274,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'member_5_email',
@@ -1300,7 +1300,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'member_6_email',
@@ -1326,7 +1326,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'member_7_email',
@@ -1352,7 +1352,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'member_8_email',
@@ -1831,7 +1831,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_1_email',
@@ -1857,7 +1857,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_2_email',
@@ -1883,7 +1883,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_3_email',
@@ -1909,7 +1909,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_4_email',
@@ -1935,7 +1935,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_5_email',
@@ -1961,7 +1961,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_6_email',
@@ -1987,7 +1987,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_7_email',
@@ -2013,7 +2013,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_8_email',
@@ -2326,7 +2326,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'email',
@@ -2496,7 +2496,7 @@ return [
                         'label' => 'Mobile Number (Client)',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'contact_person',
@@ -2974,7 +2974,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_1_email',
@@ -3000,7 +3000,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_2_email',
@@ -3026,7 +3026,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_3_email',
@@ -3052,7 +3052,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_4_email',
@@ -3078,7 +3078,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_5_email',
@@ -3104,7 +3104,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_6_email',
@@ -3130,7 +3130,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_7_email',
@@ -3156,7 +3156,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_8_email',
@@ -3594,7 +3594,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_1_email',
@@ -3620,7 +3620,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_2_email',
@@ -3646,7 +3646,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_3_email',
@@ -3672,7 +3672,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_4_email',
@@ -3698,7 +3698,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_5_email',
@@ -3724,7 +3724,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_6_email',
@@ -3750,7 +3750,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_7_email',
@@ -3776,7 +3776,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_8_email',
@@ -4074,7 +4074,7 @@ return [
                         'label' => 'Mobile Number (Linked with Aadhaar)',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'email',
@@ -4343,7 +4343,7 @@ return [
                         'label' => 'Contact Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'contact_email',
@@ -4526,7 +4526,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'email',
@@ -4620,7 +4620,7 @@ return [
                         'label' => 'Promoter / Director 1: Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'promoter_director_1_email',
@@ -4648,7 +4648,7 @@ return [
                         'label' => 'Promoter / Director 2: Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'promoter_director_2_email',
@@ -4676,7 +4676,7 @@ return [
                         'label' => 'Promoter / Director 3: Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'promoter_director_3_email',
@@ -4704,7 +4704,7 @@ return [
                         'label' => 'Promoter / Director 4: Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'promoter_director_4_email',
@@ -5182,7 +5182,7 @@ return [
                         'label' => 'Mobile Number (Client)',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'contact_person',
@@ -5830,7 +5830,7 @@ return [
                         'label' => 'Director Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'director_email',
@@ -5856,7 +5856,7 @@ return [
                         'label' => 'Nominee Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'nominee_email',
@@ -6091,7 +6091,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_1_email',
@@ -6117,7 +6117,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => true,
-                        'validation' => 'required|digits:10',
+                        'validation' => 'required|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_2_email',
@@ -6143,7 +6143,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_3_email',
@@ -6169,7 +6169,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_4_email',
@@ -6195,7 +6195,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_5_email',
@@ -6221,7 +6221,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_6_email',
@@ -6247,7 +6247,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_7_email',
@@ -6273,7 +6273,7 @@ return [
                         'label' => 'Mobile Number',
                         'type' => 'text',
                         'required' => false,
-                        'validation' => 'nullable|digits:10',
+                        'validation' => 'nullable|string|min:10|max:15',
                     ],
                     [
                         'name' => 'partner_8_email',

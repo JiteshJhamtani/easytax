@@ -673,6 +673,9 @@
             let currentVisibleBank = 1;
             let maxBanks = 5; 
 
+            let firstAccInput = $('input[name="bank_account_number_2"]');
+            if (firstAccInput.length === 0) return; // Only run if bank accounts exist
+
             for(let i = 2; i <= maxBanks; i++) {
                 let accInput = $('input[name="bank_account_number_' + i + '"]');
                 let ifscInput = $('input[name="ifsc_code_' + i + '"]');
@@ -686,17 +689,24 @@
                 }
             }
 
-            let lastVisibleIfscName = currentVisibleBank === 1 ? 'ifsc_code' : 'ifsc_code_' + currentVisibleBank;
-            let lastVisibleIfscWrapper = $('input[name="' + lastVisibleIfscName + '"]').closest('.form-group');
+            let sectionContainer = firstAccInput.closest('.form-section');
+            let heading = sectionContainer.find('h3').first();
 
-            if(lastVisibleIfscWrapper.length > 0 && $('input[name="bank_account_number_' + (currentVisibleBank + 1) + '"]').length > 0) {
-                lastVisibleIfscWrapper.after(`
-                    <div class="col-12 mb-3 mt-2 form-group" id="add-bank-wrapper">
-                        <button type="button" id="add-bank-btn" class="btn btn-sm" style="background-color: #1E9C5D; color: white; border-radius: 5px; font-weight: bold; padding: 6px 16px; border: none;">
+            if (heading.length) {
+                // If the heading isn't wrapped in flex yet, wrap it
+                if (!heading.parent().attr('style') || !heading.parent().attr('style').includes('display: flex')) {
+                    heading.wrap('<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px dashed #f3f4f6; padding-bottom: 10px;"></div>');
+                    heading.css({ 'margin': '0', 'text-align': 'left', 'width': 'auto', 'border': 'none', 'padding': '0' });
+                }
+
+                // If button doesn't exist, append it
+                if ($('#add-bank-btn').length === 0 && currentVisibleBank < maxBanks) {
+                    heading.parent().append(`
+                        <button type="button" id="add-bank-btn" class="btn btn-sm" style="background-color: #1E9C5D; color: white; border-radius: 5px; font-weight: bold; padding: 6px 16px; border: none; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(30,156,93,0.2);">
                             + Add Another Bank
                         </button>
-                    </div>
-                `);
+                    `);
+                }
             }
 
             $(document).off('click', '#add-bank-btn').on('click', '#add-bank-btn', function() {
@@ -706,10 +716,9 @@
 
                 nextAccWrapper.slideDown(250);
                 nextIfscWrapper.slideDown(250);
-                $('#add-bank-wrapper').insertAfter(nextIfscWrapper);
 
-                if($('input[name="bank_account_number_' + (currentVisibleBank + 1) + '"]').length === 0) {
-                    $('#add-bank-wrapper').hide();
+                if($('input[name="bank_account_number_' + (currentVisibleBank + 1) + '"]').length === 0 || currentVisibleBank >= maxBanks) {
+                    $('#add-bank-btn').hide();
                 }
             });
         }

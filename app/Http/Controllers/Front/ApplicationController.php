@@ -46,6 +46,26 @@ class ApplicationController extends Controller
             }
         }
 
+        // Sanitize Mobile Numbers globally
+        foreach ($validated as $key => $value) {
+            if (str_contains($key, 'mobile') || str_contains($key, 'phone')) {
+                if (is_string($value)) {
+                    $cleanNumber = preg_replace('/[^0-9]/', '', $value);
+                    if (strlen($cleanNumber) > 10) {
+                        if (str_starts_with($cleanNumber, '91')) {
+                            $cleanNumber = substr($cleanNumber, 2);
+                        } elseif (str_starts_with($cleanNumber, '0')) {
+                            $cleanNumber = substr($cleanNumber, 1);
+                        }
+                    }
+                    if (strlen($cleanNumber) > 10) {
+                        $cleanNumber = substr($cleanNumber, -10);
+                    }
+                    $validated[$key] = $cleanNumber;
+                }
+            }
+        }
+
         \Illuminate\Support\Facades\Log::info('Form validation passed.');
 
         // ==========================================
@@ -257,7 +277,7 @@ class ApplicationController extends Controller
         \Illuminate\Support\Facades\Log::info("Razorpay order creation response for application {$application->id}", $orderResponse);
 
         if (! $orderResponse['success']) {
-            return back()->with('error', 'Payment initialization failed. Please try again.');
+            return back()->with('error', 'Payment initialization failed. Please try again.')->withInput();
         }
 
         $application->update([
@@ -505,7 +525,7 @@ class ApplicationController extends Controller
         );
 
         if (! $orderResponse['success']) {
-            return back()->with('error', 'Retry failed. Please try again.');
+            return back()->with('error', 'Retry failed. Please try again.')->withInput();
         }
 
         $application->update([
