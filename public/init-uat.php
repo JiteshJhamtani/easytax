@@ -8,12 +8,22 @@
 require __DIR__.'/../vendor/autoload.php';
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+try {
+    $user = \App\Models\User::updateOrCreate(
+        ['email' => 'subadmin@gmail.com'],
+        [
+            'name' => 'Sub Admin',
+            'password' => bcrypt('password123'),
+            'role' => 'SUB-ADMIN',
+            'is_active' => true
+        ]
+    );
 
-$status = $kernel->call('db:seed', ['--force' => true]);
-
-echo "<h1>Database Seeding Complete</h1>";
-echo "<p>Artisan Output:</p>";
-echo "<pre>" . htmlentities($kernel->output()) . "</pre>";
+    echo "<h1>Initialization Complete</h1>";
+    echo "<p>User 'subadmin@gmail.com' successfully created or updated with SUB-ADMIN role.</p>";
+} catch (\Exception $e) {
+    echo "<h1>Error</h1>";
+    echo "<p>" . $e->getMessage() . "</p>";
+}
 echo "<hr>";
 echo "<p><strong>CRITICAL:</strong> Delete this file (init-uat.php) immediately from your repository and UAT server after verifying.</p>";
