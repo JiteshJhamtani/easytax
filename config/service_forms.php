@@ -2651,8 +2651,8 @@ return [
         ],
         'documents' => [
             [
-                'name' => 'bill_doc_1',
-                'label' => 'Bill Document 1',
+                'name' => 'return_doc_1',
+                'label' => 'Return Document 1',
                 'required' => true,
                 'mimes' => [
                     'pdf',
@@ -2667,8 +2667,8 @@ return [
                 ],
             ],
             [
-                'name' => 'bill_doc_2',
-                'label' => 'Bill Document 2',
+                'name' => 'return_doc_2',
+                'label' => 'Return Document 2',
                 'required' => false,
                 'mimes' => [
                     'pdf',
@@ -2683,8 +2683,8 @@ return [
                 ],
             ],
             [
-                'name' => 'bill_doc_3',
-                'label' => 'Bill Document 3',
+                'name' => 'return_doc_3',
+                'label' => 'Return Document 3',
                 'required' => false,
                 'mimes' => [
                     'pdf',
@@ -2699,8 +2699,8 @@ return [
                 ],
             ],
             [
-                'name' => 'bill_doc_4',
-                'label' => 'Bill Document 4',
+                'name' => 'return_doc_4',
+                'label' => 'Return Document 4',
                 'required' => false,
                 'mimes' => [
                     'pdf',
@@ -2715,8 +2715,8 @@ return [
                 ],
             ],
             [
-                'name' => 'bill_doc_5',
-                'label' => 'Bill Document 5',
+                'name' => 'return_doc_5',
+                'label' => 'Return Document 5',
                 'required' => false,
                 'mimes' => [
                     'pdf',
@@ -2731,8 +2731,8 @@ return [
                 ],
             ],
             [
-                'name' => 'bill_doc_6',
-                'label' => 'Bill Document 6',
+                'name' => 'return_doc_6',
+                'label' => 'Return Document 6',
                 'required' => false,
                 'mimes' => [
                     'pdf',
@@ -2747,8 +2747,8 @@ return [
                 ],
             ],
             [
-                'name' => 'bill_doc_7',
-                'label' => 'Bill Document 7',
+                'name' => 'return_doc_7',
+                'label' => 'Return Document 7',
                 'required' => false,
                 'mimes' => [
                     'pdf',
@@ -2763,8 +2763,8 @@ return [
                 ],
             ],
             [
-                'name' => 'bill_doc_8',
-                'label' => 'Bill Document 8',
+                'name' => 'return_doc_8',
+                'label' => 'Return Document 8',
                 'required' => false,
                 'mimes' => [
                     'pdf',
@@ -2779,8 +2779,8 @@ return [
                 ],
             ],
             [
-                'name' => 'bill_doc_9',
-                'label' => 'Bill Document 9',
+                'name' => 'return_doc_9',
+                'label' => 'Return Document 9',
                 'required' => false,
                 'mimes' => [
                     'pdf',
@@ -2795,8 +2795,8 @@ return [
                 ],
             ],
             [
-                'name' => 'bill_doc_10',
-                'label' => 'Bill Document 10',
+                'name' => 'return_doc_10',
+                'label' => 'Return Document 10',
                 'required' => false,
                 'mimes' => [
                     'pdf',

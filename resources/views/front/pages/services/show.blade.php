@@ -951,32 +951,40 @@
         (function() {
             var observer = new MutationObserver(function(mutations, obs) {
                 var myDocs = $('input[type="file"]').filter(function() {
-                    return $(this).attr('name') && $(this).attr('name').includes('bill_doc_');
+                    let name = $(this).attr('name');
+                    return name && (name.includes('bill_doc_') || name.includes('return_doc_'));
                 });
 
                 if (myDocs.length > 0 && $('#add-more-bills-btn').length === 0) {
+                    let isBill = myDocs.first().attr('name').includes('bill_doc_');
+                    let btnText = isBill ? "+ Add Another Bill" : "+ Add Another Doc";
+
                     myDocs.each(function(index) {
                         if (index > 0) { $(this).closest('.form-group').hide(); }
                     });
 
-                    let firstWrapper = myDocs.first().closest('.form-group');
-                    firstWrapper.after(`
-                        <div class="col-12 mb-3 mt-2" id="add-more-wrapper">
-                            <button type="button" id="add-more-bills-btn" class="btn btn-primary btn-sm" style="background-color: #0d6efd; color: white; border-radius: 5px; padding: 6px 16px; border: none; font-weight: bold; cursor: pointer;">
-                                + Add Another Bill
+                    let sectionContainer = myDocs.first().closest('.form-section');
+                    let heading = sectionContainer.find('h3').first();
+
+                    if (heading.length) {
+                        heading.wrap('<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px dashed #f3f4f6; padding-bottom: 10px;"></div>');
+                        heading.css({ 'margin': '0', 'text-align': 'left', 'width': 'auto', 'border': 'none', 'padding': '0' });
+                        
+                        heading.parent().append(`
+                            <button type="button" id="add-more-bills-btn" class="btn btn-primary btn-sm" style="background-color: #0d6efd; color: white; border-radius: 5px; padding: 6px 16px; border: none; font-weight: bold; cursor: pointer; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(13,110,253,0.2);">
+                                ${btnText}
                             </button>
-                        </div>
-                    `);
+                        `);
+                    }
 
                     let visibleCount = 1;
                     $(document).off('click', '#add-more-bills-btn').on('click', '#add-more-bills-btn', function() {
                         if (visibleCount < myDocs.length) {
                             let nextWrapper = $(myDocs[visibleCount]).closest('.form-group');
                             nextWrapper.slideDown(250);
-                            $('#add-more-wrapper').insertAfter(nextWrapper);
                             visibleCount++;
                         }
-                        if (visibleCount >= myDocs.length) { $('#add-more-wrapper').hide(); }
+                        if (visibleCount >= myDocs.length) { $('#add-more-bills-btn').hide(); }
                     });
                 }
             });
