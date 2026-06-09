@@ -11,6 +11,8 @@ $app = require_once __DIR__.'/../bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 try {
+    \Illuminate\Database\Eloquent\Model::unguard();
+
     $user = \App\Models\User::updateOrCreate(
         ['email' => 'subadmin@gmail.com'],
         [
@@ -20,6 +22,8 @@ try {
             'is_active' => true
         ]
     );
+
+    \Illuminate\Database\Eloquent\Model::reguard();
 
     echo "<h1>Initialization Complete</h1>";
     echo "<p>User 'subadmin@gmail.com' successfully created or updated with SUB-ADMIN role.</p>";
