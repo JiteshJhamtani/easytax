@@ -121,11 +121,39 @@ return [
                 'label' => 'Filing Details',
                 'fields' => [
                     [
-                        'name' => 'itr_type',
-                        'label' => 'Financial/Tax Year',
+                        'name' => 'itr_year_1',
+                        'label' => 'Primary Financial/Tax Year',
+                        'type' => 'select',
+                        'required' => true,
+                        'validation' => 'required|string',
+                        'options' => [
+                            '2027-28' => 'F.Y. 2027-28',
+                            '2026-27' => 'F.Y. 2026-27 (Current)',
+                            '2025-26' => 'F.Y. 2025-26 (ITR-U)',
+                            '2024-25' => 'F.Y. 2024-25 (ITR-U)',
+                            '2023-24' => 'F.Y. 2023-24 (ITR-U)',
+                        ],
+                    ],
+                    [
+                        'name' => 'itr_year_2',
+                        'label' => 'Additional Financial Year 1',
                         'type' => 'select',
                         'required' => false,
-                        'validation' => 'required|string',
+                        'validation' => 'nullable|string',
+                        'options' => [
+                            '2027-28' => 'F.Y. 2027-28',
+                            '2026-27' => 'F.Y. 2026-27 (Current)',
+                            '2025-26' => 'F.Y. 2025-26 (ITR-U)',
+                            '2024-25' => 'F.Y. 2024-25 (ITR-U)',
+                            '2023-24' => 'F.Y. 2023-24 (ITR-U)',
+                        ],
+                    ],
+                    [
+                        'name' => 'itr_year_3',
+                        'label' => 'Additional Financial Year 2',
+                        'type' => 'select',
+                        'required' => false,
+                        'validation' => 'nullable|string',
                         'options' => [
                             '2027-28' => 'F.Y. 2027-28',
                             '2026-27' => 'F.Y. 2026-27 (Current)',

@@ -622,6 +622,53 @@
         }
 
         // ── 5. BANK REPEATER & GST NESTED FIELDS ──
+        function initItrYearRepeater() {
+            let year2Wrapper = $('select[name="itr_year_2"]').closest('.form-group');
+            let year3Wrapper = $('select[name="itr_year_3"]').closest('.form-group');
+            
+            if (year2Wrapper.length === 0) return; // Not an ITR form
+            
+            // Hide them initially if empty
+            if (!$('select[name="itr_year_2"]').val()) year2Wrapper.hide();
+            if (!$('select[name="itr_year_3"]').val()) year3Wrapper.hide();
+
+            let year1Wrapper = $('select[name="itr_year_1"]').closest('.form-group');
+            
+            // Add the button inside the wrapper, styled as a sleek link
+            let addYearHtml = `
+                <div class="mt-1 text-end text-right" id="add-year-wrapper">
+                    <button type="button" id="add-year-btn" class="btn btn-link btn-sm p-0" style="color: #0d6efd; font-weight: 600; text-decoration: none; font-size: 0.85rem;">
+                        + Add Another Year
+                    </button>
+                </div>
+            `;
+
+            let currentVisibleYear = $('select[name="itr_year_3"]').val() ? 3 : ($('select[name="itr_year_2"]').val() ? 2 : 1);
+            
+            if (currentVisibleYear === 1) {
+                year1Wrapper.append(addYearHtml);
+            } else if (currentVisibleYear === 2) {
+                year2Wrapper.append(addYearHtml);
+            }
+
+            $(document).off('click', '#add-year-btn').on('click', '#add-year-btn', function() {
+                if (currentVisibleYear === 1) {
+                    year2Wrapper.slideDown(250);
+                    $('#add-year-wrapper').appendTo(year2Wrapper);
+                    currentVisibleYear++;
+                } else if (currentVisibleYear === 2) {
+                    year3Wrapper.slideDown(250);
+                    $('#add-year-wrapper').hide();
+                    currentVisibleYear++;
+                }
+            });
+
+            // Re-calculate price when years change
+            $(document).on('change', 'select[name^="itr_year_"]', function() {
+                calculateDynamicPrice();
+            });
+        }
+
         function initBankRepeater() {
             let currentVisibleBank = 1;
             let maxBanks = 5; 
@@ -743,7 +790,11 @@
             let selectedGst  = normalizeValue($('select[name="gst_type"]').val() || $('input[name="gst_type"]:checked').val());
             let selectedFreq = normalizeValue($('select[name="frequency_of_return"]').val() || $('input[name="frequency_of_return"]:checked').val());
             let selectedPlan = normalizeValue($('select[name="plan"]').val() || $('input[name="plan"]:checked').val());
-            let s_type = normalizeValue($('select[name="itr_type"]').val() || $('input[name="itr_type"]:checked').val());
+            let y1 = normalizeValue($('select[name="itr_year_1"]').val() || $('input[name="itr_year_1"]:checked').val());
+            let y2 = normalizeValue($('select[name="itr_year_2"]').val() || $('input[name="itr_year_2"]:checked').val());
+            let y3 = normalizeValue($('select[name="itr_year_3"]').val() || $('input[name="itr_year_3"]:checked').val());
+            let s_type = y1;
+            let yearMultiplier = [y1, y2, y3].filter(v => v !== '').length || 1;
             let s_bus  = normalizeValue($('select[name="has_business"]').val() || $('input[name="has_business"]:checked').val());
             let s_cg   = normalizeValue($('select[name="has_capital_gains"]').val() || $('input[name="has_capital_gains"]:checked').val());
             let s_sal  = normalizeValue($('select[name="has_salary"]').val() || $('input[name="has_salary"]:checked').val());
@@ -760,8 +811,8 @@
                        (normalizeValue(rule.itr_salary)        === '' || normalizeValue(rule.itr_salary)        === 'any' || normalizeValue(rule.itr_salary)        === s_sal);
             });
 
-            let finalTotal   = match ? parseFloat(match.base_price)        : {{ $service->price ?? 0 }};
-            let baseComm     = match ? parseFloat(match.commission_amount) : {{ $service->commission_value ?? 0 }};
+            let finalTotal   = (match ? parseFloat(match.base_price)        : {{ $service->price ?? 0 }}) * yearMultiplier;
+            let baseComm     = (match ? parseFloat(match.commission_amount) : {{ $service->commission_value ?? 0 }}) * yearMultiplier;
             
             let totalComm = baseComm + appliedPromoBonus;
             let walletDeduct = finalTotal - totalComm;
@@ -849,6 +900,7 @@
             injectTooltips();
             convertToWizard();
             initSmartFormLogic();
+            initItrYearRepeater();
             initBankRepeater();
             applyDynamicHideShow();
 

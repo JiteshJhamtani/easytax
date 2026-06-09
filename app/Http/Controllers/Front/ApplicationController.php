@@ -90,7 +90,22 @@ class ApplicationController extends Controller
                     ->first();
             } else {
                 // ITR TRUE DATABASE MAPPING
-                $itrType = $request->input('itr_type', 'Any');
+                $itrType = $request->input('itr_year_1', 'Any');
+
+                $yearMultiplier = 0;
+                if ($request->filled('itr_year_1')) {
+                    $yearMultiplier++;
+                }
+                if ($request->filled('itr_year_2')) {
+                    $yearMultiplier++;
+                }
+                if ($request->filled('itr_year_3')) {
+                    $yearMultiplier++;
+                }
+                if ($yearMultiplier === 0) {
+                    $yearMultiplier = 1;
+                }
+
                 $turnover = $request->input('turnover', $request->input('business_turnover', 'Any'));
                 $itrBusiness = $request->input('has_business', 'Any');
                 $itrCapGains = $request->input('has_capital_gains', 'Any');
@@ -125,6 +140,11 @@ class ApplicationController extends Controller
             if ($rule) {
                 $finalPrice = $rule->base_price;
                 $commission = $rule->commission_amount;
+            }
+
+            if ($service->slug === 'itr-filing' && isset($yearMultiplier)) {
+                $finalPrice *= $yearMultiplier;
+                $commission *= $yearMultiplier;
             }
         } else {
             $commission = $service->calculateCommission((float) $service->price);
