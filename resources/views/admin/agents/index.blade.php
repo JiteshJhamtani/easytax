@@ -185,9 +185,14 @@
 @section('content')
     <div class="page-header">
         <h1 class="page-title">Agents Management</h1>
-        <a href="{{ route('admin.agents.create') }}" class="btn-premium">
-            <i class="fas fa-user-plus"></i> Add New Agent
-        </a>
+        <div>
+            <button id="toggleTrashBtn" class="btn btn-outline-danger mr-2" type="button" style="color: #dc2626; border-color: #fca5a5; font-weight: 700; padding: 0.6rem 1.25rem; border-radius: 8px;">
+                <i class="fas fa-trash"></i> View Trash
+            </button>
+            <a href="{{ route('admin.agents.create') }}" class="btn-premium">
+                <i class="fas fa-user-plus"></i> Add New Agent
+            </a>
+        </div>
     </div>
 
     <div class="table-card">
@@ -223,10 +228,29 @@
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
             });
 
+            let isTrashed = false;
+
+            $('#toggleTrashBtn').click(function() {
+                isTrashed = !isTrashed;
+                if(isTrashed) {
+                    $(this).html('<i class="fas fa-arrow-left"></i> Back to Active');
+                    $(this).removeClass('btn-outline-danger').addClass('btn-danger').css('color', '#fff');
+                } else {
+                    $(this).html('<i class="fas fa-trash"></i> View Trash');
+                    $(this).removeClass('btn-danger').addClass('btn-outline-danger').css('color', '#dc2626');
+                }
+                $('#agentsTable').DataTable().ajax.reload();
+            });
+
             $('#agentsTable').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: '{{ route('admin.agents.datatable') }}',
+                ajax: {
+                    url: '{{ route('admin.agents.datatable') }}',
+                    data: function (d) {
+                        d.is_trashed = isTrashed;
+                    }
+                },
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search agents..."

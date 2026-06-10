@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Lead extends Model
 {
@@ -17,7 +18,7 @@ class Lead extends Model
     ];
 
     // A lead belongs to the marketer who generated it
-    public function marketer()
+    public function marketer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'marketer_id');
     }

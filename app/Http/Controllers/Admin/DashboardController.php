@@ -7,7 +7,6 @@ use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 
 class DashboardController extends Controller
 {
@@ -163,7 +162,7 @@ class DashboardController extends Controller
             'expires_at' => now()->addSeconds(60)->timestamp,
         ]);
 
-        // 3. Encrypt the payload using your custom shared secret
+        // 3. Encrypt the payload using the secure config value
         $encrypter = new \Illuminate\Encryption\Encrypter(config('services.cross_server.secret'), config('app.cipher'));
         $token = $encrypter->encryptString($payload);
 

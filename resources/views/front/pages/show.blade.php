@@ -10,9 +10,8 @@
                     <div class="card-body p-4 p-md-5">
                         <h1 class="font-weight-bold mb-4 text-dark">{{ $page->title }}</h1>
                         <hr class="mb-5">
-                        <div class="page-content text-secondary" style="line-height: 1.8; font-size: 1.05rem;">
-                            {{-- We output unescaped content because it's managed via TinyMCE WYSIWYG by the Admin --}}
-                            {!! $page->content !!}
+                        <div class="prose max-w-none prose-lg text-slate-700">
+                            {!! clean($page->content) !!}
                         </div>
                     </div>
                 </div>

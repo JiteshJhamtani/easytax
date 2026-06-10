@@ -83,7 +83,7 @@ class LeadController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $leadData = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email',
@@ -92,8 +92,6 @@ class LeadController extends Controller
             'notes' => 'nullable|string',
             'marketer_id' => 'nullable|exists:users,id',
         ]);
-
-        $leadData = $request->validated();
 
         // If a marketer submits it, automatically assign them.
         // If an admin submits it, check if they selected a marketer in the dropdown.
@@ -114,7 +112,7 @@ class LeadController extends Controller
 
     public function storeVle(Request $request)
     {
-        $request->validate([
+        $leadData = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email',
@@ -122,8 +120,6 @@ class LeadController extends Controller
             'amount' => 'required|integer|min:10', // STRICT RULE: Minimum 10
             'notes' => 'nullable|string',
         ]);
-
-        $leadData = $request->validated();
         $leadData['source'] = 'VLE'; // HARDCODED: Automatically tags as VLE
         $leadData['marketer_id'] = auth()->id(); // Assigned to the logged-in marketer
 

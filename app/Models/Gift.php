@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -15,7 +16,7 @@ class Gift extends Model implements HasMedia
     protected $fillable = ['name', 'description', 'period_type', 'is_active'];
     protected $casts = ['is_active' => 'boolean'];
 
-    public function conditionGroups()
+    public function conditionGroups(): HasMany
     {
         return $this->hasMany(GiftConditionGroup::class)->orderBy('sort_order');
     }

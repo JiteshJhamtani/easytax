@@ -24,13 +24,17 @@ class AgentController extends Controller
         return view('admin.agents.index');
     }
 
-    public function datatable()
+    public function datatable(Request $request)
     {
         $agents = User::query()
             ->where('role', 'agent')
             ->withCount(['applications'])
             ->withSum('applications as commission_total', 'commission_amount')
             ->withSum('payouts as payouts_total', 'amount');
+
+        if ($request->is_trashed == 'true') {
+            $agents->onlyTrashed();
+        }
 
         return DataTables::of($agents)
 
@@ -46,23 +50,39 @@ class AgentController extends Controller
             })
 
             // 2. STOP Laravel from crashing by disabling SQL text searches on math columns
-            ->filterColumn('applications', function($query, $keyword) { /* Do nothing */ })
+            ->filterColumn('applications', function ($query, $keyword) { /* Do nothing */
+            })
             ->filterColumn('commission', function ($query, $keyword) { /* Do nothing */
             })
             ->filterColumn('payouts', function ($query, $keyword) { /* Do nothing */
             })
 
-            ->addColumn('action', function ($agent) {
+            ->addColumn('action', function ($agent) use ($request) {
+                if ($request->is_trashed == 'true') {
+                    return '
+                        <form action="'.route('admin.agents.restore', $agent->id).'" method="POST" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent(\'confirm-action\', { detail: { form: this, title: \'Restore agent?\', message: \'Are you sure you want to restore this agent?\' } }));" style="display:inline;">
+                            '.csrf_field().'
+                            <button type="submit" class="btn btn-sm btn-success">Restore</button>
+                        </form>
+                    ';
+                }
+
                 $toggle = $agent->is_active ? 'Suspend' : 'Activate';
 
-                return '
+                $actions = '
                 <a href="'.route('admin.agents.show', $agent).'" class="btn btn-sm btn-primary">View</a>
                 <a href="'.route('admin.agents.edit', $agent).'" class="btn btn-sm btn-warning">Edit</a>
                 <form method="POST" action="'.route('admin.agents.toggle-status', $agent).'" style="display:inline;">
                     '.csrf_field().method_field('PATCH').'
                     <button class="btn btn-sm btn-danger">'.$toggle.'</button>
                 </form>
+                <form method="POST" action="'.route('admin.agents.destroy', $agent).'" style="display:inline;" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent(\'confirm-action\', { detail: { form: this, title: \'Delete agent?\', message: \'Are you sure you want to delete this agent?\' } }));">
+                    '.csrf_field().method_field('DELETE').'
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">Delete</button>
+                </form>
                 ';
+
+                return $actions;
             })
             ->rawColumns(['status', 'action'])
             ->make(true);
@@ -179,5 +199,26 @@ class AgentController extends Controller
         $agent->save();
 
         return back()->with('success', 'Agent status updated');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Delete Agent
+    |--------------------------------------------------------------------------
+    */
+
+    public function destroy(User $agent)
+    {
+        $agent->delete();
+
+        return back()->with('success', 'Agent deleted successfully');
+    }
+
+    public function restore($id)
+    {
+        $agent = User::withTrashed()->findOrFail($id);
+        $agent->restore();
+
+        return back()->with('success', 'Agent restored successfully');
     }
 }

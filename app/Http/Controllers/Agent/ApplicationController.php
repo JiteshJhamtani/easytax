@@ -99,6 +99,10 @@ class ApplicationController extends Controller
             $query->where('payment_status', 'FAILED');
         }
 
+        if ($request->is_trashed == 'true') {
+            $query->onlyTrashed();
+        }
+
         return datatables()->of($query)
             ->addColumn('service', fn ($a) => $a->service->name)
             ->addColumn('status', fn ($a) => '<span class="badge badge-info">'.$a->status->value.'</span>')
@@ -169,10 +173,29 @@ class ApplicationController extends Controller
 
                 // If not generated yet, show the Generate button
                 $url = route('agent.applications.balance-sheet', $a->id);
-
                 return '<a href="'.$url.'" class="btn btn-sm btn-outline-success font-weight-bold" style="white-space: nowrap;"><i class="fas fa-file-excel mr-1"></i> Generate</a>';
             })
-            ->addColumn('actions', fn ($a) => '<a href="'.route('agent.applications.show', $a).'" class="btn btn-sm btn-primary">View</a>')
+            ->addColumn('actions', function ($a) use ($request) {
+                if ($request->is_trashed == 'true') {
+                    return '
+                        <form action="'.route('agent.applications.restore', $a->id).'" method="POST" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent(\'confirm-action\', { detail: { form: this, title: \'Restore Application?\', message: \'Are you sure you want to restore this application?\' } }));" style="display:inline;">
+                            '.csrf_field().'
+                            <button type="submit" class="btn btn-sm btn-success">Restore</button>
+                        </form>
+                    ';
+                }
+
+                $html = '<a href="'.route('agent.applications.show', $a).'" class="btn btn-sm btn-primary">View</a>';
+                $html .= '
+                    <form action="'.route('agent.applications.destroy', $a->id).'" method="POST" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent(\'confirm-action\', { detail: { form: this, title: \'Move to trash?\', message: \'Are you sure you want to delete this application?\' } }));" style="display:inline; margin-left: 4px;">
+                        '.csrf_field().'
+                        '.method_field('DELETE').'
+                        <button type="submit" class="btn btn-sm btn-danger" style="padding: 0.25rem 0.5rem;"><i class="fas fa-trash"></i></button>
+                    </form>
+                ';
+
+                return $html;
+            })
             ->rawColumns(['status', 'payment', 'ack_no', 'computation', 'balance_sheet', 'actions'])
             ->make(true);
     }
@@ -249,6 +272,25 @@ class ApplicationController extends Controller
         \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationCancelledNotification($application));
 
         return back()->with('success', 'Application has been successfully cancelled.');
+    }
+
+    public function destroy(Application $application)
+    {
+        abort_if($application->agent_id !== auth()->id(), 403);
+
+        $application->delete();
+
+        return back()->with('success', 'Application deleted successfully.');
+    }
+
+    public function restore($id)
+    {
+        $application = Application::withTrashed()->findOrFail($id);
+        abort_if($application->agent_id !== auth()->id(), 403);
+
+        $application->restore();
+
+        return back()->with('success', 'Application restored successfully.');
     }
 
     /*

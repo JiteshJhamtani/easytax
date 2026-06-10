@@ -8,7 +8,6 @@ use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Agent\ApplicationController as AgentApplicationController;
 use App\Http\Controllers\Agent\CommissionController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
-use App\Http\Controllers\Api\KpiController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -127,6 +126,12 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
 
     Route::get('/applications/{application}', [AgentApplicationController::class, 'show'])
         ->name('applications.show');
+
+    Route::delete('/applications/{application}', [AgentApplicationController::class, 'destroy'])
+        ->name('applications.destroy');
+
+    Route::post('/applications/{id}/restore', [AgentApplicationController::class, 'restore'])
+        ->name('applications.restore');
 
     Route::post('/applications/{application}/retry', [AgentApplicationController::class, 'retry'])
         ->name('applications.retry');
@@ -311,6 +316,12 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
     Route::patch('/agents/{agent}/toggle-status', [AgentController::class, 'toggleStatus'])
         ->name('agents.toggle-status');
 
+    Route::delete('/agents/{agent}', [AgentController::class, 'destroy'])
+        ->name('agents.destroy');
+
+    Route::post('/agents/{id}/restore', [AgentController::class, 'restore'])
+        ->name('agents.restore');
+
     /*
     |--------------------------------------------------------------------------
     | Notifications
@@ -336,7 +347,7 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
         Route::get('/services/{service}/edit', [AdminServiceController::class, 'edit'])->name('services.edit');
         Route::put('/services/{service}', [AdminServiceController::class, 'update'])->name('services.update');
         Route::patch('/services/{service}/toggle-status', [AdminServiceController::class, 'toggleStatus'])->name('services.toggle-status');
-        
+
         // Static Pages
         Route::get('/pages/datatable', [\App\Http\Controllers\Admin\PageController::class, 'datatable'])->name('pages.datatable');
         Route::resource('pages', \App\Http\Controllers\Admin\PageController::class)->except(['show']);

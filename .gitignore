@@ -38,3 +38,7 @@ resources/views/welcome.blade.php
 /storage/framework/
 restore_correct_db.php
 restore_db.php
+
+# Ignore temporary migration scripts in public folder
+/public/*.php
+!/public/index.php

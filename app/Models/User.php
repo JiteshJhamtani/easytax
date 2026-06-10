@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Traits\MasksSensitiveData;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, HasRoles, MasksSensitiveData, Notifiable;
+    use HasFactory, HasRoles, MasksSensitiveData, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'name',

@@ -294,6 +294,9 @@
                         <i class="fas fa-plus"></i> New Application
                     </a>
                 @endif
+                <button id="toggleTrashBtn" class="btn btn-outline-danger ml-2" type="button" style="color: #dc2626; border-color: #fca5a5; background: #fff; font-weight: 700; font-size: 0.9rem; padding: 0.7rem 1.4rem; border-radius: 8px; border: 1px solid #fca5a5; cursor: pointer; transition: all 0.2s ease;">
+                    <i class="fas fa-trash"></i> View Trash
+                </button>
             </div>
         </div>
     </header>
@@ -443,5 +446,25 @@
 
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
+    <script>
+        // Store the state of trash view
+        window.isTrashedView = false;
+        
+        $(document).ready(function() {
+            $('#toggleTrashBtn').click(function() {
+                window.isTrashedView = !window.isTrashedView;
+                if(window.isTrashedView) {
+                    $(this).html('<i class="fas fa-arrow-left"></i> Back to Active');
+                    $(this).css({ 'background-color': '#dc2626', 'color': '#fff' });
+                } else {
+                    $(this).html('<i class="fas fa-trash"></i> View Trash');
+                    $(this).css({ 'background-color': '#fff', 'color': '#dc2626' });
+                }
+                if ($.fn.DataTable.isDataTable('#applicationsTable')) {
+                    $('#applicationsTable').DataTable().ajax.reload();
+                }
+            });
+        });
+    </script>
     <script src="{{ asset('assets/js/applications.js') }}?v={{ time() }}"></script>
 @endsection

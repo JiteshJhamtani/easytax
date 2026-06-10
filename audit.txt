@@ -1,0 +1,241 @@
++-------------------+----------------------------------------------------------------------------------+
+| Package           | laravel/framework                                                                |
+| Severity          |                                                                                  |
+| Advisory ID       | PKSA-mdq4-51ck-6kdq                                                              |
+| CVE               | CVE-2026-48019                                                                   |
+| Title             | Laravel CRLF injection in default email rule                                     |
+| URL               | https://github.com/laravel/framework/security/advisories/GHSA-5vg9-5847-vvmq     |
+| Affected versions | >=9.0.0,<10.0.0|>=10.0.0,<11.0.0|>=11.0.0,<12.0.0|>=12.0.0,<12.60.0|>=13.0.0,<13 |
+|                   | .10.0                                                                            |
+| Reported at       | 2026-05-19T18:13:00+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | league/commonmark                                                                |
+| Severity          | medium                                                                           |
+| Advisory ID       | PKSA-21fb-n1x5-5nf7                                                              |
+| CVE               | CVE-2026-33347                                                                   |
+| Title             | league/commonmark has an embed extension allowed_domains bypass                  |
+| URL               | https://github.com/advisories/GHSA-hh8v-hgvp-g3f5                                |
+| Affected versions | >=2.3.0,<=2.8.1                                                                  |
+| Reported at       | 2026-03-19T19:04:24+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | league/commonmark                                                                |
+| Severity          | medium                                                                           |
+| Advisory ID       | PKSA-2cx9-ynrq-qdk3                                                              |
+| CVE               | CVE-2026-30838                                                                   |
+| Title             | CommonMark has DisallowedRawHtml extension bypass via whitespace in HTML tag     |
+|                   | names                                                                            |
+| URL               | https://github.com/advisories/GHSA-4v6x-c7xx-hw9f                                |
+| Affected versions | >=2.0.0,<=2.8.0                                                                  |
+| Reported at       | 2026-03-06T23:27:03+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | phpoffice/phpspreadsheet                                                         |
+| Severity          | critical                                                                         |
+| Advisory ID       | PKSA-x678-4z45-v3d5                                                              |
+| CVE               | CVE-2026-45034                                                                   |
+| Title             | PHPSpreadsheet has a patch bypass for CVE-2026-34084                             |
+| URL               | https://github.com/advisories/GHSA-87m4-826x-3crx                                |
+| Affected versions | <=1.30.4                                                                         |
+| Reported at       | 2026-06-08T23:00:14+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | phpoffice/phpspreadsheet                                                         |
+| Severity          | high                                                                             |
+| Advisory ID       | PKSA-gz3f-3cz3-3wsw                                                              |
+| CVE               | CVE-2026-40902                                                                   |
+| Title             | PhpSpreadsheet has CPU Denial of Service via Unbounded Row Number in XLSX Row    |
+|                   | Dimensions                                                                       |
+| URL               | https://github.com/advisories/GHSA-7c6m-4442-2x6m                                |
+| Affected versions | <=1.30.3|>=2.0.0,<=2.1.15|>=2.2.0,<=2.4.4|>=3.3.0,<=3.10.4|>=4.0.0,<=5.6.0       |
+| Reported at       | 2026-04-29T20:24:13+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | phpoffice/phpspreadsheet                                                         |
+| Severity          | high                                                                             |
+| Advisory ID       | PKSA-x13r-n4wc-4gcr                                                              |
+| CVE               | CVE-2026-40863                                                                   |
+| Title             | PhpSpreadsheet has CPU Denial of Service via Unbounded Row Index in              |
+|                   | SpreadsheetML XML Reader                                                         |
+| URL               | https://github.com/advisories/GHSA-84wq-86v6-x5j6                                |
+| Affected versions | <=1.30.3|>=2.0.0,<=2.1.15|>=2.2.0,<=2.4.4|>=3.3.0,<=3.10.4|>=4.0.0,<=5.6.0       |
+| Reported at       | 2026-04-29T20:23:27+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | phpoffice/phpspreadsheet                                                         |
+| Severity          | critical                                                                         |
+| Advisory ID       | PKSA-8cfg-tzhf-fr83                                                              |
+| CVE               | CVE-2026-34084                                                                   |
+| Title             | PhpSpreadsheet has SSRF/RCE in IOFactory::load when $filename is user controlled |
+| URL               | https://github.com/advisories/GHSA-q4q6-r8wh-5cgh                                |
+| Affected versions | <=1.30.2|>=2.0.0,<=2.1.14|>=2.2.0,<=2.4.3|>=3.3.0,<=3.10.3|>=4.0.0,<=5.5.0       |
+| Reported at       | 2026-04-29T20:22:30+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | phpoffice/phpspreadsheet                                                         |
+| Severity          | medium                                                                           |
+| Advisory ID       | PKSA-hznc-gbby-6w16                                                              |
+| CVE               | CVE-2026-40296                                                                   |
+| Title             | PhpSpreadsheet has XSS via number format code with @ text placeholder bypasses   |
+|                   | htmlspecialchars in HTML writer                                                  |
+| URL               | https://github.com/advisories/GHSA-hrmw-qprp-wgmc                                |
+| Affected versions | <=1.30.3|>=2.0.0,<=2.1.15|>=2.2.0,<=2.4.4|>=3.3.0,<=3.10.4|>=4.0.0,<=5.6.0       |
+| Reported at       | 2026-04-28T22:57:13+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | phpoffice/phpspreadsheet                                                         |
+| Severity          | medium                                                                           |
+| Advisory ID       | PKSA-jtdk-dcr5-f11n                                                              |
+| CVE               | CVE-2026-35453                                                                   |
+| Title             | PhpSpreadsheet has XSS via NumberFormat @ Text Substitution in HTML Writer       |
+| URL               | https://github.com/advisories/GHSA-6wpp-88cp-7q68                                |
+| Affected versions | <=1.30.3|>=2.0.0,<=2.1.15|>=2.2.0,<=2.4.4|>=3.3.0,<=3.10.4|>=4.0.0,<=5.6.0       |
+| Reported at       | 2026-04-28T22:50:31+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | symfony/http-foundation                                                          |
+| Severity          |                                                                                  |
+| Advisory ID       | PKSA-y6py-qpv1-h52p                                                              |
+| CVE               | CVE-2026-48736                                                                   |
+| Title             | CVE-2026-48736: IpUtils::PRIVATE_SUBNETS Omits IPv6 Transition Forms (6to4,      |
+|                   | NAT64, Teredo, IPv4-compatible): SSRF Bypass in NoPrivateNetworkHttpClient       |
+| URL               | https://symfony.com/cve-2026-48736                                               |
+| Affected versions | >=6.4.0,<6.4.41|>=7.0.0,<7.1.0|>=7.1.0,<7.2.0|>=7.2.0,<7.3.0|>=7.3.0,<7.4.0|>=7. |
+|                   | 4.0,<7.4.13|>=8.0.0,<8.0.13                                                      |
+| Reported at       | 2026-05-26T08:00:00+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | symfony/http-kernel                                                              |
+| Severity          | medium                                                                           |
+| Advisory ID       | PKSA-dw7n-x7f5-zf63                                                              |
+| CVE               | CVE-2026-45075                                                                   |
+| Title             | CVE-2026-45075: HEAD Request Bypasses methods: ['GET'] Filter in #[IsGranted] /  |
+|                   | #[IsSignatureValid] / #[IsCsrfTokenValid]                                        |
+| URL               | https://symfony.com/cve-2026-45075                                               |
+| Affected versions | >=7.4.0,<7.4.12|>=8.0.0,<8.0.12                                                  |
+| Reported at       | 2026-05-20T08:00:00+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | symfony/mailer                                                                   |
+| Severity          | medium                                                                           |
+| Advisory ID       | PKSA-28rh-rzzn-djk4                                                              |
+| CVE               | CVE-2026-45068                                                                   |
+| Title             | CVE-2026-45068: Argument Injection in SendmailTransport via Dash-Prefixed        |
+|                   | Recipient Address                                                                |
+| URL               | https://symfony.com/cve-2026-45068                                               |
+| Affected versions | >=2.0.0,<3.0.0|>=3.0.0,<4.0.0|>=4.0.0,<5.0.0|>=5.0.0,<5.1.0|>=5.1.0,<5.2.0|>=5.2 |
+|                   | .0,<5.3.0|>=5.3.0,<5.4.0|>=5.4.0,<5.4.52|>=6.0.0,<6.1.0|>=6.1.0,<6.2.0|>=6.2.0,< |
+|                   | 6.3.0|>=6.3.0,<6.4.0|>=6.4.0,<6.4.40|>=7.0.0,<7.1.0|>=7.1.0,<7.2.0|>=7.2.0,<7.3. |
+|                   | 0|>=7.3.0,<7.4.0|>=7.4.0,<7.4.12|>=8.0.0,<8.0.12                                 |
+| Reported at       | 2026-05-20T08:00:00+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | symfony/mime                                                                     |
+| Severity          | medium                                                                           |
+| Advisory ID       | PKSA-wtxr-p26d-nn42                                                              |
+| CVE               | CVE-2026-45070                                                                   |
+| Title             | CVE-2026-45070: Email Header Injection via Non-Token Characters in Mime          |
+|                   | Parameter Names                                                                  |
+| URL               | https://symfony.com/cve-2026-45070                                               |
+| Affected versions | >=2.0.0,<3.0.0|>=3.0.0,<4.0.0|>=4.0.0,<5.0.0|>=5.0.0,<5.1.0|>=5.1.0,<5.2.0|>=5.2 |
+|                   | .0,<5.3.0|>=5.3.0,<5.4.0|>=5.4.0,<5.4.52|>=6.0.0,<6.1.0|>=6.1.0,<6.2.0|>=6.2.0,< |
+|                   | 6.3.0|>=6.3.0,<6.4.0|>=6.4.0,<6.4.40|>=7.0.0,<7.1.0|>=7.1.0,<7.2.0|>=7.2.0,<7.3. |
+|                   | 0|>=7.3.0,<7.4.0|>=7.4.0,<7.4.12|>=8.0.0,<8.0.12                                 |
+| Reported at       | 2026-05-20T08:00:00+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | symfony/mime                                                                     |
+| Severity          | high                                                                             |
+| Advisory ID       | PKSA-2n2k-66v2-bwg3                                                              |
+| CVE               | CVE-2026-45067                                                                   |
+| Title             | CVE-2026-45067: Email Header / SMTP Command Injection via CRLF in                |
+|                   | Symfony\Component\Mime\Address                                                   |
+| URL               | https://symfony.com/cve-2026-45067                                               |
+| Affected versions | >=2.0.0,<3.0.0|>=3.0.0,<4.0.0|>=4.0.0,<5.0.0|>=5.0.0,<5.1.0|>=5.1.0,<5.2.0|>=5.2 |
+|                   | .0,<5.3.0|>=5.3.0,<5.4.0|>=5.4.0,<5.4.52|>=6.0.0,<6.1.0|>=6.1.0,<6.2.0|>=6.2.0,< |
+|                   | 6.3.0|>=6.3.0,<6.4.0|>=6.4.0,<6.4.40|>=7.0.0,<7.1.0|>=7.1.0,<7.2.0|>=7.2.0,<7.3. |
+|                   | 0|>=7.3.0,<7.4.0|>=7.4.0,<7.4.12|>=8.0.0,<8.0.12                                 |
+| Reported at       | 2026-05-20T08:00:00+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | symfony/polyfill-intl-idn                                                        |
+| Severity          | low                                                                              |
+| Advisory ID       | PKSA-dwsq-ppd2-mb1x                                                              |
+| CVE               | CVE-2026-46644                                                                   |
+| Title             | CVE-2026-46644: symfony/polyfill-intl-idn accepts xn-- labels whose Punycode     |
+|                   | payload decodes to ASCII-only: insecure equivalence                              |
+| URL               | https://symfony.com/cve-2026-46644                                               |
+| Affected versions | >=1.17.1,<1.38.1                                                                 |
+| Reported at       | 2026-05-26T08:00:00+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | symfony/routing                                                                  |
+| Severity          |                                                                                  |
+| Advisory ID       | PKSA-bf7t-jnpz-492k                                                              |
+| CVE               | CVE-2026-48784                                                                   |
+| Title             | CVE-2026-48784: UrlGenerator Dot-Segment Encoding Skips Every Other Chained      |
+|                   | `../` or `./` → Generated URL Collapses Off-Route Under RFC 3986 Normalization   |
+| URL               | https://symfony.com/cve-2026-48784                                               |
+| Affected versions | >=2.0.0,<3.0.0|>=3.0.0,<4.0.0|>=4.0.0,<5.0.0|>=5.0.0,<5.1.0|>=5.1.0,<5.2.0|>=5.2 |
+|                   | .0,<5.3.0|>=5.3.0,<5.4.0|>=5.4.0,<5.4.53|>=6.0.0,<6.1.0|>=6.1.0,<6.2.0|>=6.2.0,< |
+|                   | 6.3.0|>=6.3.0,<6.4.0|>=6.4.0,<6.4.41|>=7.0.0,<7.1.0|>=7.1.0,<7.2.0|>=7.2.0,<7.3. |
+|                   | 0|>=7.3.0,<7.4.0|>=7.4.0,<7.4.13|>=8.0.0,<8.0.13                                 |
+| Reported at       | 2026-05-26T08:00:00+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | symfony/routing                                                                  |
+| Severity          | medium                                                                           |
+| Advisory ID       | PKSA-yc7t-91v9-99xs                                                              |
+| CVE               | CVE-2026-45065                                                                   |
+| Title             | CVE-2026-45065: UrlGenerator Route-Requirement Bypass via Unanchored Regex       |
+|                   | Alternation → Off-Site //host URL Injection                                      |
+| URL               | https://symfony.com/cve-2026-45065                                               |
+| Affected versions | >=2.0.0,<3.0.0|>=3.0.0,<4.0.0|>=4.0.0,<5.0.0|>=5.0.0,<5.1.0|>=5.1.0,<5.2.0|>=5.2 |
+|                   | .0,<5.3.0|>=5.3.0,<5.4.0|>=5.4.0,<5.4.52|>=6.0.0,<6.1.0|>=6.1.0,<6.2.0|>=6.2.0,< |
+|                   | 6.3.0|>=6.3.0,<6.4.0|>=6.4.0,<6.4.40|>=7.0.0,<7.1.0|>=7.1.0,<7.2.0|>=7.2.0,<7.3. |
+|                   | 0|>=7.3.0,<7.4.0|>=7.4.0,<7.4.12|>=8.0.0,<8.0.12                                 |
+| Reported at       | 2026-05-20T08:00:00+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | symfony/yaml                                                                     |
+| Severity          | low                                                                              |
+| Advisory ID       | PKSA-v5yj-8nmz-sk2q                                                              |
+| CVE               | CVE-2026-45304                                                                   |
+| Title             | CVE-2026-45304: YAML Parser Exponential Memory Allocation via Recursive          |
+|                   | Collection-Alias Expansion ("Billion Laughs")                                    |
+| URL               | https://symfony.com/cve-2026-45304                                               |
+| Affected versions | >=2.0.0,<3.0.0|>=3.0.0,<4.0.0|>=4.0.0,<5.0.0|>=5.0.0,<5.1.0|>=5.1.0,<5.2.0|>=5.2 |
+|                   | .0,<5.3.0|>=5.3.0,<5.4.0|>=5.4.0,<5.4.52|>=6.0.0,<6.1.0|>=6.1.0,<6.2.0|>=6.2.0,< |
+|                   | 6.3.0|>=6.3.0,<6.4.0|>=6.4.0,<6.4.40|>=7.0.0,<7.1.0|>=7.1.0,<7.2.0|>=7.2.0,<7.3. |
+|                   | 0|>=7.3.0,<7.4.0|>=7.4.0,<7.4.12|>=8.0.0,<8.0.12                                 |
+| Reported at       | 2026-05-20T08:00:00+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | symfony/yaml                                                                     |
+| Severity          | low                                                                              |
+| Advisory ID       | PKSA-ft77-7h5f-p3r6                                                              |
+| CVE               | CVE-2026-45305                                                                   |
+| Title             | CVE-2026-45305: YAML Parser ReDoS via Catastrophic Backtracking in               |
+|                   | Parser::cleanup() Regex                                                          |
+| URL               | https://symfony.com/cve-2026-45305                                               |
+| Affected versions | >=2.0.0,<3.0.0|>=3.0.0,<4.0.0|>=4.0.0,<5.0.0|>=5.0.0,<5.1.0|>=5.1.0,<5.2.0|>=5.2 |
+|                   | .0,<5.3.0|>=5.3.0,<5.4.0|>=5.4.0,<5.4.52|>=6.0.0,<6.1.0|>=6.1.0,<6.2.0|>=6.2.0,< |
+|                   | 6.3.0|>=6.3.0,<6.4.0|>=6.4.0,<6.4.40|>=7.0.0,<7.1.0|>=7.1.0,<7.2.0|>=7.2.0,<7.3. |
+|                   | 0|>=7.3.0,<7.4.0|>=7.4.0,<7.4.12|>=8.0.0,<8.0.12                                 |
+| Reported at       | 2026-05-20T08:00:00+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+
++-------------------+----------------------------------------------------------------------------------+
+| Package           | symfony/yaml                                                                     |
+| Severity          | low                                                                              |
+| Advisory ID       | PKSA-b14r-zh1d-vdrc                                                              |
+| CVE               | CVE-2026-45133                                                                   |
+| Title             | CVE-2026-45133: YAML Parser Stack Exhaustion via Unbounded Recursion in Nested   |
+|                   | Blocks, Sequences, and Mappings                                                  |
+| URL               | https://symfony.com/cve-2026-45133                                               |
+| Affected versions | >=2.0.0,<3.0.0|>=3.0.0,<4.0.0|>=4.0.0,<5.0.0|>=5.0.0,<5.1.0|>=5.1.0,<5.2.0|>=5.2 |
+|                   | .0,<5.3.0|>=5.3.0,<5.4.0|>=5.4.0,<5.4.52|>=6.0.0,<6.1.0|>=6.1.0,<6.2.0|>=6.2.0,< |
+|                   | 6.3.0|>=6.3.0,<6.4.0|>=6.4.0,<6.4.40|>=7.0.0,<7.1.0|>=7.1.0,<7.2.0|>=7.2.0,<7.3. |
+|                   | 0|>=7.3.0,<7.4.0|>=7.4.0,<7.4.12|>=8.0.0,<8.0.12                                 |
+| Reported at       | 2026-05-20T08:00:00+00:00                                                        |
++-------------------+----------------------------------------------------------------------------------+

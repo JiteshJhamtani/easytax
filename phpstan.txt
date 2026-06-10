@@ -1,0 +1,586 @@
+ ------ ----------------------------------------------------------------------- 
+  Line   Exports/ApplicationsExport.php                                         
+ ------ ----------------------------------------------------------------------- 
+  14     Relation 'agent' is not found in App\Models\Application model.         
+         🪪  larastan.relationExistence                                         
+  14     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  21     Access to an undefined property App\Models\Application::$agent.        
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  22     Access to an undefined property App\Models\Application::$service.      
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   FormEngine/Form.php                                                    
+ ------ ----------------------------------------------------------------------- 
+  24     Access to an undefined property App\Models\Service::$slug.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http/Controllers/Admin/AgentController.php                             
+ ------ ----------------------------------------------------------------------- 
+  53     Call to an undefined method                                            
+         Yajra\DataTables\DataTableAbstract::filterColumn().                    
+         🪪  method.notFound                                                    
+  175    Access to an undefined property App\Models\User::$mobile_number.       
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  176    Access to an undefined property App\Models\User::$whatsapp_no.         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  177    Access to an undefined property App\Models\User::$address.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http/Controllers/Admin/ApplicationController.php                       
+ ------ ----------------------------------------------------------------------- 
+  33     Relation 'agent' is not found in App\Models\Application model.         
+         🪪  larastan.relationExistence                                         
+  33     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  49     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  53     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  82     Relation 'agent' is not found in App\Models\Application model.         
+         🪪  larastan.relationExistence                                         
+  82     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  116    Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  120    Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  156    Call to an undefined method                                            
+         Yajra\DataTables\DataTableAbstract::filterColumn().                    
+         🪪  method.notFound                                                    
+  315    Relation 'agent' is not found in App\Models\Application model.         
+         🪪  larastan.relationExistence                                         
+  315    Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  315    Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  446    Access to an undefined property App\Models\Application::$service.      
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http/Controllers/Admin/DashboardController.php                         
+ ------ ----------------------------------------------------------------------- 
+  119    Access to an undefined property App\Models\Application::$service.      
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  120    Access to an undefined property                                        
+         App\Models\Application::$applications_count.                           
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  121    Access to an undefined property App\Models\Application::$revenue.      
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  126    Relation 'agent' is not found in App\Models\Application model.         
+         🪪  larastan.relationExistence                                         
+  126    Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http/Controllers/Admin/GiftEligibilityController.php                   
+ ------ ----------------------------------------------------------------------- 
+  34     Access to an undefined property App\Models\Gift::$name.                
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  35     Access to an undefined property App\Models\Gift::$description.         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  36     Access to an undefined property App\Models\Gift::$period_type.         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  37     Access to an undefined property App\Models\Gift::$is_active.           
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  39     Access to an undefined property App\Models\Gift::$conditionGroups.     
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  64     Relation 'conditionGroups' is not found in App\Models\Gift model.      
+         🪪  larastan.relationExistence                                         
+  69     Access to an undefined property App\Models\Gift::$period_type.         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  76     Access to an undefined property App\Models\Gift::$conditionGroups.     
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  91     Access to an undefined property App\Models\Gift::$conditionGroups.     
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  119    Anonymous function has an unused use $gift.                            
+         🪪  closure.unusedUse                                                  
+  119    Anonymous function has an unused use $submissions.                     
+         🪪  closure.unusedUse                                                  
+  119    Call to an undefined method                                            
+         Yajra\DataTables\DataTableAbstract::filterColumn().                    
+         🪪  method.notFound                                                    
+  129    Access to an undefined property App\Models\Gift::$conditionGroups.     
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------- 
+  Line   Http/Controllers/Admin/LeadController.php                          
+ ------ ------------------------------------------------------------------- 
+  46     Relation 'marketer' is not found in App\Models\Lead model.         
+         🪪  larastan.relationExistence                                     
+  96     Call to an undefined method Illuminate\Http\Request::validated().  
+         🪪  method.notFound                                                
+  126    Call to an undefined method Illuminate\Http\Request::validated().  
+         🪪  method.notFound                                                
+  181    Relation 'marketer' is not found in App\Models\Lead model.         
+         🪪  larastan.relationExistence                                     
+ ------ ------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http/Controllers/Admin/PageController.php                              
+ ------ ----------------------------------------------------------------------- 
+  70     Access to an undefined property App\Models\Page::$is_active.           
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  98     Access to an undefined property App\Models\Page::$title.               
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  99     Access to an undefined property App\Models\Page::$slug.                
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  101    Access to an undefined property App\Models\Page::$created_at.          
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  150    Access to an undefined property App\Models\Page::$is_active.           
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------- 
+  Line   Http/Controllers/Admin/PayoutController.php                     
+ ------ ---------------------------------------------------------------- 
+  32     Relation 'agent' is not found in App\Models\AgentPayout model.  
+         🪪  larastan.relationExistence                                  
+ ------ ---------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http/Controllers/Admin/ServiceController.php                           
+ ------ ----------------------------------------------------------------------- 
+  47     Call to an undefined method                                            
+         Yajra\DataTables\DataTableAbstract::filterColumn().                    
+         🪪  method.notFound                                                    
+  100    Access to an undefined property App\Models\Service::$slug.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  116    Access to an undefined property App\Models\Service::$slug.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  138    Access to an undefined property App\Models\Service::$slug.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  159    Access to an undefined property App\Models\Service::$slug.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  164    Access to an undefined property App\Models\Service::$slug.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  167    Access to an undefined property App\Models\Service::$slug.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  214    Access to an undefined property App\Models\Service::$active.           
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  214    Access to an undefined property App\Models\Service::$active.           
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http/Controllers/Admin/TeamController.php                              
+ ------ ----------------------------------------------------------------------- 
+  34     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  160    Access to an undefined property                                        
+         App\Models\User|Illuminate\Database\Eloquent\Collection<int, App\Mode  
+         ls\User>::$mobile_number.                                              
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  242    Access to an undefined property                                        
+         App\Models\Application::$monthly_total.                                
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  256    Access to an undefined property                                        
+         App\Models\Application::$unpaid_balance.                               
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http/Controllers/Agent/ApplicationController.php                       
+ ------ ----------------------------------------------------------------------- 
+  31     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  35     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  55     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  67     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  71     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  306    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$agent_id.                         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  328    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$agent_id.                         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------ 
+  Line   Http/Controllers/Agent/CommissionController.php                   
+ ------ ------------------------------------------------------------------ 
+  26     Relation 'service' is not found in App\Models\Application model.  
+         🪪  larastan.relationExistence                                    
+ ------ ------------------------------------------------------------------ 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http/Controllers/Front/ApplicationController.php                       
+ ------ ----------------------------------------------------------------------- 
+  37     Access to an undefined property App\Models\Service::$slug.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  74     Access to an undefined property App\Models\Service::$price.            
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  75     Access to an undefined property App\Models\Service::$price.            
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  77     Access to an undefined property App\Models\Service::$slug.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  161    Access to an undefined property                                        
+         App\Models\ServicePricingRule::$base_price.                            
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  162    Access to an undefined property                                        
+         App\Models\ServicePricingRule::$commission_amount.                     
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  170    Access to an undefined property App\Models\Service::$price.            
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  256    Access to an undefined property App\Models\Service::$slug.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  273    Access to an undefined property App\Models\Service::$name.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  376    Access to an undefined property App\Models\Application::$agent.        
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  432    Access to an undefined property App\Models\Application::$agent.        
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  619    Access to an undefined property App\Models\Application::$agent.        
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http/Controllers/Front/ServiceController.php                           
+ ------ ----------------------------------------------------------------------- 
+  47     Access to an undefined property App\Models\Service::$price.            
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  48     Access to an undefined property App\Models\Service::$price.            
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  69     Relation 'conditionGroups' is not found in App\Models\Gift model.      
+         🪪  larastan.relationExistence                                         
+  69     Relation 'conditionGroups' is not found in App\Models\Gift model.      
+         🪪  larastan.relationExistence                                         
+  78     Access to an undefined property App\Models\Gift::$conditionGroups.     
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  104    Access to an undefined property App\Models\Service::$slug.             
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  124    Access to an undefined property App\Models\Gift::$name.                
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  125    Access to an undefined property App\Models\Gift::$conditionGroups.     
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http/Controllers/Team/DashboardController.php                          
+ ------ ----------------------------------------------------------------------- 
+  16     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  43     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  54     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  165    Access to an undefined property App\Models\Application::$assigned_to.  
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  179    Access to an undefined property App\Models\Application::$assigned_to.  
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  196    Access to an undefined property App\Models\Application::$assigned_to.  
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  210    Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Models/Page.php                                                        
+ ------ ----------------------------------------------------------------------- 
+  37     Access to an undefined property App\Models\Page::$slug.                
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  37     Access to an undefined property App\Models\Page::$title.               
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Models/Service.php                                                     
+ ------ ----------------------------------------------------------------------- 
+  78     Access to an undefined property App\Models\Service::$commission_type.  
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  79     Access to an undefined property                                        
+         App\Models\Service::$commission_value.                                 
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  83     Access to an undefined property                                        
+         App\Models\Service::$commission_value.                                 
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  88     Access to an undefined property                                        
+         $this(App\Models\Service)::$commission_value.                          
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  99     Access to an undefined property App\Models\Service::$price.            
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  99     Access to an undefined property App\Models\Service::$price.            
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Notifications/ApplicationCancelledNotification.php                     
+ ------ ----------------------------------------------------------------------- 
+  47     Access to an undefined property App\Models\Application::$service.      
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  49     Access to an undefined property App\Models\Application::$agent.        
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  65     Access to an undefined property App\Models\Application::$agent.        
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Notifications/ApplicationSubmittedNotification.php                     
+ ------ ----------------------------------------------------------------------- 
+  47     Access to an undefined property App\Models\Application::$service.      
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  49     Access to an undefined property App\Models\Application::$agent.        
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  63     Access to an undefined property App\Models\Application::$service.      
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  65     Access to an undefined property App\Models\Application::$agent.        
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Services/AgentDashboardService.php                                     
+ ------ ----------------------------------------------------------------------- 
+  57     Relation 'service' is not found in App\Models\Application model.       
+         🪪  larastan.relationExistence                                         
+  70     Relation 'conditionGroups' is not found in App\Models\Gift model.      
+         🪪  larastan.relationExistence                                         
+  141    Access to an undefined property App\Models\Gift::$period_type.         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  148    Access to an undefined property App\Models\Gift::$period_type.         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  149    Access to an undefined property App\Models\Gift::$period_type.         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  150    Access to an undefined property App\Models\Gift::$period_type.         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  158    Access to an undefined property App\Models\Gift::$name.                
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  189    Access to an undefined property App\Models\Gift::$period_type.         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  190    Access to an undefined property App\Models\Gift::$period_type.         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  191    Access to an undefined property App\Models\Gift::$period_type.         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  195    Access to an undefined property App\Models\Gift::$name.                
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Services/GiftEligibilityService.php                                    
+ ------ ----------------------------------------------------------------------- 
+  23     Access to an undefined property App\Models\Gift::$period_type.         
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  31     Access to an undefined property App\Models\Gift::$conditionGroups.     
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  64     Access to an undefined property App\Models\Gift::$conditionGroups.     
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  81     Access to an undefined property App\Models\Gift::$conditionGroups.     
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Services/RazorpayService.php                                           
+ ------ ----------------------------------------------------------------------- 
+  34     Access to an undefined property Razorpay\Api\Api::$order.              
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  74     Access to an undefined property Razorpay\Api\Api::$utility.            
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  94     Access to an undefined property Razorpay\Api\Api::$payment.            
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  122    Access to an undefined property Razorpay\Api\Api::$order.              
+         🪪  property.notFound                                                  
+         💡  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ -- ------------------------------------------------------------------------- 
+     Error                                                                    
+ -- ------------------------------------------------------------------------- 
+     Ignored error pattern #Unsafe usage of new static\(\).# was not matched  
+     in reported errors.                                                      
+     Ignored error pattern #Call to an undefined static method# was not       
+     matched in reported errors.                                              
+ -- ------------------------------------------------------------------------- 
+
+ [ERROR] Found 134 errors                                                       
+

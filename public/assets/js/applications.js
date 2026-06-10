@@ -60,6 +60,10 @@ $(document).ready(function () {
                 d.payment = $("#filterPayment").val();
                 d.date_from = $("#filterDateFrom").val();
                 d.date_to = $("#filterDateTo").val();
+                
+                if (typeof window.isTrashedView !== 'undefined') {
+                    d.is_trashed = window.isTrashedView;
+                }
             },
         },
 

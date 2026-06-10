@@ -6,6 +6,8 @@ use App\Enums\ApplicationStatus;
 use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -55,12 +57,12 @@ class Application extends Model implements HasMedia
     |--------------------------------------------------------------------------
     */
 
-    public function agent()
+    public function agent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'agent_id');
     }
 
-    public function service()
+    public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class, 'service_id');
     }
@@ -116,12 +118,12 @@ class Application extends Model implements HasMedia
         return $this->status === ApplicationStatus::COMPLETED;
     }
 
-    public function payout()
+    public function payout(): BelongsTo
     {
         return $this->belongsTo(AgentPayout::class, 'payout_id');
     }
 
-    public function logs()
+    public function logs(): HasMany
     {
         return $this->hasMany(ApplicationLog::class);
     }
