@@ -45,7 +45,7 @@
                 ') }}" alt="Accounting paperwork" class="w-full h-full object-cover transition-transform duration-700 hover:scale-105">
                         </div>
                         <div class="stagger-anim opacity-0 translate-y-5 rounded-xl flex flex-col justify-center items-center p-6 text-white shadow-sm transition-all duration-700 ease-out bg-[#182b49] dark:bg-[#12223a]" style="transition-delay: 0.2s;">
-                            <h2 class="text-5xl font-bold mb-2 tracking-tight">15k+</h2>
+                            <h2 class="text-5xl font-bold mb-2 tracking-tight">1M+</h2>
                             <p class="text-center text-sm font-medium px-2 text-gray-300">Trusted users securely processing and filing returns this year.</p>
                         </div>
                         {{-- Image 2 (Middle Left) --}}
