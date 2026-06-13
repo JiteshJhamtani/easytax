@@ -10,7 +10,7 @@ return [
     | This secret key is used to authenticate B2B export endpoints.
     |
     */
-    'sync_secret' => env('B2B_SYNC_SECRET', 'EasyTax_Super_Secret_Key_2026!'),
+    'sync_secret' => env('B2B_SYNC_SECRET'),
 
     /*
     |--------------------------------------------------------------------------

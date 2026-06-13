@@ -1,8 +1,16 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\AgentMiddleware;
+use App\Http\Middleware\LoadSidebarMenu;
+use App\Http\Middleware\MarketerMiddleware;
+use App\Http\Middleware\RestrictToB2BDomains;
+use App\Http\Middleware\SetTenantContext;
+use App\Http\Middleware\TeamMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,17 +21,18 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
 
         $middleware->trustProxies(at: '*');
-        $middleware->append(\App\Http\Middleware\SetTenantContext::class);
+        $middleware->append(SetTenantContext::class);
 
         $middleware->alias([
-            'agent' => \App\Http\Middleware\AgentMiddleware::class,
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'sidebar' => \App\Http\Middleware\LoadSidebarMenu::class,
-            'team' => \App\Http\Middleware\TeamMiddleware::class,
-            'b2b.only' => \App\Http\Middleware\RestrictToB2BDomains::class,
+            'agent' => AgentMiddleware::class,
+            'admin' => AdminMiddleware::class,
+            'sidebar' => LoadSidebarMenu::class,
+            'team' => TeamMiddleware::class,
+            'marketer' => MarketerMiddleware::class,
+            'b2b.only' => RestrictToB2BDomains::class,
         ]);
 
-        $middleware->redirectUsersTo(fn (\Illuminate\Http\Request $request) => match (strtoupper($request->user()->role ?? 'AGENT')) {
+        $middleware->redirectUsersTo(fn (Request $request) => match (strtoupper($request->user()->role ?? 'AGENT')) {
             'ADMIN', 'SUPER_ADMIN', 'SUB-ADMIN' => route('admin.dashboard'),
             'TEAM' => route('team.dashboard'),
             'MARKETER' => route('marketer.dashboard'), // Fixes your marketers too!

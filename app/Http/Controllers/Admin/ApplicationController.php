@@ -7,9 +7,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
+use Smalot\PdfParser\Parser;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ApplicationController extends Controller
@@ -66,7 +72,7 @@ class ApplicationController extends Controller
         // -----------------------------
 
         // Exclude 'Super Admin' and 'Rahul Sharma' since they are not operators
-        $teamMembers = \App\Models\User::whereIn('role', ['TEAM', 'team', 'ADMIN', 'admin'])
+        $teamMembers = User::whereIn('role', ['TEAM', 'team', 'ADMIN', 'admin'])
             ->where('is_active', true)
             ->whereNotIn('name', ['Super Admin', 'Rahul Sharma'])
             ->get();
@@ -90,7 +96,8 @@ class ApplicationController extends Controller
         $type = $request->type ?? 'other';
 
         // ==========================================
-        // 🚨 BUG FIX: THE BLACK HOLE FILTER
+        //  BUG FIX: THE BLACK HOLE FILTER
+        //
         // ==========================================
         if ($type === 'incomplete') {
             // "Incomplete" means it is either explicitly marked as Draft/Cancelled/Failed
@@ -114,6 +121,7 @@ class ApplicationController extends Controller
         if ($type !== 'incomplete') {
             if ($type === 'other') {
                 $query->whereHas('service', function ($q) use ($specialSlugs) {
+
                     $q->whereNotIn('slug', $specialSlugs);
                 });
             } elseif (in_array($type, $specialSlugs)) {
@@ -147,7 +155,7 @@ class ApplicationController extends Controller
         }
 
         // Exclude 'Super Admin' and 'Rahul Sharma' since they are not operators
-        $teamMembers = \App\Models\User::whereIn('role', ['TEAM', 'team', 'ADMIN', 'admin'])
+        $teamMembers = User::whereIn('role', ['TEAM', 'team', 'ADMIN', 'admin'])
             ->where('is_active', true)
             ->whereNotIn('name', ['Super Admin', 'Rahul Sharma'])
             ->get();
@@ -191,7 +199,7 @@ class ApplicationController extends Controller
 
                     if (! $ackNumber) {
                         try {
-                            $parser = new \Smalot\PdfParser\Parser;
+                            $parser = new Parser;
                             $pdf = $parser->parseFile($ackMedia->getPath());
                             $text = substr($pdf->getText(), 0, 2000);
 
@@ -267,7 +275,7 @@ class ApplicationController extends Controller
                 $html .= '<option value="">Unassigned</option>';
                 foreach ($teamMembers as $member) {
                     $selected = $a->assigned_to == $member->id ? 'selected' : '';
-                    $html .= '<option value="'.$member->id.'" '.$selected.'>'.$member->name.'</option>';
+                    $html .= '<option value="'.e($member->id).'" '.$selected.'>'.e($member->name).'</option>';
                 }
                 $html .= '</select>';
 
@@ -357,7 +365,7 @@ class ApplicationController extends Controller
 
         $standardColumns = ['App ID', 'Agent Name', 'Service', 'Status', 'Submitted Date'];
         $displayDynamicKeys = array_map(function ($key) {
-            return \Illuminate\Support\Str::title(str_replace('_', ' ', $key));
+            return Str::title(str_replace('_', ' ', $key));
         }, $dynamicKeys);
 
         $csvHeaders = array_merge($standardColumns, $displayDynamicKeys);
@@ -402,14 +410,12 @@ class ApplicationController extends Controller
 
     public function bulk(Request $request)
     {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:applications,id',
+        ]);
 
-        $ids = $request->ids;
-
-        if (! $ids) {
-            return back()->with('error', 'No rows selected.');
-        }
-
-        Application::whereIn('id', $ids)
+        Application::whereIn('id', $request->ids)
             ->update(['status' => 'IN_PROGRESS']);
 
         return back()->with('success', 'Applications updated.');
@@ -428,7 +434,7 @@ class ApplicationController extends Controller
             'status' => 'required|string|in:IN_PROGRESS,E_FILING,OTP_VERIFICATION,COMPLETED',
         ]);
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($application, $request) {
+        DB::transaction(function () use ($application, $request) {
             $application->update(['status' => $request->status]);
 
             if ($request->status === 'COMPLETED') {
@@ -454,11 +460,11 @@ class ApplicationController extends Controller
                     : ($formData['email'] ?? $formData['email_id'] ?? $formData['applicant_email'] ?? null);
 
                 $clientName = $formData['applicant_name'] ?? $formData['name'] ?? $formData['full_name'] ?? $formData['company_name'] ?? $formData['firm_name'] ?? 'Valued Client';
-                $trackingUrl = \Illuminate\Support\Facades\URL::signedRoute('tracking.show', ['application' => $application->id]);
+                $trackingUrl = URL::signedRoute('tracking.show', ['application' => $application->id]);
 
                 if ($clientEmail && filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
                     try {
-                        \Illuminate\Support\Facades\Mail::send('emails.application_completed', [
+                        Mail::send('emails.application_completed', [
                             'application' => $application,
                             'clientName' => $clientName,
                             'trackingUrl' => $trackingUrl,
@@ -476,33 +482,6 @@ class ApplicationController extends Controller
         }
 
         return back()->with('success', 'Application status updated successfully.');
-    }
-
-    private function sendSnptWhatsapp($phone, Application $application)
-    {
-        $cleanPhone = preg_replace('/[^0-9]/', '', (string) $phone);
-        if (strlen($cleanPhone) == 10) {
-            $cleanPhone = '91'.$cleanPhone;
-        }
-
-        $serviceName = $application->service->name ?? 'Service';
-        $message = "Hello! Great news: Your application for {$serviceName} (App ID: #{$application->id}) has been successfully COMPLETED. Thank you for choosing EasyTax!";
-
-        try {
-            $instanceId = 'YOUR_SNPT_INSTANCE_ID';
-            $accessToken = 'YOUR_SNPT_ACCESS_TOKEN';
-
-            Http::post('https://snpt.in/api/send', [
-                'number' => $cleanPhone,
-                'type' => 'text',
-                'message' => $message,
-                'instance_id' => $instanceId,
-                'access_token' => $accessToken,
-            ]);
-            \Log::info("WhatsApp sent to {$cleanPhone} for App #{$application->id}");
-        } catch (\Exception $e) {
-            \Log::error("WhatsApp failed for App #{$application->id}: ".$e->getMessage());
-        }
     }
 
     public function uploadDocument(Request $request, Application $application)
@@ -525,7 +504,7 @@ class ApplicationController extends Controller
         if ($request->hasFile('ack_file')) {
             $media = $application->addMediaFromRequest('ack_file')->toMediaCollection('itr_acknowledgement', 'private');
             try {
-                $parser = new \Smalot\PdfParser\Parser;
+                $parser = new Parser;
                 $pdf = $parser->parseFile($media->getPath());
                 $text = substr($pdf->getText(), 0, 2000);
                 if (preg_match('/\b(\d{15})\b/', $text, $matches)) {
@@ -571,10 +550,9 @@ class ApplicationController extends Controller
 
     public function storeCredentials(Request $request, Application $application)
     {
-        // Removed the old moa/aoa string validations
         $request->validate([
-            'admin_username' => 'nullable|string',
-            'admin_password' => 'nullable|string',
+            'admin_username' => 'nullable|string|max:255',
+            'admin_password' => 'nullable|string|max:255',
             'final_document' => 'nullable|file|mimetypes:application/pdf,image/jpeg,image/png|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
@@ -583,12 +561,12 @@ class ApplicationController extends Controller
             ? json_decode($application->form_data, true)
             : ($application->form_data ?? []);
 
-        // Save GST Credentials
+        // Save GST Credentials — password is encrypted at rest
         if ($request->has('admin_username')) {
             $formData['admin_username'] = $request->admin_username;
         }
-        if ($request->has('admin_password')) {
-            $formData['admin_password'] = $request->admin_password;
+        if ($request->has('admin_password') && ! empty($request->admin_password)) {
+            $formData['admin_password'] = Crypt::encryptString($request->admin_password);
         }
 
         // Update the database
@@ -656,7 +634,7 @@ class ApplicationController extends Controller
         }
 
         $headers = [];
-        if (\Illuminate\Support\Str::endsWith(strtolower($media->file_name), '.pdf')) {
+        if (Str::endsWith(strtolower($media->file_name), '.pdf')) {
             $headers['Content-Type'] = 'application/pdf';
         }
 
@@ -697,7 +675,7 @@ class ApplicationController extends Controller
             fputcsv($file, $columns);
 
             foreach ($formData as $key => $value) {
-                $displayKey = \Illuminate\Support\Str::title(str_replace('_', ' ', $key));
+                $displayKey = Str::title(str_replace('_', ' ', $key));
                 $displayValue = $value;
                 if (is_array($value)) {
                     $displayValue = implode(', ', $value);
@@ -723,7 +701,7 @@ class ApplicationController extends Controller
         $otherIncome = (float) preg_replace('/[^0-9.]/', '', $formData['other_income'] ?? 0);
 
         $extractedData = [];
-        $parser = new \Smalot\PdfParser\Parser;
+        $parser = new Parser;
 
         $compMedia = $application->getFirstMedia('computation_sheet');
 
@@ -795,7 +773,7 @@ class ApplicationController extends Controller
             'tradingTotal', 'pnlTotal', 'bsTotal', 'capitalTotal'
         );
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.applications.pdfs.balance_sheet', $pdfData);
+        $pdf = Pdf::loadView('admin.applications.pdfs.balance_sheet', $pdfData);
 
         // --- NEW: AUTO-SAVE TO DATABASE ---
         $fileName = 'Balance_Sheet_'.$panNumber.'.pdf';
@@ -815,12 +793,20 @@ class ApplicationController extends Controller
 
     public function assignTeam(Request $request, $id)
     {
-        $application = \App\Models\Application::findOrFail($id);
-
-        $application->update([
-            // If they select "Unassigned" it sends null, otherwise it saves the User ID
-            'assigned_to' => $request->team_id ? $request->team_id : null,
+        $request->validate([
+            'team_id' => 'nullable|integer|exists:users,id',
         ]);
+
+        $application = Application::findOrFail($id);
+
+        if ($request->team_id) {
+            $teamMember = User::whereIn('role', ['TEAM', 'team'])->findOrFail($request->team_id);
+            $assignTo = $teamMember->id;
+        } else {
+            $assignTo = null;
+        }
+
+        $application->update(['assigned_to' => $assignTo]);
 
         return response()->json([
             'success' => true,
@@ -828,7 +814,7 @@ class ApplicationController extends Controller
         ]);
     }
 
-    public function destroy(\App\Models\Application $application)
+    public function destroy(Application $application)
     {
         $application->delete();
 
@@ -837,7 +823,7 @@ class ApplicationController extends Controller
 
     public function restore($id)
     {
-        $application = \App\Models\Application::onlyTrashed()->findOrFail($id);
+        $application = Application::onlyTrashed()->findOrFail($id);
         $application->restore();
 
         return redirect()->back()->with('success', 'Application restored successfully.');

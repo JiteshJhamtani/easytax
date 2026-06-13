@@ -376,7 +376,14 @@
                         <div class="col-md-6 mb-3">
                             <div class="bg-white p-3 rounded-lg border shadow-sm h-100 data-box transition-hover" style="border-left: 3px solid #1a73e8;">
                                 <span class="d-block text-muted text-uppercase text-xs font-weight-bold mb-1">GST Password</span>
-                                <span class="text-dark font-weight-bold" style="font-size: 1.1rem;">{{ $application->form_data['admin_password'] }}</span>
+                                @php
+                                    try {
+                                        $gstPassword = \Illuminate\Support\Facades\Crypt::decryptString($application->form_data['admin_password']);
+                                    } catch (\Exception $e) {
+                                        $gstPassword = $application->form_data['admin_password'];
+                                    }
+                                @endphp
+                                <span class="text-dark font-weight-bold" style="font-size: 1.1rem;">{{ $gstPassword }}</span>
                             </div>
                         </div>
                         @endif

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -43,12 +44,12 @@ class MarketerController extends Controller implements HasMiddleware
         return datatables()->of($marketers)
             // 1. Keeping your exact Leads Count calculation
             ->addColumn('leads_count', function ($marketer) {
-                return \App\Models\Lead::where('marketer_id', $marketer->id)->count();
+                return Lead::where('marketer_id', $marketer->id)->count();
             })
             // 2. NEW: Combined Name & Email UI
             ->addColumn('name_email', function ($row) {
-                return '<div class="font-weight-bold text-dark">'.$row->name.'</div>
-                        <div class="small text-muted">'.$row->email.'</div>';
+                return '<div class="font-weight-bold text-dark">'.e($row->name).'</div>
+                        <div class="small text-muted">'.e($row->email).'</div>';
             })
             // 3. NEW: Status Badge UI
             ->editColumn('is_active', function ($row) {

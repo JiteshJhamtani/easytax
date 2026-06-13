@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
+use Illuminate\Encryption\Encrypter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -73,28 +74,32 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('login')->with('error', 'No authentication token provided.');
         }
 
+        $secret = config('services.cross_server.secret');
+
+        if (empty($secret)) {
+            return redirect()->route('login')->with('error', 'Cross-server login is not configured.');
+        }
+
         try {
-            // 1. Decrypt the token using the secure config value
-            $encrypter = new \Illuminate\Encryption\Encrypter(config('services.cross_server.secret'), config('app.cipher'));
+            $encrypter = new Encrypter($secret, config('app.cipher'));
             $decrypted = $encrypter->decryptString($request->token);
             $payload = json_decode($decrypted, true);
 
-            // 2. Security Check: Has the 60-second link expired?
             if (now()->timestamp > $payload['expires_at']) {
                 return redirect()->route('login')->with('error', 'Login link expired for security. Please try again.');
             }
 
-            // 3. Find the matching Admin user on THIS server
             $user = User::where('email', $payload['email'])
-                ->whereIn('role', ['SUPER_ADMIN', 'ADMIN']) // Ensure only admins can do this
+                ->whereIn('role', ['SUPER_ADMIN', 'ADMIN'])
+                ->where('is_active', true)
                 ->first();
 
             if (! $user) {
-                return redirect()->route('login')->with('error', 'Admin account not found on this server.');
+                return redirect()->route('login')->with('error', 'Admin account not found or is inactive on this server.');
             }
 
-            // 4. Log the user in and bounce them straight to the dashboard!
             Auth::login($user);
+            $request->session()->regenerate();
 
             return redirect()->route('admin.dashboard')->with('success', 'Successfully switched portals!');
 

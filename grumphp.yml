@@ -5,6 +5,6 @@ grumphp:
             testsuite: ~
         shell:
             scripts:
-                - ["vendor/bin/pint", "--dirty", "--format", "agent"]
+                - ["scripts/pint.sh"]
     testsuites: []
     extensions: []

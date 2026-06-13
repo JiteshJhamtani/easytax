@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Application;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class TeamController extends Controller
 {
@@ -13,7 +17,7 @@ class TeamController extends Controller
     {
         $teamMembers = User::whereIn('role', ['team', 'TEAM'])->orderBy('id', 'desc')->get();
 
-        $assignedCounts = \App\Models\Application::whereIn('assigned_to', $teamMembers->pluck('id'))
+        $assignedCounts = Application::whereIn('assigned_to', $teamMembers->pluck('id'))
             ->whereNotIn('status', ['COMPLETED', 'CANCELLED', 'REJECTED']) // Optional: Only count active/pending tasks
             ->selectRaw('assigned_to, count(*) as count')
             ->groupBy('assigned_to')
@@ -27,28 +31,28 @@ class TeamController extends Controller
     {
         $operator = User::whereIn('role', ['team', 'TEAM'])->findOrFail($id);
 
-        $totalAssigned = \App\Models\Application::where('assigned_to', $operator->id)->count();
-        $totalCompleted = \App\Models\Application::where('assigned_to', $operator->id)->where('status', 'COMPLETED')->count();
+        $totalAssigned = Application::where('assigned_to', $operator->id)->count();
+        $totalCompleted = Application::where('assigned_to', $operator->id)->where('status', 'COMPLETED')->count();
         $totalPending = $totalAssigned - $totalCompleted;
 
-        $applications = \App\Models\Application::with(['service'])
+        $applications = Application::with(['service'])
             ->where('assigned_to', $operator->id)
             ->orderBy('updated_at', 'desc')
             ->paginate(15);
 
-        $services = \App\Models\Service::orderBy('name')->get();
+        $services = Service::orderBy('name')->get();
 
-        $currentRates = \Illuminate\Support\Facades\DB::table('operator_service_rates')
+        $currentRates = DB::table('operator_service_rates')
             ->where('operator_id', $operator->id)
             ->pluck('price', 'service_id');
 
-        $payouts = \Illuminate\Support\Facades\DB::table('operator_payouts')
+        $payouts = DB::table('operator_payouts')
             ->where('operator_id', $operator->id)
             ->orderBy('paid_at', 'desc')
             ->get();
 
         // Calculate Total Earned
-        $totalEarned = \App\Models\Application::where('assigned_to', $operator->id)
+        $totalEarned = Application::where('assigned_to', $operator->id)
             ->where('status', 'COMPLETED')
             ->join('operator_service_rates', function ($join) use ($operator) {
                 $join->on('applications.service_id', '=', 'operator_service_rates.service_id')
@@ -59,7 +63,7 @@ class TeamController extends Controller
         $totalPaid = $payouts->sum('amount');
         $balanceDue = $totalEarned - $totalPaid;
 
-        $monthlyEarnings = \App\Models\Application::where('assigned_to', $operator->id)
+        $monthlyEarnings = Application::where('assigned_to', $operator->id)
             ->where('status', 'COMPLETED')
             ->join('operator_service_rates', function ($join) use ($operator) {
                 $join->on('applications.service_id', '=', 'operator_service_rates.service_id')
@@ -86,7 +90,7 @@ class TeamController extends Controller
         $rates = $request->input('rates', []); // Array of [service_id => price]
 
         foreach ($rates as $serviceId => $price) {
-            \Illuminate\Support\Facades\DB::table('operator_service_rates')->updateOrInsert(
+            DB::table('operator_service_rates')->updateOrInsert(
                 ['operator_id' => $operator->id, 'service_id' => $serviceId],
                 ['price' => $price ?: 0, 'updated_at' => now()]
             );
@@ -105,7 +109,7 @@ class TeamController extends Controller
             'payment_note' => 'nullable|string|max:255',
         ]);
 
-        \Illuminate\Support\Facades\DB::table('operator_payouts')->insert([
+        DB::table('operator_payouts')->insert([
             'operator_id' => $operator->id,
             'amount' => $request->amount,
             'payment_note' => $request->payment_note,
@@ -131,11 +135,8 @@ class TeamController extends Controller
         User::forceCreate([
             'name' => $request->name,
             'email' => $request->email,
-
-            'password' => $request->password,
-
+            'password' => Hash::make($request->password),
             'mobile_number' => $request->phone,
-
             'role' => 'TEAM',
             'is_active' => true,
         ]);
@@ -160,7 +161,7 @@ class TeamController extends Controller
         $teamMember->mobile_number = $request->phone;
 
         if ($request->filled('password')) {
-            $teamMember->password = $request->password;
+            $teamMember->password = Hash::make($request->password);
         }
 
         $teamMember->save();
@@ -171,7 +172,7 @@ class TeamController extends Controller
     // 4. Delete an Operator
     public function destroy($id)
     {
-        $teamMember = User::where('role', 'team')->findOrFail($id);
+        $teamMember = User::whereIn('role', ['team', 'TEAM'])->findOrFail($id);
         $teamMember->delete();
 
         return back()->with('success', 'Operator removed completely.');
@@ -186,7 +187,7 @@ class TeamController extends Controller
     // Loads the new dedicated Edit Page
     public function edit($id)
     {
-        $teamMember = User::where('role', 'team')->findOrFail($id);
+        $teamMember = User::whereIn('role', ['team', 'TEAM'])->findOrFail($id);
 
         return view('admin.team.edit', compact('teamMember'));
     }
@@ -194,7 +195,7 @@ class TeamController extends Controller
     // Flips the user between Active (1) and Suspended (0)
     public function toggleStatus($id)
     {
-        $teamMember = User::where('role', 'team')->findOrFail($id);
+        $teamMember = User::whereIn('role', ['team', 'TEAM'])->findOrFail($id);
         $teamMember->is_active = ! $teamMember->is_active; // Flips the boolean
         $teamMember->save();
 
@@ -208,7 +209,7 @@ class TeamController extends Controller
     {
         $operator = User::whereIn('role', ['team', 'TEAM'])->findOrFail($id);
 
-        $totalEarned = \App\Models\Application::where('assigned_to', $operator->id)
+        $totalEarned = Application::where('assigned_to', $operator->id)
             ->where('status', 'COMPLETED')
             ->join('operator_service_rates', function ($join) use ($operator) {
                 $join->on('applications.service_id', '=', 'operator_service_rates.service_id')
@@ -216,14 +217,14 @@ class TeamController extends Controller
             })
             ->sum('operator_service_rates.price');
 
-        $totalPaid = \Illuminate\Support\Facades\DB::table('operator_payouts')
+        $totalPaid = DB::table('operator_payouts')
             ->where('operator_id', $operator->id)
             ->sum('amount');
 
         $balanceDue = $totalEarned - $totalPaid;
 
         // 1. Fetch all earnings, ordering from OLDEST to NEWEST
-        $rawEarnings = \App\Models\Application::where('assigned_to', $operator->id)
+        $rawEarnings = Application::where('assigned_to', $operator->id)
             ->where('status', 'COMPLETED')
             ->join('operator_service_rates', function ($join) use ($operator) {
                 $join->on('applications.service_id', '=', 'operator_service_rates.service_id')

@@ -7,12 +7,18 @@ use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\PaymentLog;
+use App\Models\Service;
+use App\Models\ServicePricingRule;
+use App\Models\User;
+use App\Notifications\ApplicationSubmittedNotification;
 use App\Services\ApplicationDocumentService;
 use App\Services\ApplicationLogger;
 use App\Services\FormValidator;
 use App\Services\RazorpayService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class ApplicationController extends Controller
 {
@@ -28,9 +34,9 @@ class ApplicationController extends Controller
         FormValidator $validator,
         ApplicationDocumentService $applicationDocumentService
     ) {
-        \Illuminate\Support\Facades\Log::info("Application submission started for slug: {$slug}");
+        Log::info("Application submission started for slug: {$slug}");
 
-        $service = \App\Models\Service::where('slug', $slug)
+        $service = Service::where('slug', $slug)
             ->where('active', true)
             ->firstOrFail();
 
@@ -66,7 +72,7 @@ class ApplicationController extends Controller
             }
         }
 
-        \Illuminate\Support\Facades\Log::info('Form validation passed.');
+        Log::info('Form validation passed.');
 
         // ==========================================
         // DYNAMIC PRICING OVERRIDE ENGINE
@@ -84,7 +90,7 @@ class ApplicationController extends Controller
                 $col3 = $validated['frequency_of_return'] ?? '';
                 $col4 = $validated['plan'] ?? '';
 
-                $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
+                $rule = ServicePricingRule::where('service_id', $service->id)
                     ->where(function ($q) use ($col1) {
                         $q->where('gst_type', $col1)->orWhereNull('gst_type')->orWhere('gst_type', 'Any');
                     })
@@ -102,7 +108,7 @@ class ApplicationController extends Controller
             } elseif ($service->slug === 'gst-annual-package') {
                 $turnoverVal = $validated['turnover'] ?? 'Any';
 
-                $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
+                $rule = ServicePricingRule::where('service_id', $service->id)
                     ->where(function ($q) use ($turnoverVal) {
                         $q->where('turnover', $turnoverVal)->orWhereNull('turnover')->orWhere('turnover', 'Any');
                     })
@@ -130,7 +136,7 @@ class ApplicationController extends Controller
                 $itrBusiness = $request->input('has_business', 'Any');
                 $itrCapGains = $request->input('has_capital_gains', 'Any');
 
-                $rule = \App\Models\ServicePricingRule::where('service_id', $service->id)
+                $rule = ServicePricingRule::where('service_id', $service->id)
                     ->where(function ($q) use ($itrType) {
                         $q->where('itr_type', $itrType)->orWhere('itr_type', strtolower($itrType))
                             ->orWhereNull('itr_type')->orWhereIn('itr_type', ['Any', 'any']);
@@ -182,9 +188,9 @@ class ApplicationController extends Controller
 
             $connectionName = config()->has('database.connections.master_connection') ? 'master_connection' : config('database.default');
             try {
-                $coupon = \Illuminate\Support\Facades\DB::connection($connectionName)->table('coupons')->where('code', $couponCode)->where('is_active', true)->first();
+                $coupon = DB::connection($connectionName)->table('coupons')->where('code', $couponCode)->where('is_active', true)->first();
             } catch (\Exception $e) {
-                $coupon = \Illuminate\Support\Facades\DB::table('coupons')->where('code', $couponCode)->where('is_active', true)->first();
+                $coupon = DB::table('coupons')->where('code', $couponCode)->where('is_active', true)->first();
             }
 
             if ($coupon) {
@@ -204,30 +210,44 @@ class ApplicationController extends Controller
                     }
                 }
 
-                // 3. Check usage limits
-                if ($coupon->global_max_uses && $coupon->total_used >= $coupon->global_max_uses) {
+                // 3. Atomic usage check + increment (prevents race conditions)
+                $agentId = auth()->id();
+                $couponLimitResult = DB::transaction(function () use ($coupon, $agentId) {
+                    $locked = DB::table('coupons')
+                        ->where('id', $coupon->id)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($locked->global_max_uses && $locked->total_used >= $locked->global_max_uses) {
+                        return 'global_limit';
+                    }
+
+                    $usedCount = Application::where('agent_id', $agentId)
+                        ->where('coupon_id', $locked->id)
+                        ->whereNotIn('status', ['DRAFT', 'CANCELLED'])
+                        ->count();
+
+                    if ($locked->max_uses_per_agent && $usedCount >= $locked->max_uses_per_agent) {
+                        return 'agent_limit';
+                    }
+
+                    DB::table('coupons')
+                        ->where('id', $locked->id)
+                        ->increment('total_used');
+
+                    return 'ok';
+                });
+
+                if ($couponLimitResult === 'global_limit') {
                     return back()->with('error', 'Promo code max usage reached.')->withInput();
                 }
-                $usedCount = \App\Models\Application::where('agent_id', auth()->id())
-                    ->where('coupon_id', $coupon->id)
-                    ->whereNotIn('status', ['DRAFT', 'CANCELLED'])
-                    ->count();
-                if ($coupon->max_uses_per_agent && $usedCount >= $coupon->max_uses_per_agent) {
+                if ($couponLimitResult === 'agent_limit') {
                     return back()->with('error', 'You have already used this promo code.')->withInput();
                 }
 
                 $couponId = $coupon->id;
                 $couponBonus = $coupon->bonus_amount;
-
-                // Increase the agent's total commission by the bonus amount!
                 $commission += $couponBonus;
-
-                // Synchronize the usage count back to the master database
-                try {
-                    \Illuminate\Support\Facades\DB::connection($connectionName)->table('coupons')->where('id', $couponId)->increment('total_used');
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\DB::table('coupons')->where('id', $couponId)->increment('total_used');
-                }
             }
         }
         // ==========================================
@@ -235,7 +255,7 @@ class ApplicationController extends Controller
         // Amount to charge via Razorpay
         $amountToPay = max(0, $finalPrice - $commission);
 
-        $application = \App\Models\Application::create([
+        $application = Application::create([
             'agent_id' => auth()->id(),
             'service_id' => $service->id,
             'form_data' => $validated,
@@ -247,11 +267,11 @@ class ApplicationController extends Controller
             'coupon_bonus' => $couponBonus,
             // ─────────────────────────────
 
-            'status' => \App\Enums\ApplicationStatus::DRAFT,
-            'payment_status' => \App\Enums\PaymentStatus::PENDING,
+            'status' => ApplicationStatus::DRAFT,
+            'payment_status' => PaymentStatus::PENDING,
         ]);
 
-        \Illuminate\Support\Facades\Log::info("Draft application created with ID: {$application->id}");
+        Log::info("Draft application created with ID: {$application->id}");
 
         $applicationDocumentService->handleUploads($application, $request, $service->slug);
 
@@ -262,7 +282,7 @@ class ApplicationController extends Controller
 
         // Create Razorpay order
         $receiptId = 'APP_'.$application->id.'_'.time();
-        $razorpay = new \App\Services\RazorpayService;
+        $razorpay = new RazorpayService;
 
         $orderResponse = $razorpay->createOrder(
             $receiptId,
@@ -274,7 +294,7 @@ class ApplicationController extends Controller
             ]
         );
 
-        \Illuminate\Support\Facades\Log::info("Razorpay order creation response for application {$application->id}", $orderResponse);
+        Log::info("Razorpay order creation response for application {$application->id}", $orderResponse);
 
         if (! $orderResponse['success']) {
             return back()->with('error', 'Payment initialization failed. Please try again.')->withInput();
@@ -284,12 +304,12 @@ class ApplicationController extends Controller
             'payment_reference' => $orderResponse['order_id'],
         ]);
 
-        \App\Models\PaymentLog::create([
+        PaymentLog::create([
             'application_id' => $application->id,
             'transaction_id' => $receiptId,
             'event' => 'order_created',
             'status' => $orderResponse['status'] ?? null,
-            'payload' => $validated,
+            'payload' => null,
             'response' => $orderResponse,
         ]);
 
@@ -360,7 +380,7 @@ class ApplicationController extends Controller
         ]);
 
         //  STRICT CHECK: Only process this if it hasn't been paid yet!
-        \Illuminate\Support\Facades\DB::transaction(function () use ($application) {
+        DB::transaction(function () use ($application) {
             $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
 
             if ($lockedApplication->payment_status !== PaymentStatus::PAID) {
@@ -377,8 +397,8 @@ class ApplicationController extends Controller
                     ->log('Payment confirmed via Razorpay');
 
                 // Notify admins
-                $admins = \App\Models\User::where('role', 'ADMIN')->where('is_active', true)->get();
-                \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationSubmittedNotification($lockedApplication));
+                $admins = User::where('role', 'ADMIN')->where('is_active', true)->get();
+                Notification::send($admins, new ApplicationSubmittedNotification($lockedApplication));
 
                 ApplicationLogger::log($lockedApplication->id, 'payment_success');
             }
@@ -407,7 +427,7 @@ class ApplicationController extends Controller
             ->first();
 
         if ($application) {
-            return \Illuminate\Support\Facades\DB::transaction(function () use ($application, $orderId, $request) {
+            return DB::transaction(function () use ($application, $orderId, $request) {
                 $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
 
                 // 🛑 STRICT CHECK: Prevent overwriting a successful payment (e.g. if webhook already marked it PAID)
@@ -417,7 +437,7 @@ class ApplicationController extends Controller
                 }
 
                 // 🟢 FALLBACK CHECK: If the frontend froze but the payment actually succeeded, check Razorpay directly
-                $razorpay = new \App\Services\RazorpayService;
+                $razorpay = new RazorpayService;
                 $orderStatus = $razorpay->fetchOrderStatus($orderId);
 
                 if ($orderStatus === 'paid') {
@@ -433,10 +453,10 @@ class ApplicationController extends Controller
                         ->log('Payment confirmed via fallback check after modal closure');
 
                     // Notify admins
-                    $admins = \App\Models\User::where('role', 'ADMIN')->where('is_active', true)->get();
-                    \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationSubmittedNotification($lockedApplication));
+                    $admins = User::where('role', 'ADMIN')->where('is_active', true)->get();
+                    Notification::send($admins, new ApplicationSubmittedNotification($lockedApplication));
 
-                    \App\Services\ApplicationLogger::log($lockedApplication->id, 'payment_success_fallback');
+                    ApplicationLogger::log($lockedApplication->id, 'payment_success_fallback');
 
                     return redirect()->route('payment.result', ['txn' => $orderId])
                         ->with('success', 'Payment was successful and recovered automatically.');
@@ -604,7 +624,7 @@ class ApplicationController extends Controller
             }
 
             //  STRICT CHECK: Only update if not already paid by the frontend
-            \Illuminate\Support\Facades\DB::transaction(function () use ($application, $paymentId, $data) {
+            DB::transaction(function () use ($application, $paymentId, $data) {
                 $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
 
                 if ($lockedApplication->payment_status !== PaymentStatus::PAID) {
@@ -620,8 +640,8 @@ class ApplicationController extends Controller
                         ->log('Payment confirmed via Razorpay (Webhook)');
 
                     // Notify admins
-                    $admins = \App\Models\User::where('role', 'ADMIN')->where('is_active', true)->get();
-                    \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationSubmittedNotification($lockedApplication));
+                    $admins = User::where('role', 'ADMIN')->where('is_active', true)->get();
+                    Notification::send($admins, new ApplicationSubmittedNotification($lockedApplication));
 
                     PaymentLog::create([
                         'application_id' => $lockedApplication->id,
@@ -645,7 +665,7 @@ class ApplicationController extends Controller
                 $application = Application::where('payment_reference', $orderId)->first();
 
                 if ($application) {
-                    \Illuminate\Support\Facades\DB::transaction(function () use ($application, $data) {
+                    DB::transaction(function () use ($application, $data) {
                         $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
 
                         if ($lockedApplication->payment_status !== PaymentStatus::PAID) {
@@ -717,7 +737,7 @@ class ApplicationController extends Controller
     /**
      * --- SECURE CLIENT TRACKING PAGE ---
      */
-    public function track(\Illuminate\Http\Request $request, \App\Models\Application $application)
+    public function track(Request $request, Application $application)
     {
         // 1. Verify the cryptographic signature so hackers can't guess URLs
         if (! $request->hasValidSignature()) {

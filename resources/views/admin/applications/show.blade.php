@@ -270,7 +270,17 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">Portal Password</label>
-                                <input type="text" name="admin_password" class="form-control border-light shadow-sm" placeholder="Enter password" value="{{ $rawFormData['admin_password'] ?? '' }}">
+                                @php
+                                    $displayPassword = '';
+                                    if (!empty($rawFormData['admin_password'])) {
+                                        try {
+                                            $displayPassword = \Illuminate\Support\Facades\Crypt::decryptString($rawFormData['admin_password']);
+                                        } catch (\Exception $e) {
+                                            $displayPassword = $rawFormData['admin_password'];
+                                        }
+                                    }
+                                @endphp
+                                <input type="text" name="admin_password" class="form-control border-light shadow-sm" placeholder="Enter password" value="{{ $displayPassword }}">
                             </div>
                             <div class="col-md-12 mb-3">
                                 <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">{{ $isCompanySetup ? 'Incorporation Certificate' : 'GST Certificate / Final Document' }}</label>
