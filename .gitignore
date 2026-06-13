@@ -42,3 +42,4 @@ restore_db.php
 # Ignore temporary migration scripts in public folder
 /public/*.php
 !/public/index.php
+CLAUDE.md
