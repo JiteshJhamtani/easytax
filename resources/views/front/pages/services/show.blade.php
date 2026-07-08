@@ -483,7 +483,7 @@
         function initSmartFormLogic() {
             const logicMap = {
                 'has_salary': { inputs: ['salary_amount'], docs: ['form_16'] },
-                'has_business': { inputs: ['business_amount', 'turnover'], docs: ['profit_loss_statement', 'balance_sheet'] },
+                'has_business': { inputs: ['turnover', 'business_amount', 'other_income_amount', 'business_name'], docs: ['profit_loss_statement', 'balance_sheet'] },
                 'has_capital_gains': { inputs: [], docs: ['broker_statement'] }
             };
 

@@ -147,6 +147,11 @@
                     $repeaterGroups = [];
                     
                     foreach($formData as $key => $value) {
+                        // Skip any field that is completely empty (except for '0')
+                        if (empty($value) && $value !== '0') {
+                            continue;
+                        }
+
                         if (str_starts_with($key, 'director_') || str_starts_with($key, 'member_') || str_starts_with($key, 'partner_')) {
                             if (preg_match('/^([a-zA-Z]+)_(\d+)_(.+)$/', $key, $matches)) {
                                 $prefix = $matches[1]; 

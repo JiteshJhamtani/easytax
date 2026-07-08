@@ -202,7 +202,7 @@ $(document).ready(function() {
         $('#disp-live-np').text('₹' + np.toLocaleString('en-IN'));
         
         let isNpValid = false;
-        if (np === targetNP && targetNP > 0) {
+        if (Math.round(np) === Math.round(targetNP) && targetNP > 0) {
             isNpValid = true;
             $('#status-np').removeClass('tally-error').addClass('tally-match').html('<i class="fas fa-check-circle mr-1"></i> Net Profit Matched');
             $('#disp-live-np').removeClass('text-danger').addClass('text-success');

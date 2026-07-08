@@ -263,6 +263,22 @@ return [
                         'required' => false,
                         'validation' => 'nullable|numeric|min:0',
                     ],
+                    [
+                        'name' => 'other_income_amount',
+                        'label' => 'Other Income',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|numeric|min:0',
+                        'placeholder' => 'Enter amount from other sources (if any)',
+                    ],
+                    [
+                        'name' => 'business_name',
+                        'label' => 'Name of the Business',
+                        'type' => 'text',
+                        'required' => false,
+                        'validation' => 'nullable|string|max:255',
+                        'placeholder' => 'e.g., Kirana store, Freelance, Consulting, Trading firm',
+                    ],
                 ],
             ],
             'bank_details' => [
