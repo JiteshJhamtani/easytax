@@ -15,7 +15,7 @@ $(document).ready(function () {
         { data: "id", name: "id" },
         { data: "agent", name: "agent.name" }, 
         { data: "service", name: "service.name" },
-        { data: 'dynamic_data', name: 'dynamic_data', orderable: false, searchable: false },
+        { data: 'dynamic_data', name: 'dynamic_data', orderable: false, searchable: true },
         { data: "status", name: "status" },
         { data: "payment", name: "payment_status" }
     ];
@@ -76,7 +76,7 @@ $(document).ready(function () {
         // SaaS-style language overrides
         language: {
             search: "_INPUT_",
-            searchPlaceholder: "Search ID or Service...",
+            searchPlaceholder: "Search ID, Applicant, or Service...",
             lengthMenu: "Show _MENU_ entries",
             info: "Showing _START_ to _END_ of _TOTAL_ entries",
             paginate: {

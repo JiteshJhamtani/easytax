@@ -79,7 +79,7 @@ $(document).ready(function () {
         // SaaS-style language overrides
         language: {
             search: "_INPUT_",
-            searchPlaceholder: "Search ID or Service...",
+            searchPlaceholder: "Search ID, Applicant, or Service...",
             lengthMenu: "Show _MENU_ entries",
             info: "Showing _START_ to _END_ of _TOTAL_ entries",
             paginate: {

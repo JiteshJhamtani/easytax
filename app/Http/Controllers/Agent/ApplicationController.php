@@ -104,6 +104,13 @@ class ApplicationController extends Controller
         }
 
         return datatables()->of($query)
+            ->filterColumn('service.name', function ($query, $keyword) {
+                $query->where(function($q) use ($keyword) {
+                    $q->whereHas('service', function ($q2) use ($keyword) {
+                        $q2->where('name', 'like', "%{$keyword}%");
+                    })->orWhere('form_data', 'like', "%{$keyword}%");
+                });
+            })
             ->addColumn('service', fn ($a) => $a->service->name)
             ->addColumn('status', fn ($a) => '<span class="badge badge-info">'.$a->status->value.'</span>')
             ->addColumn('payment', fn ($a) => '<span class="badge badge-success">'.$a->payment_status->value.'</span>')

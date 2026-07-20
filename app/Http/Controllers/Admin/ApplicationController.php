@@ -171,6 +171,9 @@ class ApplicationController extends Controller
                     $q->where('name', 'like', "%{$keyword}%");
                 });
             })
+            ->filterColumn('dynamic_data', function ($query, $keyword) {
+                $query->where('form_data', 'like', "%{$keyword}%");
+            })
             ->addColumn('dynamic_data', function ($a) {
                 $targetField = $a->service->primary_data_field ?? null;
                 if (! $targetField || empty($a->form_data)) {
