@@ -2,13 +2,20 @@
 
 namespace App\Http\Controllers\Agent;
 
+use App\Enums\ApplicationStatus;
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\PaymentLog;
+use App\Models\Service;
+use App\Models\User;
+use App\Notifications\ApplicationCancelledNotification;
 use App\Services\PhonePeService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use Smalot\PdfParser\Parser;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ApplicationController extends Controller
@@ -45,7 +52,7 @@ class ApplicationController extends Controller
             ")->first();
         // -----------------------------
 
-        $services = \App\Models\Service::where('active', true)->get();
+        $services = Service::where('active', true)->get();
 
         return view('agent.applications.index', compact('stats', 'services', 'type', 'pageTitle'));
     }
@@ -105,7 +112,7 @@ class ApplicationController extends Controller
 
         return datatables()->of($query)
             ->filterColumn('service.name', function ($query, $keyword) {
-                $query->where(function($q) use ($keyword) {
+                $query->where(function ($q) use ($keyword) {
                     $q->whereHas('service', function ($q2) use ($keyword) {
                         $q2->where('name', 'like', "%{$keyword}%");
                     })->orWhere('form_data', 'like', "%{$keyword}%");
@@ -180,6 +187,7 @@ class ApplicationController extends Controller
 
                 // If not generated yet, show the Generate button
                 $url = route('agent.applications.balance-sheet', $a->id);
+
                 return '<a href="'.$url.'" class="btn btn-sm btn-outline-success font-weight-bold" style="white-space: nowrap;"><i class="fas fa-file-excel mr-1"></i> Generate</a>';
             })
             ->addColumn('actions', function ($a) use ($request) {
@@ -261,12 +269,12 @@ class ApplicationController extends Controller
     {
         abort_if($application->agent_id !== auth()->id(), 403);
 
-        if ($application->status === \App\Enums\ApplicationStatus::CANCELLED) {
+        if ($application->status === ApplicationStatus::CANCELLED) {
             return back()->with('error', 'Application is already cancelled.');
         }
 
         $application->update([
-            'status' => \App\Enums\ApplicationStatus::CANCELLED,
+            'status' => ApplicationStatus::CANCELLED,
             'commission_amount' => 0,
         ]);
 
@@ -275,8 +283,8 @@ class ApplicationController extends Controller
             ->causedBy(auth()->user())
             ->log('Application cancelled by agent');
 
-        $admins = \App\Models\User::where('role', 'admin')->where('is_active', true)->get();
-        \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationCancelledNotification($application));
+        $admins = User::where('role', 'admin')->where('is_active', true)->get();
+        Notification::send($admins, new ApplicationCancelledNotification($application));
 
         return back()->with('success', 'Application has been successfully cancelled.');
     }
@@ -321,7 +329,7 @@ class ApplicationController extends Controller
         }
 
         $headers = [];
-        if (\Illuminate\Support\Str::endsWith(strtolower($media->file_name), '.pdf')) {
+        if (Str::endsWith(strtolower($media->file_name), '.pdf')) {
             $headers['Content-Type'] = 'application/pdf';
         }
 
@@ -364,7 +372,7 @@ class ApplicationController extends Controller
         $otherIncome = (float) preg_replace('/[^0-9.]/', '', $formData['other_income'] ?? 0);
 
         $extractedData = [];
-        $parser = new \Smalot\PdfParser\Parser;
+        $parser = new Parser;
 
         $compMedia = $application->getFirstMedia('computation_sheet');
 
@@ -431,7 +439,7 @@ class ApplicationController extends Controller
         $pdfData = compact('applicantName', 'panNumber', 'data', 'grossProfit', 'netProfit', 'closingCapital', 'tradingTotal', 'pnlTotal', 'bsTotal', 'capitalTotal');
 
         // Generate PDF using your template
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.applications.pdfs.balance_sheet', $pdfData);
+        $pdf = Pdf::loadView('admin.applications.pdfs.balance_sheet', $pdfData);
 
         // --- NEW: AUTO-SAVE TO DATABASE FOR AGENT ---
         $fileName = 'Balance_Sheet_'.$panNumber.'.pdf';
