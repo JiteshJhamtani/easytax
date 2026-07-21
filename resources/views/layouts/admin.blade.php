@@ -65,7 +65,23 @@
             overflow-x: hidden;
         }
 
-       
+        /* ── MODERN BACK BUTTON ── */
+        .btn-back-modern {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: var(--surface); color: var(--slate-dark);
+            font-size: 0.85rem; font-weight: 700;
+            padding: 0.5rem 1rem; border-radius: 50px;
+            border: 1px solid var(--border);
+            text-decoration: none; transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            margin-bottom: 1rem; cursor: pointer;
+        }
+        .btn-back-modern:hover {
+            background: var(--ink-100); color: var(--green);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+            text-decoration: none;
+        }
 
         .shell { display: flex; min-height: 100vh; }
 

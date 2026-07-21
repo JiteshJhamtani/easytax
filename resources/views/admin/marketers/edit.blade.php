@@ -20,9 +20,7 @@
 @section('content')
 <div class="container-fluid px-4 py-4">
     <div class="mb-4">
-        <a href="{{ route('crm.marketers.index') }}" class="text-muted text-decoration-none font-weight-bold">
-            <i class="fas fa-arrow-left mr-1"></i> Back to Marketers
-        </a>
+        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Marketers</a>
     </div>
 
     @if($errors->any())

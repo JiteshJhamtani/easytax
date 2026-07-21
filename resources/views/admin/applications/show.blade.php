@@ -6,10 +6,7 @@
 @section('content_header')
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-2 pt-2">
         <div>
-            <a href="{{ route('admin.applications.index') }}"
-                class="text-muted text-sm font-weight-bold mb-2 d-inline-block transition-hover">
-                <i class="fas fa-arrow-left mr-1"></i> Back to Applications
-            </a>
+            <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Applications</a>
 
             @php
                 $status = strtolower($application->status?->value ?? 'unknown');

@@ -8,9 +8,7 @@
             <h1 class="m-0 text-dark font-weight-bold">Payout #{{ $payout->id }}</h1>
             <p class="text-muted mb-0 mt-1">Generated on {{ $payout->created_at?->format('d M Y, h:i A') ?? 'N/A' }}</p>
         </div>
-        <a href="{{ route('admin.payouts.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm">
-            <i class="fas fa-arrow-left mr-1"></i> Back to Payouts
-        </a>
+        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Payouts</a>
     </div>
 @stop
 

@@ -5,9 +5,7 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center mb-3 mt-2 flex-wrap" style="gap: 10px;">
         <h1 class="m-0 text-dark font-weight-bold" style="font-size: 1.5rem;">Agent Overview</h1>
-        <a href="{{ route('admin.agents.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm text-nowrap">
-            <i class="fas fa-arrow-left mr-1"></i> Back to Agents
-        </a>
+        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Agents</a>
     </div>
 @stop
 

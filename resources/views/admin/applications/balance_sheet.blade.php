@@ -40,7 +40,7 @@
             <h2 class="font-weight-bold mb-1">Balance Sheet Generator</h2>
             <p class="text-muted mb-0">Application ID: #{{ $application->id }} | Target Net Profit: <strong class="text-dark">₹{{ number_format($netProfit) }}</strong></p>
         </div>
-        <a href="{{ url('admin/applications?type=itr-filing') }}" class="btn btn-outline-secondary rounded-pill">
+        <a href="javascript:history.back()" class="btn-back-modern">
             <i class="fas fa-arrow-left mr-2"></i> Back to ITRs
         </a>
     </div>

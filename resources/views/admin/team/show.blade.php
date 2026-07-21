@@ -6,7 +6,7 @@
 <div class="container-fluid px-4 py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <a href="{{ route('admin.team.index') }}" class="text-muted text-decoration-none mb-2 d-inline-block"><i class="fas fa-arrow-left"></i> Back to Team</a>
+            <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Team</a>
             <h3 class="font-weight-bold text-dark mb-0">
                 {{ $operator->name }} 
                 @if($operator->is_active)

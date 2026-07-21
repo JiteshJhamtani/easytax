@@ -5,9 +5,7 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
         <h1 class="m-0 text-dark font-weight-bold">Create New Page</h1>
-        <a href="{{ route('admin.pages.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm">
-            <i class="fas fa-arrow-left mr-1"></i> Back to Pages
-        </a>
+        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Pages</a>
     </div>
 @stop
 

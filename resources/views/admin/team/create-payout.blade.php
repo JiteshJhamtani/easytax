@@ -8,7 +8,7 @@
         <div class="col-md-6">
             
             <div class="mb-4">
-                <a href="{{ route('admin.team.show', $operator->id) }}" class="text-muted text-decoration-none"><i class="fas fa-arrow-left"></i> Back to Profile</a>
+                <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Profile</a>
                 <h3 class="font-weight-bold text-dark mt-2 mb-0">Record Payout</h3>
                 <p class="text-muted">Issue a payment to <strong>{{ $operator->name }}</strong></p>
             </div>

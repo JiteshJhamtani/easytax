@@ -26,9 +26,7 @@
 <div class="container-fluid px-4 py-4">
     
     <div class="mb-4">
-        <a href="{{ route('admin.team.index') }}" class="text-muted text-decoration-none font-weight-bold">
-            <i class="fas fa-arrow-left mr-1"></i> Back to Operators
-        </a>
+        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Operators</a>
     </div>
 
     <div class="row justify-content-center">
