@@ -160,6 +160,31 @@ class RazorpayService
     }
 
     /**
+     * Fetch all payments attempted against an order
+     *
+     * @return array<int, array{id: string, status: string, amount: int}>
+     */
+    public function fetchOrderPayments(string $orderId): array
+    {
+        try {
+            $payments = $this->api->order->fetch($orderId)->payments();
+
+            return array_map(fn ($payment) => [
+                'id' => $payment->id,
+                'status' => $payment->status,
+                'amount' => $payment->amount,
+            ], $payments->items ?? []);
+        } catch (\Exception $e) {
+            Log::error('Razorpay fetch order payments failed', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+    }
+
+    /**
      * Verify webhook signature
      *
      * @param  string  $payload  Raw request body

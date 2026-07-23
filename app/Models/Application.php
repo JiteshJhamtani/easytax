@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ApplicationStatus;
 use App\Enums\PaymentStatus;
+use App\Traits\MasksSensitiveData;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,7 +17,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Application extends Model implements HasMedia
 {
-    use \App\Traits\MasksSensitiveData, HasFactory, InteractsWithMedia, LogsActivity, SoftDeletes;
+    use HasFactory, InteractsWithMedia, LogsActivity, MasksSensitiveData, SoftDeletes;
 
     protected $maskable = ['email', 'mobile_number', 'whatsapp_no', 'pan_number', 'aadhaar_number'];
 
@@ -31,6 +32,7 @@ class Application extends Model implements HasMedia
         'assigned_to',
         'payment_status',
         'payment_reference',
+        'expected_amount_paise',
         'status',
         'pending_reason',
         'started_at',

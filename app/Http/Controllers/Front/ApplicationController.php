@@ -302,6 +302,7 @@ class ApplicationController extends Controller
 
         $application->update([
             'payment_reference' => $orderResponse['order_id'],
+            'expected_amount_paise' => (int) round($amountToPay * 100),
         ]);
 
         PaymentLog::create([
@@ -357,7 +358,7 @@ class ApplicationController extends Controller
         // Fetch payment details
         $payment = $razorpay->fetchPayment($validated['razorpay_payment_id']);
 
-        $expectedAmount = (int) round(max(0, $application->amount - $application->commission_amount) * 100);
+        $expectedAmount = $this->expectedPaise($application);
 
         if (($payment['amount'] ?? 0) !== $expectedAmount) {
             Log::critical('Payment amount mismatch!', [
@@ -406,30 +407,7 @@ class ApplicationController extends Controller
             'response' => $payment,
         ]);
 
-        //  STRICT CHECK: Only process this if it hasn't been paid yet!
-        DB::transaction(function () use ($application) {
-            $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
-
-            if ($lockedApplication->payment_status !== PaymentStatus::PAID) {
-
-                $lockedApplication->update([
-                    'payment_status' => PaymentStatus::PAID,
-                    'status' => ApplicationStatus::SUBMITTED,
-                    'submitted_at' => now(),
-                ]);
-
-                activity('application')
-                    ->performedOn($lockedApplication)
-                    ->causedBy($lockedApplication->agent)
-                    ->log('Payment confirmed via Razorpay');
-
-                // Notify admins
-                $admins = User::where('role', 'ADMIN')->where('is_active', true)->get();
-                Notification::send($admins, new ApplicationSubmittedNotification($lockedApplication));
-
-                ApplicationLogger::log($lockedApplication->id, 'payment_success');
-            }
-        });
+        $this->markApplicationPaid($application, 'Payment confirmed via Razorpay', 'payment_success');
 
         return redirect()->route('payment.result', ['txn' => $application->payment_reference]);
     }
@@ -453,58 +431,80 @@ class ApplicationController extends Controller
             ->where('agent_id', auth()->id())
             ->first();
 
-        if ($application) {
-            return DB::transaction(function () use ($application, $orderId, $request) {
-                $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
-
-                // 🛑 STRICT CHECK: Prevent overwriting a successful payment (e.g. if webhook already marked it PAID)
-                if ($lockedApplication->payment_status === PaymentStatus::PAID) {
-                    return redirect()->route('payment.result', ['txn' => $orderId])
-                        ->with('success', 'Payment was successful and processed in the background.');
-                }
-
-                // 🟢 FALLBACK CHECK: If the frontend froze but the payment actually succeeded, check Razorpay directly
-                $razorpay = app(RazorpayService::class);
-                $orderStatus = $razorpay->fetchOrderStatus($orderId);
-
-                if ($orderStatus === 'paid') {
-                    $lockedApplication->update([
-                        'payment_status' => PaymentStatus::PAID,
-                        'status' => ApplicationStatus::SUBMITTED,
-                        'submitted_at' => now(),
-                    ]);
-
-                    activity('application')
-                        ->performedOn($lockedApplication)
-                        ->causedBy($lockedApplication->agent)
-                        ->log('Payment confirmed via fallback check after modal closure');
-
-                    // Notify admins
-                    $admins = User::where('role', 'ADMIN')->where('is_active', true)->get();
-                    Notification::send($admins, new ApplicationSubmittedNotification($lockedApplication));
-
-                    ApplicationLogger::log($lockedApplication->id, 'payment_success_fallback');
-
-                    return redirect()->route('payment.result', ['txn' => $orderId])
-                        ->with('success', 'Payment was successful and recovered automatically.');
-                }
-
-                $lockedApplication->update(['payment_status' => PaymentStatus::FAILED]);
-
-                PaymentLog::create([
-                    'application_id' => $lockedApplication->id,
-                    'transaction_id' => $orderId,
-                    'event' => 'payment_failed',
-                    'status' => 'failed',
-                    'payload' => $request->all(),
-                    'response' => null,
-                ]);
-
-                ApplicationLogger::log($lockedApplication->id, 'payment_failed');
-
-                return redirect()->route('payment.result', ['txn' => $orderId]);
-            });
+        if (! $application) {
+            return redirect()->route('payment.result', ['txn' => $orderId]);
         }
+
+        if ($application->payment_status === PaymentStatus::PAID) {
+            return redirect()->route('payment.result', ['txn' => $orderId])
+                ->with('success', 'Payment was successful and processed in the background.');
+        }
+
+        // 🟢 FALLBACK CHECK: If the frontend froze but the payment actually succeeded, check Razorpay directly
+        $razorpay = app(RazorpayService::class);
+        $paymentConfirmed = $razorpay->fetchOrderStatus($orderId) === 'paid';
+        $inFlight = false;
+
+        // A dismissed modal is not proof of failure: a payment on this order may be
+        // captured, authorized (capture it now), or still mid-flight (e.g. UPI collect).
+        if (! $paymentConfirmed) {
+            $expectedAmount = $this->expectedPaise($application);
+
+            foreach ($razorpay->fetchOrderPayments($orderId) as $orderPayment) {
+                if ($orderPayment['amount'] !== $expectedAmount) {
+                    continue;
+                }
+
+                if ($orderPayment['status'] === 'captured') {
+                    $paymentConfirmed = true;
+                    break;
+                }
+
+                if ($orderPayment['status'] === 'authorized') {
+                    $paymentConfirmed = $razorpay->capturePayment($orderPayment['id'], $expectedAmount);
+                    $inFlight = ! $paymentConfirmed;
+                    break;
+                }
+
+                if ($orderPayment['status'] === 'created') {
+                    $inFlight = true;
+                }
+            }
+        }
+
+        if ($paymentConfirmed) {
+            $this->markApplicationPaid($application, 'Payment confirmed via fallback check after modal closure', 'payment_success_fallback');
+
+            return redirect()->route('payment.result', ['txn' => $orderId])
+                ->with('success', 'Payment was successful and recovered automatically.');
+        }
+
+        if ($inFlight) {
+            return redirect()->route('payment.result', ['txn' => $orderId])
+                ->with('error', 'Your payment is still processing. Please wait a moment and check the status before retrying.');
+        }
+
+        DB::transaction(function () use ($application, $orderId, $request) {
+            $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
+
+            // 🛑 STRICT CHECK: Prevent overwriting a successful payment (e.g. if webhook already marked it PAID)
+            if ($lockedApplication->payment_status === PaymentStatus::PAID) {
+                return;
+            }
+
+            $lockedApplication->update(['payment_status' => PaymentStatus::FAILED]);
+
+            PaymentLog::create([
+                'application_id' => $lockedApplication->id,
+                'transaction_id' => $orderId,
+                'event' => 'payment_failed',
+                'status' => 'failed',
+                'payload' => $request->all(),
+                'response' => null,
+            ]);
+
+            ApplicationLogger::log($lockedApplication->id, 'payment_failed');
+        });
 
         return redirect()->route('payment.result', ['txn' => $orderId]);
     }
@@ -556,11 +556,20 @@ class ApplicationController extends Controller
             return back()->with('error', 'Payment already completed.');
         }
 
+        $razorpay = app(RazorpayService::class);
+
+        // A payment on the previous order may have succeeded after the browser gave
+        // up (late webhook, slow UPI) — recover it instead of charging again.
+        if ($application->payment_reference
+            && $razorpay->fetchOrderStatus($application->payment_reference) === 'paid') {
+            $this->markApplicationPaid($application, 'Payment recovered from previous order during retry', 'payment_success_retry_check');
+
+            return back()->with('success', 'Your earlier payment was successful — no need to pay again.');
+        }
+
         // Re-use stored commission
         $amountToPay = max(0, $application->amount - $application->commission_amount);
         $receiptId = 'APP_'.$application->id.'_RETRY_'.time();
-
-        $razorpay = app(RazorpayService::class);
         $orderResponse = $razorpay->createOrder(
             $receiptId,
             (int) round($amountToPay * 100),
@@ -578,6 +587,7 @@ class ApplicationController extends Controller
         $application->update([
             'payment_reference' => $orderResponse['order_id'],
             'payment_status' => PaymentStatus::PENDING,
+            'expected_amount_paise' => (int) round($amountToPay * 100),
         ]);
 
         PaymentLog::create([
@@ -607,6 +617,10 @@ class ApplicationController extends Controller
         $payload = $request->getContent();
         $signature = $request->header('X-Razorpay-Signature');
 
+        if (! is_string($signature) || $signature === '') {
+            return response()->json(['error' => 'Missing signature'], 403);
+        }
+
         $razorpay = app(RazorpayService::class);
 
         if (! $razorpay->verifyWebhook($payload, $signature)) {
@@ -629,7 +643,7 @@ class ApplicationController extends Controller
                 return response()->json(['error' => 'Missing order_id'], 400);
             }
 
-            $application = Application::where('payment_reference', $orderId)->first();
+            $application = $this->findApplicationByOrderId($orderId);
 
             if (! $application) {
                 Log::warning('Webhook: application not found for order', ['order_id' => $orderId]);
@@ -638,7 +652,7 @@ class ApplicationController extends Controller
             }
 
             $receivedAmount = $data['payload']['payment']['entity']['amount'] ?? 0;
-            $expectedAmount = (int) round(max(0, $application->amount - $application->commission_amount) * 100);
+            $expectedAmount = $this->expectedPaise($application);
 
             if ($receivedAmount !== $expectedAmount) {
                 Log::critical('Webhook: Payment amount mismatch!', [
@@ -650,38 +664,16 @@ class ApplicationController extends Controller
                 return response()->json(['success' => true]);
             }
 
-            //  STRICT CHECK: Only update if not already paid by the frontend
-            DB::transaction(function () use ($application, $paymentId, $data) {
-                $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
-
-                if ($lockedApplication->payment_status !== PaymentStatus::PAID) {
-                    $lockedApplication->update([
-                        'payment_status' => PaymentStatus::PAID,
-                        'status' => ApplicationStatus::SUBMITTED,
-                        'submitted_at' => now(),
-                    ]);
-
-                    activity('application')
-                        ->performedOn($lockedApplication)
-                        ->causedBy($lockedApplication->agent)
-                        ->log('Payment confirmed via Razorpay (Webhook)');
-
-                    // Notify admins
-                    $admins = User::where('role', 'ADMIN')->where('is_active', true)->get();
-                    Notification::send($admins, new ApplicationSubmittedNotification($lockedApplication));
-
-                    PaymentLog::create([
-                        'application_id' => $lockedApplication->id,
-                        'transaction_id' => $paymentId,
-                        'event' => 'webhook_captured',
-                        'status' => 'captured',
-                        'payload' => $data,
-                        'response' => null,
-                    ]);
-
-                    ApplicationLogger::log($lockedApplication->id, 'payment_success_webhook');
-                }
-            });
+            if ($this->markApplicationPaid($application, 'Payment confirmed via Razorpay (Webhook)', 'payment_success_webhook')) {
+                PaymentLog::create([
+                    'application_id' => $application->id,
+                    'transaction_id' => $paymentId,
+                    'event' => 'webhook_captured',
+                    'status' => 'captured',
+                    'payload' => $data,
+                    'response' => null,
+                ]);
+            }
         }
 
         // Handle payment.failed event
@@ -737,8 +729,11 @@ class ApplicationController extends Controller
             ]);
         }
 
-        // 2. Fallback: check Payment Logs (rare cases)
+        // 2. Fallback: check Payment Logs (rare cases), scoped to the agent's own applications
         $log = PaymentLog::where('transaction_id', $transactionId)
+            ->whereIn('application_id', Application::withTrashed()
+                ->where('agent_id', auth()->id())
+                ->select('id'))
             ->latest()
             ->first();
 
@@ -759,6 +754,68 @@ class ApplicationController extends Controller
             'status' => 'PENDING',
 
         ]);
+    }
+
+    /**
+     * Mark an application as paid (idempotently, under a row lock) and notify admins.
+     *
+     * @return bool True if the application transitioned to PAID, false if it already was.
+     */
+    private function markApplicationPaid(Application $application, string $activityMessage, string $logEvent): bool
+    {
+        return DB::transaction(function () use ($application, $activityMessage, $logEvent) {
+            $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
+
+            if ($lockedApplication->payment_status === PaymentStatus::PAID) {
+                return false;
+            }
+
+            $lockedApplication->update([
+                'payment_status' => PaymentStatus::PAID,
+                'status' => ApplicationStatus::SUBMITTED,
+                'submitted_at' => now(),
+            ]);
+
+            activity('application')
+                ->performedOn($lockedApplication)
+                ->causedBy($lockedApplication->agent)
+                ->log($activityMessage);
+
+            $admins = User::where('role', 'ADMIN')->where('is_active', true)->get();
+            Notification::send($admins, new ApplicationSubmittedNotification($lockedApplication));
+
+            ApplicationLogger::log($lockedApplication->id, $logEvent);
+
+            return true;
+        });
+    }
+
+    /**
+     * The paise amount a Razorpay payment for this application must equal,
+     * snapshotted at order creation so later admin edits cannot invalidate it.
+     */
+    private function expectedPaise(Application $application): int
+    {
+        return $application->expected_amount_paise !== null
+            ? (int) $application->expected_amount_paise
+            : (int) round(max(0, $application->amount - $application->commission_amount) * 100);
+    }
+
+    /**
+     * Resolve an application from a Razorpay order id, falling back to payment
+     * logs for orders whose reference was overwritten by a later retry.
+     */
+    private function findApplicationByOrderId(string $orderId): ?Application
+    {
+        $application = Application::where('payment_reference', $orderId)->first();
+
+        if ($application) {
+            return $application;
+        }
+
+        $log = PaymentLog::where('response->order_id', $orderId)->latest()->first();
+
+        return $log ? Application::find($log->application_id) : null;
     }
 
     /**
