@@ -3,14 +3,11 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Enums\ApplicationStatus;
-use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
-use App\Models\PaymentLog;
 use App\Models\Service;
 use App\Models\User;
 use App\Notifications\ApplicationCancelledNotification;
-use App\Services\PhonePeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
@@ -222,47 +219,6 @@ class ApplicationController extends Controller
         $application->load(['service', 'media']);
 
         return view('agent.applications.show', compact('application'));
-    }
-
-    public function retry(Application $application)
-    {
-        abort_if($application->agent_id !== auth()->id(), 403);
-
-        if ($application->payment_status === PaymentStatus::PAID) {
-            return back()->with('error', 'Payment already completed.');
-        }
-
-        $transactionId = 'TXN_'.Str::uuid();
-
-        $application->update([
-            'payment_reference' => $transactionId,
-            'payment_status' => PaymentStatus::PENDING,
-        ]);
-
-        $phonePe = new PhonePeService;
-
-        $response = $phonePe->createPayment(
-            $transactionId,
-            (int) round($application->amount * 100),
-            (string) auth()->id(),
-            route('payment.redirect'),
-            route('payment.webhook')
-        );
-
-        PaymentLog::create([
-            'application_id' => $application->id,
-            'transaction_id' => $transactionId,
-            'event' => 'retry',
-            'response' => $response,
-        ]);
-
-        if (isset($response['data']['instrumentResponse']['redirectInfo']['url'])) {
-            return redirect()->away(
-                $response['data']['instrumentResponse']['redirectInfo']['url']
-            );
-        }
-
-        return back()->with('error', 'Retry failed.');
     }
 
     public function cancel(Application $application)

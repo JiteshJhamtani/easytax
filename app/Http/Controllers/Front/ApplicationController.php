@@ -282,7 +282,7 @@ class ApplicationController extends Controller
 
         // Create Razorpay order
         $receiptId = 'APP_'.$application->id.'_'.time();
-        $razorpay = new RazorpayService;
+        $razorpay = app(RazorpayService::class);
 
         $orderResponse = $razorpay->createOrder(
             $receiptId,
@@ -340,7 +340,7 @@ class ApplicationController extends Controller
             ->firstOrFail();
 
         // Verify signature
-        $razorpay = new RazorpayService;
+        $razorpay = app(RazorpayService::class);
         $isValid = $razorpay->verifySignature(
             $validated['razorpay_order_id'],
             $validated['razorpay_payment_id'],
@@ -368,6 +368,33 @@ class ApplicationController extends Controller
 
             return redirect()->route('payment.result', ['txn' => $application->payment_reference])
                 ->with('error', 'Payment amount verification failed. Contact support.');
+        }
+
+        // Orders created before the payment_capture flag was added may still authorize
+        // without capturing — capture server-side so Razorpay does not auto-refund.
+        if (($payment['status'] ?? null) !== 'captured') {
+            $captured = ($payment['status'] ?? null) === 'authorized'
+                && $razorpay->capturePayment($validated['razorpay_payment_id'], $expectedAmount);
+
+            if (! $captured) {
+                Log::critical('Payment not captured — application left unpaid', [
+                    'application_id' => $application->id,
+                    'payment_id' => $validated['razorpay_payment_id'],
+                    'payment_status' => $payment['status'] ?? null,
+                ]);
+
+                PaymentLog::create([
+                    'application_id' => $application->id,
+                    'transaction_id' => $validated['razorpay_payment_id'],
+                    'event' => 'payment_capture_failed',
+                    'status' => $payment['status'] ?? null,
+                    'payload' => null,
+                    'response' => $payment,
+                ]);
+
+                return redirect()->route('payment.result', ['txn' => $application->payment_reference])
+                    ->with('error', 'Payment could not be confirmed. If money was deducted, it will be captured or auto-refunded — please contact support.');
+            }
         }
 
         PaymentLog::create([
@@ -437,7 +464,7 @@ class ApplicationController extends Controller
                 }
 
                 // 🟢 FALLBACK CHECK: If the frontend froze but the payment actually succeeded, check Razorpay directly
-                $razorpay = new RazorpayService;
+                $razorpay = app(RazorpayService::class);
                 $orderStatus = $razorpay->fetchOrderStatus($orderId);
 
                 if ($orderStatus === 'paid') {
@@ -533,7 +560,7 @@ class ApplicationController extends Controller
         $amountToPay = max(0, $application->amount - $application->commission_amount);
         $receiptId = 'APP_'.$application->id.'_RETRY_'.time();
 
-        $razorpay = new RazorpayService;
+        $razorpay = app(RazorpayService::class);
         $orderResponse = $razorpay->createOrder(
             $receiptId,
             (int) round($amountToPay * 100),
@@ -580,7 +607,7 @@ class ApplicationController extends Controller
         $payload = $request->getContent();
         $signature = $request->header('X-Razorpay-Signature');
 
-        $razorpay = new RazorpayService;
+        $razorpay = app(RazorpayService::class);
 
         if (! $razorpay->verifyWebhook($payload, $signature)) {
             Log::error('Razorpay webhook signature verification failed');

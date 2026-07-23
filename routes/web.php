@@ -142,9 +142,6 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
     Route::post('/applications/{id}/restore', [AgentApplicationController::class, 'restore'])
         ->name('applications.restore');
 
-    Route::post('/applications/{application}/retry', [AgentApplicationController::class, 'retry'])
-        ->name('applications.retry');
-
     Route::patch('/applications/{application}/cancel', [AgentApplicationController::class, 'cancel'])
         ->name('applications.cancel');
 

@@ -37,6 +37,7 @@ class RazorpayService
                 'currency' => 'INR',
                 'notes' => $notes,
                 'partial_payment' => false,
+                'payment_capture' => 1,
             ]);
 
             return [
@@ -110,6 +111,32 @@ class RazorpayService
             ]);
 
             return null;
+        }
+    }
+
+    /**
+     * Capture an authorized payment
+     *
+     * @param  string  $paymentId  Razorpay payment ID
+     * @param  int  $amountPaise  Must equal the authorized amount
+     */
+    public function capturePayment(string $paymentId, int $amountPaise): bool
+    {
+        try {
+            $payment = $this->api->payment->fetch($paymentId);
+            $payment->capture([
+                'amount' => $amountPaise,
+                'currency' => 'INR',
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Razorpay payment capture failed', [
+                'payment_id' => $paymentId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
         }
     }
 
