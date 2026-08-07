@@ -67,19 +67,20 @@
 
         /* ── MODERN BACK BUTTON ── */
         .btn-back-modern {
-            display: inline-flex; align-items: center; gap: 0.5rem;
+            display: inline-flex; align-items: center; gap: 0.6rem;
             background: var(--surface); color: var(--slate-dark);
-            font-size: 0.85rem; font-weight: 700;
-            padding: 0.5rem 1rem; border-radius: 50px;
-            border: 1px solid var(--border);
+            font-size: 1.05rem; font-weight: 700;
+            padding: 0.6rem 1.25rem; border-radius: 50px;
+            border: 2px solid var(--border);
             text-decoration: none; transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             margin-bottom: 1rem; cursor: pointer;
         }
         .btn-back-modern:hover {
             background: var(--ink-100); color: var(--green);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+            border-color: var(--green);
             text-decoration: none;
         }
 
@@ -232,6 +233,7 @@
         .shell.sidebar-mini .sb-item.active { margin-right: 0.5rem; }
         .shell.sidebar-mini .sb-item__icon { margin: 0; width: auto; }
         .shell.sidebar-mini .main { margin-left: var(--sidebar-mini); }
+        .tabular-nums { font-family: monospace; font-variant-numeric: tabular-nums; }
     </style>
 </head>
 <body>
@@ -244,185 +246,154 @@
         </a>
 
 <nav class="sb-nav">
-   
-         {{-- ==========================================  --}}
-            {{-- TEAM MEMBER SECTION (ONLY FOR OPERATORS) --}}
-            {{-- ========================================== --}}
-            @if(strtoupper(auth()->user()->role) === 'TEAM')
-                <div class="sb-section">Internal Workflow</div>
-                
-                <a href="{{ route('team.dashboard') }}" class="sb-item {{ request()->routeIs('team.*') ? 'active' : '' }}" data-label="Assigned Tasks">
-                    <span class="sb-item__icon"><i class="fas fa-clipboard-list text-info"></i></span>
-                    Assigned Apps
-                    @if(request()->routeIs('team.*'))<span class="sb-item__dot"></span>@endif
-                </a>
-            @endif
-            
-            {{-- ========================================== --}}
-            {{-- ADMIN ONLY SECTION (Hidden from Marketers) --}}
-            {{-- ========================================== --}}
-            @if(auth()->user()->isAdmin())
-                <div class="sb-section">Core</div>
+    {{-- ========================================== --}}
+    {{-- TEAM MEMBER SECTION (ONLY FOR OPERATORS) --}}
+    {{-- ========================================== --}}
+    @if(strtoupper(auth()->user()->role) === 'TEAM')
+        <div class="sb-section">Internal Workflow</div>
+        <a href="{{ route('team.dashboard') }}" class="sb-item {{ request()->routeIs('team.*') ? 'active' : '' }}" data-label="Assigned Tasks">
+            <span class="sb-item__icon"><i class="fas fa-clipboard-list text-info"></i></span>
+            Assigned Apps
+            @if(request()->routeIs('team.*'))<span class="sb-item__dot"></span>@endif
+        </a>
+    @endif
 
-                <a href="{{ url('admin/dashboard') }}" class="sb-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" data-label="Dashboard">
-                    <span class="sb-item__icon"><i class="fas fa-chart-pie"></i></span>
-                    Dashboard
-                    @if(request()->is('admin/dashboard*'))<span class="sb-item__dot"></span>@endif
-                </a>
+    {{-- ========================================== --}}
+    {{-- ADMIN ONLY SECTION --}}
+    {{-- ========================================== --}}
+    @if(auth()->user()->isAdmin())
+        <div class="sb-section">Core</div>
+        
+        <a href="{{ url('admin/dashboard') }}" class="sb-item {{ request()->routeIs('admin.dashboard') || request()->is('admin/dashboard*') ? 'active' : '' }}" data-label="Dashboard">
+            <span class="sb-item__icon"><i class="fas fa-chart-pie"></i></span>
+            Dashboard
+            @if(request()->is('admin/dashboard*'))<span class="sb-item__dot"></span>@endif
+        </a>
 
-                {{-- NATIVE PORTAL SWITCHER --}}
-                <div class="sb-has-submenu" x-data="{ 
-                    search: '', 
-                    servers: [
-                        { id: 'marketing', name: 'Marketing' },
-                        { id: 'b2b', name: 'B2B Master' },
-                        { id: 'upwest', name: 'Upwest' },
-                        { id: 'uat', name: 'UAT' },
-                        { id: 'finance', name: 'Finance (Coming Soon)' }
-                    ],
-                    get filteredServers() {
-                        return this.servers
-                            .filter(s => s.name.toLowerCase().includes(this.search.toLowerCase()))
-                            .slice(0, 4);
-                    }
-                }">
-                    <div class="sb-submenu-toggle" onclick="this.parentElement.classList.toggle('open')">
-                        <span class="sb-item__icon"><i class="fas fa-server"></i></span>
-                        Switch Portal
-                        <i class="fas fa-chevron-down sb-submenu-arrow"></i>
-                    </div>
-                    <div class="sb-submenu">
-                        <div style="padding: 0.5rem 1.5rem 0.5rem 2.8rem;">
-                            <div style="position: relative;">
-                                <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.7rem;"></i>
-                                <input type="text" x-model="search" placeholder="Search servers..." style="width: 100%; padding: 0.35rem 0.5rem 0.35rem 1.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.75rem; outline: none;">
-                            </div>
-                        </div>
-                        <template x-for="server in filteredServers" :key="server.id">
-                            <a :href="'/admin/switch-server/' + server.id" class="sb-subitem" style="padding-left: 2.8rem;">
-                                <span x-text="server.name"></span>
-                            </a>
-                        </template>
-                        <div x-show="filteredServers.length === 0" style="padding: 0.5rem 1.5rem 0.5rem 2.8rem; color: var(--text-muted); font-size: 0.8rem;">
-                            No portals found.
-                        </div>
+        {{-- NATIVE PORTAL SWITCHER --}}
+        <div class="sb-has-submenu" x-data="{ 
+            search: '', 
+            servers: [
+                { id: 'marketing', name: 'Marketing' },
+                { id: 'b2b', name: 'B2B Master' },
+                { id: 'upwest', name: 'Upwest' },
+                { id: 'uat', name: 'UAT' },
+                { id: 'finance', name: 'Finance (Coming Soon)' }
+            ],
+            get filteredServers() {
+                return this.servers
+                    .filter(s => s.name.toLowerCase().includes(this.search.toLowerCase()))
+                    .slice(0, 4);
+            }
+        }">
+            <div class="sb-submenu-toggle" onclick="this.parentElement.classList.toggle('open')">
+                <span class="sb-item__icon"><i class="fas fa-server"></i></span>
+                Switch Portal
+                <i class="fas fa-chevron-down sb-submenu-arrow"></i>
+            </div>
+            <div class="sb-submenu">
+                <div style="padding: 0.5rem 1.5rem 0.5rem 2.8rem;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.7rem;"></i>
+                        <input type="text" x-model="search" placeholder="Search servers..." style="width: 100%; padding: 0.35rem 0.5rem 0.35rem 1.8rem; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.75rem; outline: none;">
                     </div>
                 </div>
-                {{-- END PORTAL SWITCHER --}}
+                <template x-for="server in filteredServers" :key="server.id">
+                    <a :href="'/admin/switch-server/' + server.id" class="sb-subitem" style="padding-left: 2.8rem;">
+                        <span x-text="server.name"></span>
+                    </a>
+                </template>
+                <div x-show="filteredServers.length === 0" style="padding: 0.5rem 1.5rem 0.5rem 2.8rem; color: var(--text-muted); font-size: 0.8rem;">
+                    No portals found.
+                </div>
+            </div>
+        </div>
 
-                @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
-                <div class="sb-section">Management</div>
+        @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
+        <div class="sb-section">Management</div>
+        <a href="{{ url('admin/services') }}" class="sb-item {{ request()->is('admin/services*') ? 'active' : '' }}" data-label="Services">
+            <span class="sb-item__icon"><i class="fas fa-concierge-bell"></i></span>
+            Services
+            @if(request()->is('admin/services*'))<span class="sb-item__dot"></span>@endif
+        </a>
+        @endif
 
-                <a href="{{ url('admin/services') }}" class="sb-item {{ request()->is('admin/services*') ? 'active' : '' }}" data-label="Services">
-                    <span class="sb-item__icon"><i class="fas fa-concierge-bell"></i></span>
-                    Services
-                    @if(request()->is('admin/services*'))<span class="sb-item__dot"></span>@endif
-                </a>
-                @endif
+        <div class="sb-section">Application Types</div>
+        <a href="{{ route('admin.applications.index', ['type' => 'itr-filing']) }}" class="sb-item {{ request()->query('type') === 'itr-filing' ? 'active' : '' }}" data-label="ITR Filing">
+            <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar"></i></span>
+            ITR Filing
+        </a>
+        <a href="{{ route('admin.applications.index', ['type' => 'gst-registration']) }}" class="sb-item {{ request()->query('type') === 'gst-registration' ? 'active' : '' }}" data-label="GST Registration">
+            <span class="sb-item__icon"><i class="fas fa-id-card"></i></span>
+            GST Registration
+        </a>
+        <a href="{{ route('admin.applications.index', ['type' => 'gst-return-filing']) }}" class="sb-item {{ request()->query('type') === 'gst-return-filing' ? 'active' : '' }}" data-label="GST Return">
+            <span class="sb-item__icon"><i class="fas fa-file-invoice"></i></span>
+            GST Return
+        </a>
+        <a href="{{ route('admin.applications.index', ['type' => 'other']) }}" class="sb-item {{ request()->routeIs('admin.applications.index') && request()->query('type', 'other') === 'other' ? 'active' : '' }}" data-label="Other Apps">
+            <span class="sb-item__icon"><i class="fas fa-folder"></i></span>
+            Other Apps
+            @if(request()->routeIs('admin.applications.index') && request()->query('type', 'other') === 'other')<span class="sb-item__dot"></span>@endif
+        </a>
+        <a href="{{ route('admin.applications.index', ['type' => 'incomplete']) }}" class="sb-item {{ request()->query('type') === 'incomplete' ? 'active' : '' }}" data-label="Incomplete Apps">
+            <span class="sb-item__icon"><i class="fas fa-exclamation-triangle"></i></span>
+            Incomplete Apps
+        </a>
+        <a href="{{ url('admin/agents') }}" class="sb-item {{ request()->is('admin/agents*') ? 'active' : '' }}" data-label="Agents">
+            <span class="sb-item__icon"><i class="fas fa-user-tie"></i></span>
+            Agents
+            @if(request()->is('admin/agents*'))<span class="sb-item__dot"></span>@endif
+        </a>
+        <a href="{{ route('admin.team.index') }}" class="sb-item {{ request()->routeIs('admin.team.*') ? 'active' : '' }}" data-label="Team Members">
+            <span class="sb-item__icon"><i class="fas fa-user-shield"></i></span>
+            Team
+            @if(request()->routeIs('admin.team.*'))<span class="sb-item__dot"></span>@endif
+        </a>
 
-            
-
-
-                <div class="sb-section">Application Types</div>
-
-               
-
-                <a href="{{ route('admin.applications.index', ['type' => 'itr-filing']) }}" class="sb-item {{ request()->query('type') === 'itr-filing' ? 'active' : '' }}" data-label="ITR Filing">
-                    <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar"></i></span>
-                    ITR Filing
-                </a>
-
-                <a href="{{ route('admin.applications.index', ['type' => 'gst-registration']) }}" class="sb-item {{ request()->query('type') === 'gst-registration' ? 'active' : '' }}" data-label="GST Registration">
-                    <span class="sb-item__icon"><i class="fas fa-id-card"></i></span>
-                    GST Registration
-                </a>
-                 <a href="{{ route('admin.applications.index', ['type' => 'gst-return-filing']) }}" class="sb-item {{ request()->query('type') === 'gst-return-filing' ? 'active' : '' }}" data-label="GST Return">
-                    <span class="sb-item__icon"><i class="fas fa-file-invoice"></i></span>
-                    GST Return
-                </a>
-
-                <a href="{{ route('admin.applications.index', ['type' => 'other']) }}" 
-   class="sb-item {{ request()->routeIs('admin.applications.index') && request()->query('type', 'other') === 'other' ? 'active' : '' }}" 
-   data-label="Other Apps">
-    <span class="sb-item__icon"><i class="fas fa-folder"></i></span>
-    Other Apps
-    @if(request()->routeIs('admin.applications.index') && request()->query('type', 'other') === 'other')
-        <span class="sb-item__dot"></span>
+        <div class="sb-section">System</div>
+        <div class="sb-has-submenu {{ request()->is('admin/gifts*') ? 'open' : '' }}">
+            <div class="sb-submenu-toggle {{ request()->is('admin/gifts*') ? 'active' : '' }}" onclick="this.parentElement.classList.toggle('open')">
+                <span class="sb-item__icon"><i class="fas fa-gift"></i></span>
+                Gifts
+                <i class="fas fa-chevron-down sb-submenu-arrow"></i>
+            </div>
+            <div class="sb-submenu">
+                <a href="{{ url('admin/gifts') }}" class="sb-subitem {{ request()->routeIs('admin.gifts.index') ? 'active' : '' }}">All Gifts</a>
+                <a href="{{ url('admin/gifts/eligibility') }}" class="sb-subitem {{ request()->routeIs('admin.gifts.eligibility*') ? 'active' : '' }}">Eligibility</a>
+            </div>
+        </div>
+        <a href="{{ route('admin.coupons.index') }}" class="sb-item {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}" data-label="Promo Campaigns">
+            <span class="sb-item__icon"><i class="fas fa-ticket-alt"></i></span>
+            Coupons
+            @if(request()->routeIs('admin.coupons.*'))<span class="sb-item__dot"></span>@endif
+        </a>
+        <a href="{{ url('admin/pages') }}" class="sb-item {{ request()->is('admin/pages*') ? 'active' : '' }}" data-label="Pages">
+            <span class="sb-item__icon"><i class="fas fa-file-alt"></i></span>
+            Pages
+            @if(request()->is('admin/pages*'))<span class="sb-item__dot"></span>@endif
+        </a>
     @endif
-</a>
-                
-                <a href="{{ route('admin.applications.index', ['type' => 'incomplete']) }}" class="sb-item {{ request()->query('type') === 'incomplete' ? 'active' : '' }}" data-label="Incomplete Apps">
-                    <span class="sb-item__icon"><i class="fas fa-exclamation-triangle"></i></span>
-                    Incomplete Apps
-                </a>
-                
-                <a href="{{ url('admin/agents') }}" class="sb-item {{ request()->is('admin/agents*') ? 'active' : '' }}" data-label="Agents">
-                    <span class="sb-item__icon"><i class="fas fa-user-tie"></i></span>
-                    Agents
-                    @if(request()->is('admin/agents*'))<span class="sb-item__dot"></span>@endif
-                </a>
-                {{-- TEAM / OPERATORS MANAGEMENT --}}
-                <a href="{{ route('admin.team.index') }}" class="sb-item {{ request()->routeIs('admin.team.*') ? 'active' : '' }}" data-label="Team Members">
-                    <span class="sb-item__icon"><i class="fas fa-user-shield"></i></span>
-                    Team 
-                    @if(request()->routeIs('admin.team.*'))<span class="sb-item__dot"></span>@endif
-                </a>
-       
-                <div class="sb-section">System</div>
 
-    <div class="sb-has-submenu {{ request()->is('admin/gifts*') ? 'open' : '' }}">
-        <div class="sb-submenu-toggle {{ request()->is('admin/gifts*') ? 'active' : '' }}" onclick="this.parentElement.classList.toggle('open')">
-            <span class="sb-item__icon"><i class="fas fa-gift"></i></span>
-            Gifts
-            <i class="fas fa-chevron-down sb-submenu-arrow"></i>
-        </div>
-        <div class="sb-submenu">
-            <a href="{{ url('admin/gifts') }}" class="sb-subitem {{ request()->routeIs('admin.gifts.index') ? 'active' : '' }}">All Gifts</a>
-            <a href="{{ url('admin/gifts/eligibility') }}" class="sb-subitem {{ request()->routeIs('admin.gifts.eligibility*') ? 'active' : '' }}">Eligibility</a>
-        </div>
-    </div>
-                
-    <a href="{{ route('admin.coupons.index') }}" class="sb-item {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}" data-label="Promo Campaigns">
-        <span class="sb-item__icon"><i class="fas fa-ticket-alt"></i></span>
-        Coupons
-        @if(request()->routeIs('admin.coupons.*'))<span class="sb-item__dot"></span>@endif
-    </a>
-
-    <a href="{{ url('admin/pages') }}" class="sb-item {{ request()->is('admin/pages*') ? 'active' : '' }}" data-label="Pages">
-        <span class="sb-item__icon"><i class="fas fa-file-alt"></i></span>
-        Pages
-        @if(request()->is('admin/pages*'))<span class="sb-item__dot"></span>@endif
-    </a>
-            @endif
-                
-
-
-            
-
-            {{-- ========================================== --}}
-            {{-- CRM SECTION (Visible to Admin & Marketers) --}}
-            {{-- ========================================== --}}
-            @if(strtoupper(auth()->user()->role) !== 'TEAM')
-            <div class="sb-section">Marketing CRM</div>
-
-            {{-- Only Admins can manage the actual Marketer accounts --}}
-            @if(auth()->user()->isAdmin())
-                <a href="{{ route('crm.marketers.index') }}" class="sb-item {{ request()->is('crm/marketers*') ? 'active' : '' }}" data-label="Marketers">
-                    <span class="sb-item__icon"><i class="fas fa-bullhorn"></i></span>
-                    Marketers
-                    @if(request()->is('crm/marketers*'))<span class="sb-item__dot"></span>@endif
-                </a>
-            @endif
-
-            {{-- Both Admins and Marketers can access Leads --}}
-            <a href="{{ route('crm.leads.index') }}" class="sb-item {{ request()->is('crm/leads*') ? 'active' : '' }}" data-label="Leads">
-                <span class="sb-item__icon"><i class="fas fa-magnet"></i></span>
-                Leads
-                @if(request()->is('crm/leads*'))<span class="sb-item__dot"></span>@endif
+    {{-- ========================================== --}}
+    {{-- CRM SECTION --}}
+    {{-- ========================================== --}}
+    @if(strtoupper(auth()->user()->role) !== 'TEAM')
+        <div class="sb-section">Marketing CRM</div>
+        @if(auth()->user()->isAdmin())
+            <a href="{{ route('crm.marketers.index') }}" class="sb-item {{ request()->is('crm/marketers*') ? 'active' : '' }}" data-label="Marketers">
+                <span class="sb-item__icon"><i class="fas fa-bullhorn"></i></span>
+                Marketers
+                @if(request()->is('crm/marketers*'))<span class="sb-item__dot"></span>@endif
             </a>
-            @endif
-
-        </nav>
+        @endif
+        <a href="{{ route('crm.leads.index') }}" class="sb-item {{ request()->is('crm/leads*') ? 'active' : '' }}" data-label="Leads">
+            <span class="sb-item__icon"><i class="fas fa-magnet"></i></span>
+            Leads
+            @if(request()->is('crm/leads*'))<span class="sb-item__dot"></span>@endif
+        </a>
+    @endif
+</nav>
 
          <div class="sb-bottom">
             <div class="sb-illustration">
@@ -607,7 +578,7 @@ window.userRole = "{{ strtoupper(auth()->user()->role ?? '') }}";
 <script>
     // Smooth native page transitions
     document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript"])').forEach(link => {
+        document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript"]):not(.no-transition)').forEach(link => {
             link.addEventListener('click', e => {
                 if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
                 let href = link.getAttribute('href');
@@ -617,6 +588,21 @@ window.userRole = "{{ strtoupper(auth()->user()->role ?? '') }}";
             });
         });
     });
+
+    // Global Form Submit Spinner
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof jQuery !== 'undefined') {
+            jQuery('form:not(.no-loader)').on('submit', function() {
+                let $btn = jQuery(this).find('button[type="submit"]');
+                if (!$btn.prop('disabled')) {
+                    $btn.prop('disabled', true).append(' <i class="fas fa-spinner fa-spin ml-2"></i>');
+                }
+            });
+        }
+    });
 </script>
 </body>
 </html>
+
+
+

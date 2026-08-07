@@ -1051,6 +1051,41 @@
             });
             observer.observe(document.body, { childList: true, subtree: true });
         })();
+
+        // ── 9. FORM DATA PERSISTENCE (LocalStorage) ──
+        (function() {
+            const storageKey = 'draft_form_{{ $service->id }}';
+            
+            // Load saved data
+            const savedData = localStorage.getItem(storageKey);
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    Object.keys(data).forEach(key => {
+                        let $input = $('[name="' + key + '"]');
+                        if ($input.length > 0 && $input.attr('type') !== 'file' && $input.attr('type') !== 'hidden') {
+                            $input.val(data[key]);
+                        }
+                    });
+                } catch(e) {}
+            }
+
+            // Save data on input/change
+            $('form').on('input change', 'input:not([type="file"]), select, textarea', function() {
+                let formData = {};
+                $(this).closest('form').serializeArray().forEach(item => {
+                    if (item.name !== '_token') {
+                        formData[item.name] = item.value;
+                    }
+                });
+                localStorage.setItem(storageKey, JSON.stringify(formData));
+            });
+
+            // Clear on successful submit
+            $('form').on('submit', function() {
+                localStorage.removeItem(storageKey);
+            });
+        })();
     </script>
     
     {{-- ── 9. RAZORPAY GATEWAY INVOCATION ── --}}

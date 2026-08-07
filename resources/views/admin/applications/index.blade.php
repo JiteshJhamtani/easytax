@@ -154,18 +154,18 @@
                     <i class="fas fa-file-export text-primary"></i> Export Data
                 </button>
                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="exportMenu">
-                    {{-- Option 1: Standard --}}
-                    <a class="dropdown-item" href="{{ route('admin.applications.export') }}">
-                        <i class="fas fa-table text-secondary"></i> Standard Excel Export
+                    {{-- Option 1: Current Page --}}
+                    <a class="dropdown-item no-transition ds-export-btn" href="#" data-export-type="current_page">
+                        <i class="fas fa-file-alt text-secondary"></i> Export Current Page
+                    </a>
+                    {{-- Option 2: All Filtered --}}
+                    <a class="dropdown-item no-transition ds-export-btn" href="#" data-export-type="all_filtered">
+                        <i class="fas fa-filter text-primary"></i> Export All Filtered Data
                     </a>
                     <div class="dropdown-divider"></div>
-                    {{-- Option 2: Completed Forms --}}
-                    <a class="dropdown-item" href="{{ route('admin.applications.export', ['filter' => 'completed_forms']) }}">
-                        <i class="fas fa-check-circle text-success"></i> Export Completed (Form Data)
-                    </a>
-                    {{-- Option 3: Pending Only --}}
-                    <a class="dropdown-item" href="{{ route('admin.applications.export', ['filter' => 'pending_only']) }}">
-                        <i class="fas fa-hourglass-half text-warning"></i> Export Pending Applications
+                    {{-- Option 3: Master --}}
+                    <a class="dropdown-item no-transition ds-export-btn" href="#" data-export-type="master">
+                        <i class="fas fa-database text-success"></i> Master Export (All Data)
                     </a>
                 </div>
             </div>

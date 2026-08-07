@@ -35,6 +35,26 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+Route::get('/create-dummies', function() {
+    $service = \App\Models\Service::where('slug', 'like', '%itr%')->first();
+    if (!$service) return 'ITR service not found';
+    
+    $agent = \App\Models\User::where('role', 'AGENT')->first();
+    
+    \App\Models\Application::factory(10)->create([
+        'service_id' => $service->id,
+        'agent_id' => $agent ? $agent->id : \App\Models\User::factory()->create(['role' => 'AGENT'])->id,
+        'status' => \App\Enums\ApplicationStatus::IN_PROGRESS,
+        'payment_status' => \App\Enums\PaymentStatus::PAID,
+        'form_data' => [
+            'applicant_name' => 'Dummy User ' . rand(1000, 9999),
+            'pan_number' => 'ABCDE' . rand(1000, 9999) . 'F',
+            'mobile' => '9876543210'
+        ]
+    ]);
+    return 'Dummies created';
+});
+
 Route::get('/', function () {
     return redirect()->route('admin.dashboard');
 })->name('home');

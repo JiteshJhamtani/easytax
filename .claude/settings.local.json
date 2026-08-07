@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n '$member->name\\\\|$a->agent->name\\\\|$row->name\\\\|$row->email\\\\|->name\\\\b' /var/www/uat.easytax.live/app/Http/Controllers/Admin/ApplicationController.php)",
+      "Bash(vendor/bin/pint *)",
+      "Bash(php artisan *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000/)",
+      "Read(//tmp/**)",
+      "Bash(npx playwright *)",
+      "Bash(npm install *)",
+      "Bash(node *)",
+      "Bash(npm list *)",
+      "Bash(dpkg -l)",
+      "Bash(apt-cache show *)",
+      "Bash(dpkg -l libnspr4)",
+      "Bash(chmod +x /tmp/easytax_curl_tests.sh)",
+      "Bash(bash /tmp/easytax_curl_tests.sh)",
+      "Bash(python3 -c \"import json,sys; [print\\(r['method'],r['uri']\\) for r in json.load\\(sys.stdin\\) if 'applications' in r['uri']]\")",
+      "Bash(python3 -c \"import json,sys; [print\\(r['method'],r['uri']\\) for r in json.load\\(sys.stdin\\)]\")",
+      "Bash(vendor/bin/phpstan analyse *)",
+      "Bash(git stash *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(php --version)",
+      "Bash(/usr/bin/env php *)",
+      "Bash(./vendor/bin/pint --version)",
+      "Bash(vendor/bin/grumphp --version)",
+      "Bash(chmod +x scripts/pint.sh)",
+      "Bash(vendor/bin/grumphp run *)",
+      "Bash(git push *)",
+      "Bash(git rm *)",
+      "Bash(echo \"===EXIT: $?\")",
+      "Bash(git log *)",
+      "Bash(echo \"exit: $?\")"
+    ]
+  }
+}

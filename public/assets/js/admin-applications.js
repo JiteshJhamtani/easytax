@@ -21,7 +21,7 @@ $(document).ready(function () {
     ];
 
     if (window.userRole !== 'SUB-ADMIN') {
-        tableColumns.push({ data: "amount", name: "amount" });
+        tableColumns.push({ data: "amount", name: "amount", className: "text-right tabular-nums" });
     }
 
     // 3. Inject ITR specific columns ONLY if we are on the ITR page
@@ -42,6 +42,8 @@ $(document).ready(function () {
         
         processing: true,
         serverSide: true,
+        stateSave: true, // Save pagination state
+        stateDuration: 60 * 60, // 1 hour
         pageLength: 10,
         // ... rest of your config
         order: [[0, "desc"]], // Order by App ID descending initially
@@ -97,7 +99,8 @@ $(document).ready(function () {
         // Reset all dropdowns and date inputs
         $("#filterAgent, #filterService, #filterStatus, #filterPayment, #filterDateFrom, #filterDateTo").val('');
 
-        // Clear global search and reload the table
+        // Clear state and global search, then reload the table
+        table.state.clear();
         table.search('').draw();
     });
 
@@ -126,11 +129,15 @@ let tfCurrentStep = 1;
 const tfTotalSteps = 6;
 
 // 1. Navigation Logic
-function tfGoToStep(step) {
+function tfGoToStep(step, pushHistory = true) {
     $('.tf-step').removeClass('active');
     $('#step-' + step).addClass('active');
     $('#tf-progress').css('width', ((step / tfTotalSteps) * 100) + '%');
     $('#step-' + step).find('.tf-input').first().focus();
+    
+    if (pushHistory) {
+        history.pushState({ step: step }, '', '#balance-sheet-step-' + step);
+    }
 }
 
 $(document).on('click', '.tf-next', function() {
@@ -138,6 +145,34 @@ $(document).on('click', '.tf-next', function() {
 });
 $(document).on('click', '.tf-prev', function() {
     if (tfCurrentStep > 1) { tfCurrentStep--; tfGoToStep(tfCurrentStep); }
+});
+
+// Handle Back Button / History Navigation
+$(window).on('popstate', function(e) {
+    let hash = window.location.hash;
+    if (hash.startsWith('#balance-sheet-step-')) {
+        let step = parseInt(hash.replace('#balance-sheet-step-', ''));
+        if (!isNaN(step)) {
+            tfCurrentStep = step;
+            tfGoToStep(step, false);
+            if (!$('#balanceSheetModal').is(':visible')) {
+                $('#balanceSheetModal').modal('show');
+            }
+        }
+    } else {
+        if ($('#balanceSheetModal').is(':visible')) {
+            $('#balanceSheetModal').modal('hide');
+        }
+    }
+});
+
+// Handle Manual Modal Close
+$(document).ready(function() {
+    $('#balanceSheetModal').on('hidden.bs.modal', function () {
+        if (window.location.hash.startsWith('#balance-sheet-step-')) {
+            history.pushState("", document.title, window.location.pathname + window.location.search);
+        }
+    });
 });
 
 // Press Enter to go next
@@ -209,7 +244,7 @@ function openBalanceSheetModal(appId, salesAmt, netProfitAmt, otherIncomeAmt) {
     // Reset Modal
     $('#balanceSheetForm')[0].reset();
     tfCurrentStep = 1;
-    tfGoToStep(1);
+    tfGoToStep(1, true); // pushes state
 
     // Set Hidden Values
     $('#tf-app-id').val(appId);
@@ -228,3 +263,32 @@ function openBalanceSheetModal(appId, salesAmt, netProfitAmt, otherIncomeAmt) {
     // Show Modal
     $('#balanceSheetModal').modal('show');
 }
+
+// Export Logic for Dynamic DataTables
+$(document).ready(function() {
+    $('.ds-export-btn').on('click', function(e) {
+        e.preventDefault();
+        
+        let exportType = $(this).data('export-type');
+        
+        // Get all current DataTables parameters (filters, pagination, sort)
+        let params = table ? table.ajax.params() : {};
+        
+        // Ensure params exist (it might be undefined if DataTables hasn't loaded properly)
+        if (!params) {
+            params = {};
+        }
+        
+        // Add export type flag
+        params.export_type = exportType;
+        
+        // Build query string
+        let queryString = $.param(params);
+        
+        // Use the new dynamic export route
+        let exportUrl = '/admin/applications/export?' + queryString;
+        
+        // Native browser navigation will download the file since the server sends a download header.
+        window.location.href = exportUrl;
+    });
+});

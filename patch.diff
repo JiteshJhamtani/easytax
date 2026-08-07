@@ -1,0 +1,559 @@
+﻿diff --git a/app/FormEngine/Field.php b/app/FormEngine/Field.php
+index 1a4c779..04eee46 100755
+--- a/app/FormEngine/Field.php
++++ b/app/FormEngine/Field.php
+@@ -18,30 +18,38 @@ class Field
+     ];
+ 
+     public string $name;
++
+     public string $label;
++
+     public string $type;
++
+     public bool $required;
++
+     public ?string $validation;
++
++    public ?string $placeholder;
++
+     public array $options;
+ 
+     public function __construct(array $config)
+     {
+-        if (!in_array($config['type'], self::$allowedTypes)) {
++        if (! in_array($config['type'], self::$allowedTypes)) {
+             throw new Exception("Unsupported field type: {$config['type']}");
+         }
+ 
+-        $this->name       = $config['name'];
+-        $this->label      = $config['label'];
+-        $this->type       = $config['type'];
+-        $this->required   = $config['required'] ?? false;
++        $this->name = $config['name'];
++        $this->label = $config['label'];
++        $this->type = $config['type'];
++        $this->required = $config['required'] ?? false;
+         $this->validation = $config['validation'] ?? null;
+-        $this->options    = $config['options'] ?? [];
++        $this->placeholder = $config['placeholder'] ?? null;
++        $this->options = $config['options'] ?? [];
+     }
+ 
+     public function render(): string
+     {
+         return view("components.form.fields.{$this->type}", [
+-            'field' => $this
++            'field' => $this,
+         ])->render();
+     }
+ 
+diff --git a/app/Http/Controllers/Admin/ApplicationController.php b/app/Http/Controllers/Admin/ApplicationController.php
+index b7af505..e29e492 100755
+--- a/app/Http/Controllers/Admin/ApplicationController.php
++++ b/app/Http/Controllers/Admin/ApplicationController.php
+@@ -171,6 +171,9 @@ public function data(Request $request)
+                     $q->where('name', 'like', "%{$keyword}%");
+                 });
+             })
++            ->filterColumn('dynamic_data', function ($query, $keyword) {
++                $query->where('form_data', 'like', "%{$keyword}%");
++            })
+             ->addColumn('dynamic_data', function ($a) {
+                 $targetField = $a->service->primary_data_field ?? null;
+                 if (! $targetField || empty($a->form_data)) {
+diff --git a/app/Http/Controllers/Agent/ApplicationController.php b/app/Http/Controllers/Agent/ApplicationController.php
+index 42b3f06..016fb71 100755
+--- a/app/Http/Controllers/Agent/ApplicationController.php
++++ b/app/Http/Controllers/Agent/ApplicationController.php
+@@ -2,13 +2,20 @@
+ 
+ namespace App\Http\Controllers\Agent;
+ 
++use App\Enums\ApplicationStatus;
+ use App\Enums\PaymentStatus;
+ use App\Http\Controllers\Controller;
+ use App\Models\Application;
+ use App\Models\PaymentLog;
++use App\Models\Service;
++use App\Models\User;
++use App\Notifications\ApplicationCancelledNotification;
+ use App\Services\PhonePeService;
++use Barryvdh\DomPDF\Facade\Pdf;
+ use Illuminate\Http\Request;
++use Illuminate\Support\Facades\Notification;
+ use Illuminate\Support\Str;
++use Smalot\PdfParser\Parser;
+ use Spatie\MediaLibrary\MediaCollections\Models\Media;
+ 
+ class ApplicationController extends Controller
+@@ -45,7 +52,7 @@ public function index(Request $request)
+             ")->first();
+         // -----------------------------
+ 
+-        $services = \App\Models\Service::where('active', true)->get();
++        $services = Service::where('active', true)->get();
+ 
+         return view('agent.applications.index', compact('stats', 'services', 'type', 'pageTitle'));
+     }
+@@ -104,6 +111,13 @@ public function data(Request $request)
+         }
+ 
+         return datatables()->of($query)
++            ->filterColumn('service.name', function ($query, $keyword) {
++                $query->where(function ($q) use ($keyword) {
++                    $q->whereHas('service', function ($q2) use ($keyword) {
++                        $q2->where('name', 'like', "%{$keyword}%");
++                    })->orWhere('form_data', 'like', "%{$keyword}%");
++                });
++            })
+             ->addColumn('service', fn ($a) => $a->service->name)
+             ->addColumn('status', fn ($a) => '<span class="badge badge-info">'.$a->status->value.'</span>')
+             ->addColumn('payment', fn ($a) => '<span class="badge badge-success">'.$a->payment_status->value.'</span>')
+@@ -173,6 +187,7 @@ public function data(Request $request)
+ 
+                 // If not generated yet, show the Generate button
+                 $url = route('agent.applications.balance-sheet', $a->id);
++
+                 return '<a href="'.$url.'" class="btn btn-sm btn-outline-success font-weight-bold" style="white-space: nowrap;"><i class="fas fa-file-excel mr-1"></i> Generate</a>';
+             })
+             ->addColumn('actions', function ($a) use ($request) {
+@@ -254,12 +269,12 @@ public function cancel(Application $application)
+     {
+         abort_if($application->agent_id !== auth()->id(), 403);
+ 
+-        if ($application->status === \App\Enums\ApplicationStatus::CANCELLED) {
++        if ($application->status === ApplicationStatus::CANCELLED) {
+             return back()->with('error', 'Application is already cancelled.');
+         }
+ 
+         $application->update([
+-            'status' => \App\Enums\ApplicationStatus::CANCELLED,
++            'status' => ApplicationStatus::CANCELLED,
+             'commission_amount' => 0,
+         ]);
+ 
+@@ -268,8 +283,8 @@ public function cancel(Application $application)
+             ->causedBy(auth()->user())
+             ->log('Application cancelled by agent');
+ 
+-        $admins = \App\Models\User::where('role', 'admin')->where('is_active', true)->get();
+-        \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\ApplicationCancelledNotification($application));
++        $admins = User::where('role', 'admin')->where('is_active', true)->get();
++        Notification::send($admins, new ApplicationCancelledNotification($application));
+ 
+         return back()->with('success', 'Application has been successfully cancelled.');
+     }
+@@ -314,7 +329,7 @@ public function viewDocument($mediaId)
+         }
+ 
+         $headers = [];
+-        if (\Illuminate\Support\Str::endsWith(strtolower($media->file_name), '.pdf')) {
++        if (Str::endsWith(strtolower($media->file_name), '.pdf')) {
+             $headers['Content-Type'] = 'application/pdf';
+         }
+ 
+@@ -357,7 +372,7 @@ public function balanceSheetForm($id)
+         $otherIncome = (float) preg_replace('/[^0-9.]/', '', $formData['other_income'] ?? 0);
+ 
+         $extractedData = [];
+-        $parser = new \Smalot\PdfParser\Parser;
++        $parser = new Parser;
+ 
+         $compMedia = $application->getFirstMedia('computation_sheet');
+ 
+@@ -424,7 +439,7 @@ public function generateBalanceSheetPdf(Request $request, $id)
+         $pdfData = compact('applicantName', 'panNumber', 'data', 'grossProfit', 'netProfit', 'closingCapital', 'tradingTotal', 'pnlTotal', 'bsTotal', 'capitalTotal');
+ 
+         // Generate PDF using your template
+-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.applications.pdfs.balance_sheet', $pdfData);
++        $pdf = Pdf::loadView('admin.applications.pdfs.balance_sheet', $pdfData);
+ 
+         // --- NEW: AUTO-SAVE TO DATABASE FOR AGENT ---
+         $fileName = 'Balance_Sheet_'.$panNumber.'.pdf';
+diff --git a/config/service_forms.php b/config/service_forms.php
+index 7763481..9e4c19a 100755
+--- a/config/service_forms.php
++++ b/config/service_forms.php
+@@ -263,6 +263,22 @@
+                         'required' => false,
+                         'validation' => 'nullable|numeric|min:0',
+                     ],
++                    [
++                        'name' => 'other_income_amount',
++                        'label' => 'Other Income',
++                        'type' => 'text',
++                        'required' => false,
++                        'validation' => 'nullable|numeric|min:0',
++                        'placeholder' => 'Enter amount from other sources (if any)',
++                    ],
++                    [
++                        'name' => 'business_name',
++                        'label' => 'Name of the Business',
++                        'type' => 'text',
++                        'required' => false,
++                        'validation' => 'nullable|string|max:255',
++                        'placeholder' => 'e.g., Kirana store, Freelance, Consulting, Trading firm',
++                    ],
+                 ],
+             ],
+             'bank_details' => [
+diff --git a/public/assets/js/admin-applications.js b/public/assets/js/admin-applications.js
+index 1311aca..e9f9318 100755
+--- a/public/assets/js/admin-applications.js
++++ b/public/assets/js/admin-applications.js
+@@ -15,7 +15,7 @@ $(document).ready(function () {
+         { data: "id", name: "id" },
+         { data: "agent", name: "agent.name" }, 
+         { data: "service", name: "service.name" },
+-        { data: 'dynamic_data', name: 'dynamic_data', orderable: false, searchable: false },
++        { data: 'dynamic_data', name: 'dynamic_data', orderable: false, searchable: true },
+         { data: "status", name: "status" },
+         { data: "payment", name: "payment_status" }
+     ];
+@@ -76,7 +76,7 @@ $(document).ready(function () {
+         // SaaS-style language overrides
+         language: {
+             search: "_INPUT_",
+-            searchPlaceholder: "Search ID or Service...",
++            searchPlaceholder: "Search ID, Applicant, or Service...",
+             lengthMenu: "Show _MENU_ entries",
+             info: "Showing _START_ to _END_ of _TOTAL_ entries",
+             paginate: {
+diff --git a/public/assets/js/applications.js b/public/assets/js/applications.js
+index 273071e..2b7ea04 100755
+--- a/public/assets/js/applications.js
++++ b/public/assets/js/applications.js
+@@ -79,7 +79,7 @@ $(document).ready(function () {
+         // SaaS-style language overrides
+         language: {
+             search: "_INPUT_",
+-            searchPlaceholder: "Search ID or Service...",
++            searchPlaceholder: "Search ID, Applicant, or Service...",
+             lengthMenu: "Show _MENU_ entries",
+             info: "Showing _START_ to _END_ of _TOTAL_ entries",
+             paginate: {
+diff --git a/resources/views/admin/agents/create.blade.php b/resources/views/admin/agents/create.blade.php
+index e4a35b0..fe9eccc 100755
+--- a/resources/views/admin/agents/create.blade.php
++++ b/resources/views/admin/agents/create.blade.php
+@@ -5,9 +5,7 @@
+ @section('content_header')
+     <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
+         <h1 class="m-0 text-dark font-weight-bold">Create New Agent</h1>
+-        <a href="{{ route('admin.agents.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm">
+-            <i class="fas fa-arrow-left mr-1"></i> Back to Agents
+-        </a>
++        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Agents</a>
+     </div>
+ @stop
+ 
+diff --git a/resources/views/admin/agents/edit.blade.php b/resources/views/admin/agents/edit.blade.php
+index eaa4278..19115ab 100755
+--- a/resources/views/admin/agents/edit.blade.php
++++ b/resources/views/admin/agents/edit.blade.php
+@@ -8,9 +8,7 @@
+             <h1 class="m-0 text-dark font-weight-bold">Edit Agent</h1>
+             <p class="text-muted mb-0 mt-1">Updating profile for {{ $agent->agent_code }}</p>
+         </div>
+-        <a href="{{ route('admin.agents.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm">
+-            <i class="fas fa-arrow-left mr-1"></i> Back to Agents
+-        </a>
++        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Agents</a>
+     </div>
+ @stop
+ 
+diff --git a/resources/views/admin/agents/show.blade.php b/resources/views/admin/agents/show.blade.php
+index db5a5f9..dcf9931 100755
+--- a/resources/views/admin/agents/show.blade.php
++++ b/resources/views/admin/agents/show.blade.php
+@@ -5,9 +5,7 @@
+ @section('content_header')
+     <div class="d-flex justify-content-between align-items-center mb-3 mt-2 flex-wrap" style="gap: 10px;">
+         <h1 class="m-0 text-dark font-weight-bold" style="font-size: 1.5rem;">Agent Overview</h1>
+-        <a href="{{ route('admin.agents.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm text-nowrap">
+-            <i class="fas fa-arrow-left mr-1"></i> Back to Agents
+-        </a>
++        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Agents</a>
+     </div>
+ @stop
+ 
+diff --git a/resources/views/admin/applications/balance_sheet.blade.php b/resources/views/admin/applications/balance_sheet.blade.php
+index 54f3288..3790cc2 100644
+--- a/resources/views/admin/applications/balance_sheet.blade.php
++++ b/resources/views/admin/applications/balance_sheet.blade.php
+@@ -40,7 +40,7 @@
+             <h2 class="font-weight-bold mb-1">Balance Sheet Generator</h2>
+             <p class="text-muted mb-0">Application ID: #{{ $application->id }} | Target Net Profit: <strong class="text-dark">Γé╣{{ number_format($netProfit) }}</strong></p>
+         </div>
+-        <a href="{{ url('admin/applications?type=itr-filing') }}" class="btn btn-outline-secondary rounded-pill">
++        <a href="javascript:history.back()" class="btn-back-modern">
+             <i class="fas fa-arrow-left mr-2"></i> Back to ITRs
+         </a>
+     </div>
+@@ -202,7 +202,7 @@ function calculateAll() {
+         $('#disp-live-np').text('Γé╣' + np.toLocaleString('en-IN'));
+         
+         let isNpValid = false;
+-        if (np === targetNP && targetNP > 0) {
++        if (Math.round(np) === Math.round(targetNP) && targetNP > 0) {
+             isNpValid = true;
+             $('#status-np').removeClass('tally-error').addClass('tally-match').html('<i class="fas fa-check-circle mr-1"></i> Net Profit Matched');
+             $('#disp-live-np').removeClass('text-danger').addClass('text-success');
+diff --git a/resources/views/admin/applications/show.blade.php b/resources/views/admin/applications/show.blade.php
+index 90688a6..e0d0f7f 100755
+--- a/resources/views/admin/applications/show.blade.php
++++ b/resources/views/admin/applications/show.blade.php
+@@ -6,10 +6,7 @@
+ @section('content_header')
+     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-2 pt-2">
+         <div>
+-            <a href="{{ route('admin.applications.index') }}"
+-                class="text-muted text-sm font-weight-bold mb-2 d-inline-block transition-hover">
+-                <i class="fas fa-arrow-left mr-1"></i> Back to Applications
+-            </a>
++            <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Applications</a>
+ 
+             @php
+                 $status = strtolower($application->status?->value ?? 'unknown');
+@@ -147,6 +144,11 @@ class="btn btn-sm btn-outline-success font-weight-bold shadow-sm transition-hove
+                     $repeaterGroups = [];
+                     
+                     foreach($formData as $key => $value) {
++                        // Skip any field that is completely empty (except for '0')
++                        if (empty($value) && $value !== '0') {
++                            continue;
++                        }
++
+                         if (str_starts_with($key, 'director_') || str_starts_with($key, 'member_') || str_starts_with($key, 'partner_')) {
+                             if (preg_match('/^([a-zA-Z]+)_(\d+)_(.+)$/', $key, $matches)) {
+                                 $prefix = $matches[1]; 
+diff --git a/resources/views/admin/marketers/create.blade.php b/resources/views/admin/marketers/create.blade.php
+index d829cea..3f8c75f 100644
+--- a/resources/views/admin/marketers/create.blade.php
++++ b/resources/views/admin/marketers/create.blade.php
+@@ -20,9 +20,7 @@
+ @section('content')
+ <div class="container-fluid px-4 py-4">
+     <div class="mb-4">
+-        <a href="{{ route('crm.marketers.index') }}" class="text-muted text-decoration-none font-weight-bold">
+-            <i class="fas fa-arrow-left mr-1"></i> Back to Marketers
+-        </a>
++        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Marketers</a>
+     </div>
+ 
+     @if($errors->any())
+diff --git a/resources/views/admin/marketers/edit.blade.php b/resources/views/admin/marketers/edit.blade.php
+index e97c99f..97a1277 100644
+--- a/resources/views/admin/marketers/edit.blade.php
++++ b/resources/views/admin/marketers/edit.blade.php
+@@ -20,9 +20,7 @@
+ @section('content')
+ <div class="container-fluid px-4 py-4">
+     <div class="mb-4">
+-        <a href="{{ route('crm.marketers.index') }}" class="text-muted text-decoration-none font-weight-bold">
+-            <i class="fas fa-arrow-left mr-1"></i> Back to Marketers
+-        </a>
++        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Marketers</a>
+     </div>
+ 
+     @if($errors->any())
+diff --git a/resources/views/admin/pages/create.blade.php b/resources/views/admin/pages/create.blade.php
+index 5c17f6a..4bbb511 100755
+--- a/resources/views/admin/pages/create.blade.php
++++ b/resources/views/admin/pages/create.blade.php
+@@ -5,9 +5,7 @@
+ @section('content_header')
+     <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
+         <h1 class="m-0 text-dark font-weight-bold">Create New Page</h1>
+-        <a href="{{ route('admin.pages.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm">
+-            <i class="fas fa-arrow-left mr-1"></i> Back to Pages
+-        </a>
++        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Pages</a>
+     </div>
+ @stop
+ 
+diff --git a/resources/views/admin/pages/edit.blade.php b/resources/views/admin/pages/edit.blade.php
+index b3c618a..2db34e1 100755
+--- a/resources/views/admin/pages/edit.blade.php
++++ b/resources/views/admin/pages/edit.blade.php
+@@ -5,9 +5,7 @@
+ @section('content_header')
+     <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
+         <h1 class="m-0 text-dark font-weight-bold">Edit Page: {{ $page->title }}</h1>
+-        <a href="{{ route('admin.pages.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm">
+-            <i class="fas fa-arrow-left mr-1"></i> Back to Pages
+-        </a>
++        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Pages</a>
+     </div>
+ @stop
+ 
+diff --git a/resources/views/admin/payouts/show.blade.php b/resources/views/admin/payouts/show.blade.php
+index 2f8875b..5af2118 100755
+--- a/resources/views/admin/payouts/show.blade.php
++++ b/resources/views/admin/payouts/show.blade.php
+@@ -8,9 +8,7 @@
+             <h1 class="m-0 text-dark font-weight-bold">Payout #{{ $payout->id }}</h1>
+             <p class="text-muted mb-0 mt-1">Generated on {{ $payout->created_at?->format('d M Y, h:i A') ?? 'N/A' }}</p>
+         </div>
+-        <a href="{{ route('admin.payouts.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm">
+-            <i class="fas fa-arrow-left mr-1"></i> Back to Payouts
+-        </a>
++        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Payouts</a>
+     </div>
+ @stop
+ 
+diff --git a/resources/views/admin/services/create.blade.php b/resources/views/admin/services/create.blade.php
+index d5e292a..da0e1c7 100755
+--- a/resources/views/admin/services/create.blade.php
++++ b/resources/views/admin/services/create.blade.php
+@@ -5,9 +5,7 @@
+ @section('content_header')
+     <div class="d-flex justify-content-between align-items-center mb-3 mt-2">
+         <h1 class="m-0 text-dark font-weight-bold">Create New Service</h1>
+-        <a href="{{ route('admin.services.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm">
+-            <i class="fas fa-arrow-left mr-1"></i> Back to Services
+-        </a>
++        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Services</a>
+     </div>
+ @stop
+ 
+diff --git a/resources/views/admin/services/edit.blade.php b/resources/views/admin/services/edit.blade.php
+index 8f556a7..11f5ed5 100755
+--- a/resources/views/admin/services/edit.blade.php
++++ b/resources/views/admin/services/edit.blade.php
+@@ -8,9 +8,7 @@
+             <h1 class="m-0 text-dark font-weight-bold">Edit Service</h1>
+             <p class="text-muted mb-0 mt-1">Editing <code>{{ $service->slug }}</code></p>
+         </div>
+-        <a href="{{ route('admin.services.index') }}" class="btn btn-outline-secondary font-weight-bold shadow-sm">
+-            <i class="fas fa-arrow-left mr-1"></i> Back to Services
+-        </a>
++        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Services</a>
+     </div>
+ @stop
+ 
+diff --git a/resources/views/admin/team/create-payout.blade.php b/resources/views/admin/team/create-payout.blade.php
+index ffddd5b..961bd10 100644
+--- a/resources/views/admin/team/create-payout.blade.php
++++ b/resources/views/admin/team/create-payout.blade.php
+@@ -8,7 +8,7 @@
+         <div class="col-md-6">
+             
+             <div class="mb-4">
+-                <a href="{{ route('admin.team.show', $operator->id) }}" class="text-muted text-decoration-none"><i class="fas fa-arrow-left"></i> Back to Profile</a>
++                <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Profile</a>
+                 <h3 class="font-weight-bold text-dark mt-2 mb-0">Record Payout</h3>
+                 <p class="text-muted">Issue a payment to <strong>{{ $operator->name }}</strong></p>
+             </div>
+diff --git a/resources/views/admin/team/create.blade.php b/resources/views/admin/team/create.blade.php
+index 3fc3b82..e37de85 100644
+--- a/resources/views/admin/team/create.blade.php
++++ b/resources/views/admin/team/create.blade.php
+@@ -28,9 +28,7 @@
+ <div class="container-fluid px-4 py-4">
+     
+     <div class="mb-4">
+-        <a href="{{ route('admin.team.index') }}" class="text-muted text-decoration-none font-weight-bold">
+-            <i class="fas fa-arrow-left mr-1"></i> Back to Operators
+-        </a>
++        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Operators</a>
+     </div>
+ 
+     @if($errors->any())
+diff --git a/resources/views/admin/team/edit.blade.php b/resources/views/admin/team/edit.blade.php
+index 393e47f..f8a2a9d 100644
+--- a/resources/views/admin/team/edit.blade.php
++++ b/resources/views/admin/team/edit.blade.php
+@@ -26,9 +26,7 @@
+ <div class="container-fluid px-4 py-4">
+     
+     <div class="mb-4">
+-        <a href="{{ route('admin.team.index') }}" class="text-muted text-decoration-none font-weight-bold">
+-            <i class="fas fa-arrow-left mr-1"></i> Back to Operators
+-        </a>
++        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Operators</a>
+     </div>
+ 
+     <div class="row justify-content-center">
+diff --git a/resources/views/admin/team/show.blade.php b/resources/views/admin/team/show.blade.php
+index a9a9442..1cb699e 100644
+--- a/resources/views/admin/team/show.blade.php
++++ b/resources/views/admin/team/show.blade.php
+@@ -6,7 +6,7 @@
+ <div class="container-fluid px-4 py-4">
+     <div class="d-flex justify-content-between align-items-center mb-4">
+         <div>
+-            <a href="{{ route('admin.team.index') }}" class="text-muted text-decoration-none mb-2 d-inline-block"><i class="fas fa-arrow-left"></i> Back to Team</a>
++            <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Team</a>
+             <h3 class="font-weight-bold text-dark mb-0">
+                 {{ $operator->name }} 
+                 @if($operator->is_active)
+diff --git a/resources/views/components/form/fields/text.blade.php b/resources/views/components/form/fields/text.blade.php
+index 19a0f6f..e0f9cfc 100755
+--- a/resources/views/components/form/fields/text.blade.php
++++ b/resources/views/components/form/fields/text.blade.php
+@@ -6,7 +6,7 @@
+         @endif
+     </label>
+ 
+-    <input type="text" name="{{ $field->name }}" value="{{ old($field->name) }}" class="form-control">
++    <input type="text" name="{{ $field->name }}" value="{{ old($field->name) }}" class="form-control" @if($field->placeholder) placeholder="{{ $field->placeholder }}" @endif>
+ 
+     @error($field->name)
+         <div class="error">{{ $message }}</div>
+diff --git a/resources/views/front/pages/services/show.blade.php b/resources/views/front/pages/services/show.blade.php
+index 35a56cd..e4b6b0d 100755
+--- a/resources/views/front/pages/services/show.blade.php
++++ b/resources/views/front/pages/services/show.blade.php
+@@ -483,7 +483,7 @@ function injectTooltips() {
+         function initSmartFormLogic() {
+             const logicMap = {
+                 'has_salary': { inputs: ['salary_amount'], docs: ['form_16'] },
+-                'has_business': { inputs: ['business_amount', 'turnover'], docs: ['profit_loss_statement', 'balance_sheet'] },
++                'has_business': { inputs: ['turnover', 'business_amount', 'other_income_amount', 'business_name'], docs: ['profit_loss_statement', 'balance_sheet'] },
+                 'has_capital_gains': { inputs: [], docs: ['broker_statement'] }
+             };
+ 
+diff --git a/resources/views/layouts/admin.blade.php b/resources/views/layouts/admin.blade.php
+index 79830fd..65fd8ae 100644
+--- a/resources/views/layouts/admin.blade.php
++++ b/resources/views/layouts/admin.blade.php
+@@ -65,7 +65,23 @@
+             overflow-x: hidden;
+         }
+ 
+-       
++        /* ΓöÇΓöÇ MODERN BACK BUTTON ΓöÇΓöÇ */
++        .btn-back-modern {
++            display: inline-flex; align-items: center; gap: 0.5rem;
++            background: var(--surface); color: var(--slate-dark);
++            font-size: 0.85rem; font-weight: 700;
++            padding: 0.5rem 1rem; border-radius: 50px;
++            border: 1px solid var(--border);
++            text-decoration: none; transition: all 0.2s;
++            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
++            margin-bottom: 1rem; cursor: pointer;
++        }
++        .btn-back-modern:hover {
++            background: var(--ink-100); color: var(--green);
++            transform: translateY(-1px);
++            box-shadow: 0 4px 8px rgba(0,0,0,0.04);
++            text-decoration: none;
++        }
+ 
+         .shell { display: flex; min-height: 100vh; }
+ 
+diff --git a/resources/views/layouts/guest.blade.php b/resources/views/layouts/guest.blade.php
+index b9f65a3..eda87fe 100755
+--- a/resources/views/layouts/guest.blade.php
++++ b/resources/views/layouts/guest.blade.php
+@@ -45,7 +45,7 @@
+                 ') }}" alt="Accounting paperwork" class="w-full h-full object-cover transition-transform duration-700 hover:scale-105">
+                         </div>
+                         <div class="stagger-anim opacity-0 translate-y-5 rounded-xl flex flex-col justify-center items-center p-6 text-white shadow-sm transition-all duration-700 ease-out bg-[#182b49] dark:bg-[#12223a]" style="transition-delay: 0.2s;">
+-                            <h2 class="text-5xl font-bold mb-2 tracking-tight">15k+</h2>
++                            <h2 class="text-5xl font-bold mb-2 tracking-tight">1M+</h2>
+                             <p class="text-center text-sm font-medium px-2 text-gray-300">Trusted users securely processing and filing returns this year.</p>
+                         </div>
+                         {{-- Image 2 (Middle Left) --}}
