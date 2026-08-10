@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Exports\ApplicationsExport;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Service;
@@ -14,7 +13,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
-use Maatwebsite\Excel\Facades\Excel;
 use Smalot\PdfParser\Parser;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -311,6 +309,8 @@ class ApplicationController extends Controller
 
     public function export(Request $request)
     {
+        abort_if(strtoupper(auth()->user()->role) === 'SUB-ADMIN', 403, 'Sub-Admins are not authorized to export data.');
+
         $exportType = $request->query('export_type', 'all_filtered');
 
         $query = Application::with(['agent', 'service']);
@@ -365,16 +365,20 @@ class ApplicationController extends Controller
                 $query->onlyTrashed();
             }
 
-            if ($request->has('search') && !empty($request->search['value'])) {
+            if ($request->has('search') && ! empty($request->search['value'])) {
                 $keyword = $request->search['value'];
                 $query->where(function ($q) use ($keyword) {
                     $q->where('id', 'like', "%{$keyword}%")
-                      ->orWhereHas('agent', function($q) use ($keyword) { $q->where('name', 'like', "%{$keyword}%"); })
-                      ->orWhereHas('service', function($q) use ($keyword) { $q->where('name', 'like', "%{$keyword}%"); })
-                      ->orWhere('form_data', 'like', "%{$keyword}%");
+                        ->orWhereHas('agent', function ($q) use ($keyword) {
+                            $q->where('name', 'like', "%{$keyword}%");
+                        })
+                        ->orWhereHas('service', function ($q) use ($keyword) {
+                            $q->where('name', 'like', "%{$keyword}%");
+                        })
+                        ->orWhere('form_data', 'like', "%{$keyword}%");
                 });
             }
-            
+
             if ($exportType === 'current_page') {
                 if ($request->has('start')) {
                     $query->skip($request->start);
@@ -391,17 +395,17 @@ class ApplicationController extends Controller
             return back()->with('error', 'No applications found for this export.');
         }
 
-        $groupedApplications = $applications->groupBy(function($app) {
+        $groupedApplications = $applications->groupBy(function ($app) {
             return $app->service->name ?? 'Unknown Service';
         });
 
-        $generateCsvForGroup = function($apps) {
+        $generateCsvForGroup = function ($apps) {
             $dynamicKeys = [];
             foreach ($apps as $app) {
                 $formData = is_string($app->form_data) ? json_decode($app->form_data, true) : $app->form_data;
                 if (is_array($formData)) {
                     foreach (array_keys($formData) as $key) {
-                        if (!in_array($key, $dynamicKeys)) {
+                        if (! in_array($key, $dynamicKeys)) {
                             $dynamicKeys[] = $key;
                         }
                     }
@@ -410,7 +414,7 @@ class ApplicationController extends Controller
 
             $standardColumns = ['App ID', 'Agent Name', 'Service', 'Status', 'Payment', 'Amount', 'Submitted Date'];
             $displayDynamicKeys = array_map(function ($key) {
-                return \Illuminate\Support\Str::title(str_replace('_', ' ', $key));
+                return Str::title(str_replace('_', ' ', $key));
             }, $dynamicKeys);
             $csvHeaders = array_merge($standardColumns, $displayDynamicKeys);
 
@@ -420,7 +424,7 @@ class ApplicationController extends Controller
 
             foreach ($apps as $app) {
                 $formData = is_string($app->form_data) ? json_decode($app->form_data, true) : $app->form_data;
-                if (!is_array($formData)) {
+                if (! is_array($formData)) {
                     $formData = [];
                 }
 
@@ -448,17 +452,18 @@ class ApplicationController extends Controller
                 }
                 fputcsv($file, $row);
             }
-            
+
             rewind($file);
             $content = stream_get_contents($file);
             fclose($file);
+
             return $content;
         };
 
         if ($groupedApplications->count() === 1) {
             $serviceName = $groupedApplications->keys()->first();
-            $safeServiceName = \Illuminate\Support\Str::slug($serviceName);
-            $fileName = "Export_{$safeServiceName}_" . date('Y_m_d_His') . '.csv';
+            $safeServiceName = Str::slug($serviceName);
+            $fileName = "Export_{$safeServiceName}_".date('Y_m_d_His').'.csv';
 
             $csvContent = $generateCsvForGroup($applications);
 
@@ -473,16 +478,16 @@ class ApplicationController extends Controller
             return response()->make($csvContent, 200, $headers);
         }
 
-        $zipFileName = 'Export_Master_' . date('Y_m_d_His') . '.zip';
-        $zipFilePath = storage_path('app/' . $zipFileName);
+        $zipFileName = 'Export_Master_'.date('Y_m_d_His').'.zip';
+        $zipFilePath = storage_path('app/'.$zipFileName);
 
-        $zip = new \ZipArchive();
-        if ($zip->open($zipFilePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
+        $zip = new \ZipArchive;
+        if ($zip->open($zipFilePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
             foreach ($groupedApplications as $serviceName => $apps) {
-                $safeServiceName = \Illuminate\Support\Str::slug($serviceName);
+                $safeServiceName = Str::slug($serviceName);
                 $csvFileName = "{$safeServiceName}_data.csv";
                 $csvContent = $generateCsvForGroup($apps);
-                
+
                 $zip->addFromString($csvFileName, $csvContent);
             }
             $zip->close();
@@ -567,6 +572,18 @@ class ApplicationController extends Controller
         }
 
         return back()->with('success', 'Application status updated successfully.');
+    }
+
+    public function updatePayoutOverride(Request $request, Application $application)
+    {
+        $request->validate([
+            'override_payout_amount' => 'nullable|numeric|min:0',
+        ]);
+
+        $application->override_payout_amount = $request->override_payout_amount;
+        $application->save();
+
+        return back()->with('success', 'Application payout override updated successfully!');
     }
 
     public function uploadDocument(Request $request, Application $application)

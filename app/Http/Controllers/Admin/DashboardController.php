@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
+use Illuminate\Encryption\Encrypter;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -163,7 +164,7 @@ class DashboardController extends Controller
         ]);
 
         // 3. Encrypt the payload using the secure config value
-        $encrypter = new \Illuminate\Encryption\Encrypter(config('services.cross_server.secret'), config('app.cipher'));
+        $encrypter = new Encrypter(config('services.cross_server.secret'), config('app.cipher'));
         $token = $encrypter->encryptString($payload);
 
         // 4. Redirect them to the auto-login route on the other server

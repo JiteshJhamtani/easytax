@@ -2,8 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,13 +28,13 @@ class AppServiceProvider extends ServiceProvider
     {
         // 1. Force HTTPS on Production/UAT
         if (config('app.env') !== 'local') {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
+            URL::forceScheme('https');
         }
 
         // 2. Your existing notifications logic
-        \Illuminate\Support\Facades\View::composer('adminlte::page', function ($view) {
+        View::composer('adminlte::page', function ($view) {
             if (auth()->check() && auth()->user()->isAdmin()) {
-                /** @var \App\Models\User $user */
+                /** @var User $user */
                 $user = auth()->user();
                 $view->with('unreadNotifications', $user->unreadNotifications()->take(5)->get());
                 $view->with('unreadCount', $user->unreadNotifications()->count());
@@ -50,20 +55,21 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // 4. Implicitly grant "admin" role all permissions
-        \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
+        Gate::before(function ($user, $ability) {
             return $user->hasRole('admin') ? true : null;
         });
 
         // 5. Custom @tenant Blade directive
-        \Illuminate\Support\Facades\Blade::if('tenant', function ($tenant) {
+        Blade::if('tenant', function ($tenant) {
             return config('app.tenant') === $tenant;
         });
 
         // 6. Custom @b2bOnly Blade directive
-        \Illuminate\Support\Facades\Blade::if('b2bOnly', function () {
+        Blade::if('b2bOnly', function () {
             if (app()->environment('local')) {
                 return true;
             }
+
             return in_array(request()->getHost(), ['uat.easytax.live', 'b2b.easytax.live']);
         });
     }

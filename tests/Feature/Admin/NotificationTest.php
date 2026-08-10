@@ -1,11 +1,11 @@
 <?php
 
-use App\Models\User;
-use App\Models\Service;
-use App\Models\Application;
-use App\Enums\NotificationPreference;
 use App\Enums\ApplicationStatus;
+use App\Enums\NotificationPreference;
 use App\Enums\PaymentStatus;
+use App\Models\Application;
+use App\Models\Service;
+use App\Models\User;
 use App\Notifications\ApplicationSubmittedNotification;
 use Illuminate\Support\Facades\Notification;
 
@@ -16,7 +16,7 @@ beforeEach(function () {
         'service_id' => $this->service->id,
         'payment_status' => PaymentStatus::PENDING,
         'status' => ApplicationStatus::DRAFT,
-        'payment_reference' => 'TXN123'
+        'payment_reference' => 'TXN123',
     ]);
 
     // Setup mocked credentials
@@ -32,22 +32,22 @@ beforeEach(function () {
                     'id' => 'pay_123',
                     'order_id' => 'TXN123',
                     'amount' => $expectedAmount,
-                ]
-            ]
-        ]
+                ],
+            ],
+        ],
     ]);
 
     $this->signature = hash_hmac('sha256', $this->payloadString, 'testsecret');
 
     $this->headers = [
         'HTTP_X_RAZORPAY_SIGNATURE' => $this->signature,
-        'CONTENT_TYPE' => 'application/json'
+        'CONTENT_TYPE' => 'application/json',
     ];
 });
 
 it('dispatches mail and database notifications when admin preference is ON', function () {
     Notification::fake();
-    
+
     $this->admin->update(['notification_preference' => NotificationPreference::ON]);
 
     $response = $this->call('POST', route('payment.webhook'), [], [], [], $this->headers, $this->payloadString);
@@ -64,7 +64,7 @@ it('dispatches mail and database notifications when admin preference is ON', fun
 
 it('dispatches only database notification when admin preference is SILENT', function () {
     Notification::fake();
-    
+
     $this->admin->update(['notification_preference' => NotificationPreference::SILENT]);
 
     $response = $this->call('POST', route('payment.webhook'), [], [], [], $this->headers, $this->payloadString);
@@ -74,14 +74,14 @@ it('dispatches only database notification when admin preference is SILENT', func
     Notification::assertSentTo(
         [$this->admin], ApplicationSubmittedNotification::class,
         function ($notification, $channels) {
-            return in_array('database', $channels) && !in_array('mail', $channels);
+            return in_array('database', $channels) && ! in_array('mail', $channels);
         }
     );
 });
 
 it('does not dispatch any notifications when admin preference is OFF', function () {
     Notification::fake();
-    
+
     $this->admin->update(['notification_preference' => NotificationPreference::OFF]);
 
     $response = $this->call('POST', route('payment.webhook'), [], [], [], $this->headers, $this->payloadString);

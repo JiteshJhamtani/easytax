@@ -6,16 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class ApplicationLog extends Model
 {
-
     protected $fillable = [
         'application_id',
         'user_id',
         'event',
-        'meta'
+        'meta',
     ];
 
     protected $casts = [
-        'meta' => 'array'
+        'meta' => 'array',
     ];
 
     public function application()
@@ -27,5 +26,4 @@ class ApplicationLog extends Model
     {
         return $this->belongsTo(User::class);
     }
-
 }

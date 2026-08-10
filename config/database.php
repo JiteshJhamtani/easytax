@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Str;
+use Pdo\Mysql;
 
 return [
 
@@ -59,61 +60,60 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
-      'master_connection' => [
-    'driver'    => 'mysql',
-    'host'      => env('DB_MASTER_HOST', '127.0.0.1'),
-    'port'      => env('DB_MASTER_PORT', '3306'),
-    'database'  => env('DB_MASTER_DATABASE', 'easytax_db'),
-    'username'  => env('DB_MASTER_USERNAME', 'root'),
-    'password'  => env('DB_MASTER_PASSWORD', ''),
-    'charset'   => 'utf8mb4',
-    'collation' => 'utf8mb4_unicode_ci',
-    'prefix'    => '',
-    'strict'    => true,
-    'engine'    => null,
-],
+        'master_connection' => [
+            'driver' => 'mysql',
+            'host' => env('DB_MASTER_HOST', '127.0.0.1'),
+            'port' => env('DB_MASTER_PORT', '3306'),
+            'database' => env('DB_MASTER_DATABASE', 'easytax_db'),
+            'username' => env('DB_MASTER_USERNAME', 'root'),
+            'password' => env('DB_MASTER_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ],
 
-         'db_uat' => [
-        'driver'    => 'mysql',
-        'host'      => '127.0.0.1',   
-        'port'      => '3306',
-        'database'  => 'easytax_uat', 
-        'username'  => env('DB_USERNAME', 'root'),
-        'password'  => env('DB_PASSWORD', ''),
-        'charset'   => 'utf8mb4',
-        'collation' => 'utf8mb4_unicode_ci',
-        'prefix'    => '',
-        'strict'    => true,
-    ],
-    'db_marketing' => [
-    'driver'    => 'mysql',
-    'host'      => '127.0.0.1',
-    'port'      => '3306',
-    'database'  => 'easytax_bihar', 
-    'username'  => env('DB_USERNAME', 'root'),
-    'password'  => env('DB_PASSWORD', ''),
-    'charset'   => 'utf8mb4',
-    'collation' => 'utf8mb4_unicode_ci',
-    'prefix'    => '',
-    'strict'    => true,
-], 
- 'db_upwest' => [
-    'driver'    => 'mysql',
-    'host'      => '127.0.0.1',
-    'port'      => '3306',
-    'database'  => 'easytax_upwest', 
-    'username'  => env('DB_USERNAME', 'root'),
-    'password'  => env('DB_PASSWORD', ''),
-    'charset'   => 'utf8mb4',
-    'collation' => 'utf8mb4_unicode_ci',
-    'prefix'    => '',
-    'strict'    => true,
-],
-
+        'db_uat' => [
+            'driver' => 'mysql',
+            'host' => '127.0.0.1',
+            'port' => '3306',
+            'database' => 'easytax_uat',
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+        ],
+        'db_marketing' => [
+            'driver' => 'mysql',
+            'host' => '127.0.0.1',
+            'port' => '3306',
+            'database' => 'easytax_bihar',
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+        ],
+        'db_upwest' => [
+            'driver' => 'mysql',
+            'host' => '127.0.0.1',
+            'port' => '3306',
+            'database' => 'easytax_upwest',
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+        ],
 
         'mariadb' => [
             'driver' => 'mariadb',
@@ -131,7 +131,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 

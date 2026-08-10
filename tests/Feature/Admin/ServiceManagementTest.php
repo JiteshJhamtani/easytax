@@ -40,11 +40,11 @@ test('admin can view the create service form', function () {
 
 test('admin can create a service', function () {
     $data = [
-        'name'             => 'Test Service',
-        'slug'             => 'test-service',
-        'description'      => 'A test service description',
-        'price'            => 1500.00,
-        'commission_type'  => 'flat',
+        'name' => 'Test Service',
+        'slug' => 'test-service',
+        'description' => 'A test service description',
+        'price' => 1500.00,
+        'commission_type' => 'flat',
         'commission_value' => 200.00,
     ];
 
@@ -69,10 +69,10 @@ test('store validates slug uniqueness', function () {
 
     $this->actingAs($this->admin)
         ->post(route('admin.services.store'), [
-            'name'             => 'Another Service',
-            'slug'             => 'existing-slug',
-            'price'            => 1000,
-            'commission_type'  => 'flat',
+            'name' => 'Another Service',
+            'slug' => 'existing-slug',
+            'price' => 1000,
+            'commission_type' => 'flat',
             'commission_value' => 100,
         ])
         ->assertSessionHasErrors(['slug']);
@@ -112,16 +112,16 @@ test('admin can update a service', function () {
 
     $this->actingAs($this->admin)
         ->put(route('admin.services.update', $service), [
-            'name'             => 'Updated Service',
-            'slug'             => $service->slug,
-            'price'            => 2000.00,
-            'commission_type'  => 'percentage',
+            'name' => 'Updated Service',
+            'slug' => $service->slug,
+            'price' => 2000.00,
+            'commission_type' => 'percentage',
             'commission_value' => 10.00,
         ])
         ->assertRedirect();
 
     $this->assertDatabaseHas('services', [
-        'id'   => $service->id,
+        'id' => $service->id,
         'name' => 'Updated Service',
     ]);
 });

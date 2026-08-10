@@ -15,7 +15,7 @@ class ApplicationDocumentService
 
         $schema = config("service_forms.$serviceSlug.documents");
 
-        if (!$schema) {
+        if (! $schema) {
             return;
         }
 
@@ -39,12 +39,12 @@ class ApplicationDocumentService
                         ->addMedia($f)
                         ->withCustomProperties([
                             'field_name' => $fieldName,
-                            'label'      => $document['label'],
+                            'label' => $document['label'],
                         ])
                         // Save it to a bucket named after the field (e.g., 'partner_pan_1')
                         // And explicitly force it to the 'private' security disk!
-                        ->toMediaCollection($fieldName, 'private'); 
-                } 
+                        ->toMediaCollection($fieldName, 'private');
+                }
 
                 activity('application')
                     ->performedOn($application)

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Services\PayoutService;
 use App\Models\AgentPayout;
 use App\Models\User;
+use App\Services\PayoutService;
+use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
 class PayoutController extends Controller
@@ -34,18 +34,16 @@ class PayoutController extends Controller
 
         return DataTables::eloquent($query)
 
-            ->addColumn('agent', fn($row) => $row->agent->name ?? '-')
+            ->addColumn('agent', fn ($row) => $row->agent->name ?? '-')
 
             ->addColumn(
                 'amount',
-                fn($row) =>
-                '₹' . number_format($row->amount, 2)
+                fn ($row) => '₹'.number_format($row->amount, 2)
             )
 
             ->addColumn(
                 'period',
-                fn($row) =>
-                $row->period_start . ' → ' . $row->period_end
+                fn ($row) => $row->period_start.' → '.$row->period_end
             )
 
             ->addColumn('status', function ($row) {
@@ -79,8 +77,8 @@ class PayoutController extends Controller
     {
         $request->validate([
             'start_date' => 'required|date',
-            'end_date'   => 'required|date',
-            'agent_id'   => 'nullable|exists:users,id'
+            'end_date' => 'required|date',
+            'agent_id' => 'nullable|exists:users,id',
         ]);
 
         return response()->json(
@@ -102,8 +100,8 @@ class PayoutController extends Controller
     {
         $request->validate([
             'start_date' => 'required|date',
-            'end_date'   => 'required|date',
-            'agent_id'   => 'nullable|exists:users,id'
+            'end_date' => 'required|date',
+            'agent_id' => 'nullable|exists:users,id',
         ]);
 
         $payouts = $service->generate(
@@ -114,7 +112,7 @@ class PayoutController extends Controller
 
         return response()->json([
             'success' => true,
-            'count'   => count($payouts)
+            'count' => count($payouts),
         ]);
     }
 
@@ -129,7 +127,7 @@ class PayoutController extends Controller
         $service->markPaid($payout, $request->notes);
 
         return response()->json([
-            'success' => true
+            'success' => true,
         ]);
     }
 
@@ -143,7 +141,7 @@ class PayoutController extends Controller
     {
         $payout->load([
             'agent',
-            'applications.service'
+            'applications.service',
         ]);
 
         return view(

@@ -10,10 +10,10 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 // app/Models/Gift.php
 class Gift extends Model implements HasMedia
 {
-
     use InteractsWithMedia;
 
     protected $fillable = ['name', 'description', 'period_type', 'is_active'];
+
     protected $casts = ['is_active' => 'boolean'];
 
     public function conditionGroups(): HasMany
@@ -36,6 +36,7 @@ class Gift extends Model implements HasMedia
     {
         // Change 'easytax_b2b' to 'easytax_db' here
         $b2bDatabase = config('database.connections.master_connection.database', 'easytax_db');
-        return $b2bDatabase . '.gifts'; 
+
+        return $b2bDatabase.'.gifts';
     }
 }

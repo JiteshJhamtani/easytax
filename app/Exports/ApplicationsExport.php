@@ -8,7 +8,6 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class ApplicationsExport implements FromCollection, WithHeadings
 {
-
     public function collection()
     {
         return Application::with(['service', 'agent'])
@@ -17,12 +16,12 @@ class ApplicationsExport implements FromCollection, WithHeadings
 
                 return [
 
-                    'ID'      => $a->id,
-                    'Agent'   => $a->agent->name,
+                    'ID' => $a->id,
+                    'Agent' => $a->agent->name,
                     'Service' => $a->service->name,
-                    'Status'  => $a->status->value,
+                    'Status' => $a->status->value,
                     'Payment' => $a->payment_status->value,
-                    'Amount'  => $a->amount,
+                    'Amount' => $a->amount,
                     'Created' => $a->created_at,
 
                 ];
@@ -39,8 +38,7 @@ class ApplicationsExport implements FromCollection, WithHeadings
             'Status',
             'Payment',
             'Amount',
-            'Created'
+            'Created',
         ];
     }
-
 }

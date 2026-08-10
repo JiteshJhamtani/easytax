@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->boolean('is_active')->default(true);
+        Schema::table('applications', function (Blueprint $table) {
+            $table->decimal('override_payout_amount', 10, 2)->nullable()->after('service_id');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('is_active');
+        Schema::table('applications', function (Blueprint $table) {
+            $table->dropColumn('override_payout_amount');
         });
     }
 };

@@ -86,39 +86,7 @@
         </div>
     </div>
 
-    {{-- NEW: FINANCIAL METRICS ROW (Now styled perfectly like the row above!) --}}
-    <div class="row mb-4">
-        <div class="col-12">
-            <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="letter-spacing: 1px; font-size: 0.8rem;">My Financial Summary</h6>
-        </div>
-        <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">  
-            <div class="kpi-card">
-                <div class="kpi-icon" style="background: #f3e8ff; color: #9333ea;"><i class="fas fa-wallet"></i></div>
-                <div class="kpi-body">
-                    <div class="kpi-value">₹{{ number_format($totalEarned) }}</div>
-                    <div class="kpi-label">Total Earned</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
-            <div class="kpi-card">
-                <div class="kpi-icon" style="background: #dcfce7; color: #16a34a;"><i class="fas fa-hand-holding-usd"></i></div>
-                <div class="kpi-body">
-                    <div class="kpi-value">₹{{ number_format($totalPaid) }}</div>
-                    <div class="kpi-label">Total Received</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-md-6 mb-3 mb-md-0">
-            <div class="kpi-card">
-                <div class="kpi-icon" style="background: #fee2e2; color: #dc2626;"><i class="fas fa-file-invoice-dollar"></i></div>
-                <div class="kpi-body">
-                    <div class="kpi-value {{ $balanceDue > 0 ? 'text-danger' : '' }}">₹{{ number_format($balanceDue) }}</div>
-                    <div class="kpi-label">Balance Due</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {{-- NEW: FINANCIAL METRICS ROW (Hidden for Operators per client request) --}}
 
     {{-- DATA TABLE --}}
     <div class="table-card">

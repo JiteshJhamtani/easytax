@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Gift;
-use App\Models\Application;
 use App\Enums\ApplicationStatus;
+use App\Http\Controllers\Controller;
+use App\Models\Application;
+use App\Models\Gift;
+use App\Models\User;
 use App\Services\GiftEligibilityService;
 use App\Services\GiftPeriodResolver;
 use Illuminate\Http\Request;
@@ -16,8 +17,7 @@ class GiftEligibilityController extends Controller
     public function __construct(
         private GiftEligibilityService $eligibility,
         private GiftPeriodResolver $periodResolver,
-    ) {
-    }
+    ) {}
 
     public function hub(Request $request)
     {
@@ -28,33 +28,31 @@ class GiftEligibilityController extends Controller
             return $this->buildDatatable($request);
         }
 
-
-        $giftsJson = $gifts->load('conditionGroups.conditions.service')->map(fn($g) => [
-            'id'              => $g->id,
-            'name'            => $g->name,
-            'description'     => $g->description,
-            'period_type'     => $g->period_type,
-            'is_active'       => $g->is_active,
-            'banner_url'      => $g->hasMedia('gift_banner') ? $g->getFirstMediaUrl('gift_banner') : null,
-            'conditionGroups' => $g->conditionGroups->map(fn($grp) => [
-                'conditions' => $grp->conditions->map(fn($c) => [
-                    'service_id'   => $c->service_id,
+        $giftsJson = $gifts->load('conditionGroups.conditions.service')->map(fn ($g) => [
+            'id' => $g->id,
+            'name' => $g->name,
+            'description' => $g->description,
+            'period_type' => $g->period_type,
+            'is_active' => $g->is_active,
+            'banner_url' => $g->hasMedia('gift_banner') ? $g->getFirstMediaUrl('gift_banner') : null,
+            'conditionGroups' => $g->conditionGroups->map(fn ($grp) => [
+                'conditions' => $grp->conditions->map(fn ($c) => [
+                    'service_id' => $c->service_id,
                     'service_name' => $c->service?->name ?? '—',
-                    'min_count'    => $c->min_count,
+                    'min_count' => $c->min_count,
                 ])->values()->all(),
             ])->values()->all(),
         ])->keyBy('id')->toArray();
 
-
         return view('admin.gifts.eligibility', [
-            'gifts'   => $gifts,
-            'gift'    => $request->filled('gift_id')
+            'gifts' => $gifts,
+            'gift' => $request->filled('gift_id')
                 ? Gift::findOrFail($request->integer('gift_id'))
                 : null,
-            'year'    => $request->integer('year', now()->year),
+            'year' => $request->integer('year', now()->year),
             'quarter' => $request->integer('quarter', now()->quarter),
-            'month'   => $request->integer('month', now()->month),
-            'filter'  => $request->get('filter', 'all'),
+            'month' => $request->integer('month', now()->month),
+            'filter' => $request->get('filter', 'all'),
             'giftsJson' => $giftsJson,
         ]);
     }
@@ -74,7 +72,7 @@ class GiftEligibilityController extends Controller
 
         // All service IDs this gift cares about
         $serviceIds = $gift->conditionGroups
-            ->flatMap(fn($g) => $g->conditions->pluck('service_id'))
+            ->flatMap(fn ($g) => $g->conditions->pluck('service_id'))
             ->unique();
 
         // Submission counts per agent per service in the period
@@ -93,30 +91,32 @@ class GiftEligibilityController extends Controller
             ->unique('service_id')
             ->values();
 
-        $query = \App\Models\User::where('role', 'AGENT')
+        $query = User::where('role', 'AGENT')
             ->where('is_active', true)
             ->select(['id', 'name', 'email', 'agent_code']);
 
         return DataTables::of($query)
-            ->addColumn('agent_code', fn($u) => $u->agent_code ?? '—')
+            ->addColumn('agent_code', fn ($u) => $u->agent_code ?? '—')
             ->addColumn('eligible', function ($user) use ($gift, $submissions) {
-                $counts   = $submissions->get($user->id, collect())->keyBy('service_id');
+                $counts = $submissions->get($user->id, collect())->keyBy('service_id');
                 $eligible = $this->isEligible($gift, $counts);
+
                 return $eligible ? 'yes' : 'no';
             })
             // One column per service
             ->addColumn('counts', function ($user) use ($uniqueConditions, $submissions) {
                 $counts = $submissions->get($user->id, collect())->keyBy('service_id');
-                $data   = [];
+                $data = [];
                 foreach ($uniqueConditions as $cond) {
                     $data[$cond->service_id] = [
-                        'count'     => (int) ($counts->get($cond->service_id)?->total ?? 0),
+                        'count' => (int) ($counts->get($cond->service_id)?->total ?? 0),
                         'min_count' => $cond->min_count,
                     ];
                 }
+
                 return $data;
             })
-            ->filterColumn('eligible', function ($query, $keyword) use ($gift, $submissions) {
+            ->filterColumn('eligible', function ($query, $keyword) {
                 // handled client-side via the eligible column
             })
             ->rawColumns([])
@@ -135,9 +135,11 @@ class GiftEligibilityController extends Controller
                     break;
                 }
             }
-            if ($pass)
+            if ($pass) {
                 return true;
+            }
         }
+
         return false;
     }
 

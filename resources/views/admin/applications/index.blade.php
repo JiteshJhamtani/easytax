@@ -148,27 +148,29 @@
             <button id="toggleTrashBtn" class="export-btn mr-2" type="button" style="color: #dc2626; border-color: #fca5a5;">
                 <i class="fas fa-trash"></i> View Trash
             </button>
-            {{-- THE NEW EXPORT DROPDOWN --}}
-            <div class="dropdown d-inline-block">
-                <button class="export-btn dropdown-toggle" type="button" id="exportMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-file-export text-primary"></i> Export Data
-                </button>
-                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="exportMenu">
-                    {{-- Option 1: Current Page --}}
-                    <a class="dropdown-item no-transition ds-export-btn" href="#" data-export-type="current_page">
-                        <i class="fas fa-file-alt text-secondary"></i> Export Current Page
-                    </a>
-                    {{-- Option 2: All Filtered --}}
-                    <a class="dropdown-item no-transition ds-export-btn" href="#" data-export-type="all_filtered">
-                        <i class="fas fa-filter text-primary"></i> Export All Filtered Data
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    {{-- Option 3: Master --}}
-                    <a class="dropdown-item no-transition ds-export-btn" href="#" data-export-type="master">
-                        <i class="fas fa-database text-success"></i> Master Export (All Data)
-                    </a>
+            {{-- THE NEW EXPORT DROPDOWN (Hidden for Sub-Admins) --}}
+            @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
+                <div class="dropdown d-inline-block">
+                    <button class="export-btn dropdown-toggle" type="button" id="exportMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-file-export text-primary"></i> Export Data
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="exportMenu">
+                        {{-- Option 1: Current Page --}}
+                        <a class="dropdown-item no-transition ds-export-btn" href="#" data-export-type="current_page">
+                            <i class="fas fa-file-alt text-secondary"></i> Export Current Page
+                        </a>
+                        {{-- Option 2: All Filtered --}}
+                        <a class="dropdown-item no-transition ds-export-btn" href="#" data-export-type="all_filtered">
+                            <i class="fas fa-filter text-primary"></i> Export All Filtered Data
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        {{-- Option 3: Master --}}
+                        <a class="dropdown-item no-transition ds-export-btn" href="#" data-export-type="master">
+                            <i class="fas fa-database text-success"></i> Master Export (All Data)
+                        </a>
+                    </div>
                 </div>
-            </div>
+            @endif
         </div>
     </div>
   

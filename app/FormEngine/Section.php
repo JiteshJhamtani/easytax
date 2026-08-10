@@ -5,6 +5,7 @@ namespace App\FormEngine;
 class Section
 {
     public string $label;
+
     public array $fields = [];
 
     public function __construct(array $config)
@@ -19,7 +20,7 @@ class Section
     public function render(): string
     {
         return view('components.form.section', [
-            'section' => $this
+            'section' => $this,
         ])->render();
     }
 

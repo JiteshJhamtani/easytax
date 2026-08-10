@@ -8,7 +8,7 @@ use App\Services\AgentDashboardService;
 class DashboardController extends Controller
 {
     /**
-     * Only one dependency injected! 
+     * Only one dependency injected!
      * The service handles all the heavy lifting.
      */
     public function __construct(
@@ -20,17 +20,17 @@ class DashboardController extends Controller
         $agentId = auth()->id();
 
         return view('agent.dashboard', [
-            'stats'               => $this->dashboardService->getStats($agentId),
+            'stats' => $this->dashboardService->getStats($agentId),
             'monthlyApplications' => $this->dashboardService->getMonthlyApplications($agentId),
-            'recentApplications'  => $this->dashboardService->getRecentApplications($agentId),
-            'giftGroups'          => $this->dashboardService->getMilestoneGroups($agentId),
+            'recentApplications' => $this->dashboardService->getRecentApplications($agentId),
+            'giftGroups' => $this->dashboardService->getMilestoneGroups($agentId),
         ]);
     }
 
     public function gifts()
     {
         return view('agent.gifts.index', [
-            'giftGroups' => $this->dashboardService->getMilestoneGroups(auth()->id())
+            'giftGroups' => $this->dashboardService->getMilestoneGroups(auth()->id()),
         ]);
     }
 }

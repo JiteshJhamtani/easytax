@@ -40,13 +40,13 @@ class ApplicationSubmittedNotification extends Notification implements ShouldQue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('New Application Submitted - #' . $this->application->id)
-            ->greeting('Hello ' . $notifiable->name . ',')
+            ->subject('New Application Submitted - #'.$this->application->id)
+            ->greeting('Hello '.$notifiable->name.',')
             ->line('A new application has been successfully submitted and payment was received.')
-            ->line('**Application ID:** #' . $this->application->id)
-            ->line('**Service:** ' . $this->application->service->name)
-            ->line('**Amount:** ₹' . number_format((float) $this->application->amount, 2))
-            ->line('**Agent:** ' . ($this->application->agent ? $this->application->agent->name : 'N/A'))
+            ->line('**Application ID:** #'.$this->application->id)
+            ->line('**Service:** '.$this->application->service->name)
+            ->line('**Amount:** ₹'.number_format((float) $this->application->amount, 2))
+            ->line('**Agent:** '.($this->application->agent ? $this->application->agent->name : 'N/A'))
             ->action('View Application', route('admin.applications.show', $this->application))
             ->line('Thank you for using our application!');
     }
@@ -60,10 +60,10 @@ class ApplicationSubmittedNotification extends Notification implements ShouldQue
     {
         return [
             'application_id' => $this->application->id,
-            'message'        => 'New application submitted for ' . $this->application->service->name,
-            'amount'         => $this->application->amount,
-            'agent_name'     => $this->application->agent ? $this->application->agent->name : null,
-            'url'            => route('admin.applications.show', $this->application),
+            'message' => 'New application submitted for '.$this->application->service->name,
+            'amount' => $this->application->amount,
+            'agent_name' => $this->application->agent ? $this->application->agent->name : null,
+            'url' => route('admin.applications.show', $this->application),
         ];
     }
 }

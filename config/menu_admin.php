@@ -3,21 +3,21 @@
 return [
 
     [
-        'text'  => 'Dashboard',
+        'text' => 'Dashboard',
         'route' => 'admin.dashboard',
-        'icon'  => 'fas fa-fw fa-tachometer-alt',
+        'icon' => 'fas fa-fw fa-tachometer-alt',
     ],
 
     [
-        'text'  => 'Services',
+        'text' => 'Services',
         'route' => 'admin.services.index',
-        'icon'  => 'fas fa-fw fa-concierge-bell',
+        'icon' => 'fas fa-fw fa-concierge-bell',
     ],
 
     [
-        'text'  => 'Applications',
+        'text' => 'Applications',
         'route' => 'admin.applications.index',
-        'icon'  => 'fas fa-fw fa-file-alt',
+        'icon' => 'fas fa-fw fa-file-alt',
     ],
 
     // [
@@ -27,31 +27,31 @@ return [
     // ],
 
     [
-        'text'  => 'Agents',
+        'text' => 'Agents',
         'route' => 'admin.agents.index',
-        'icon'  => 'fas fa-fw fa-users',
+        'icon' => 'fas fa-fw fa-users',
     ],
     [
-        'text'    => 'Gifts',
-        'icon'    => 'fas fa-gift',
+        'text' => 'Gifts',
+        'icon' => 'fas fa-gift',
         'submenu' => [
             [
                 'text' => 'All Gifts',
-                'url'  => 'admin/gifts',
+                'url' => 'admin/gifts',
                 'icon' => 'fas fa-list',
             ],
             [
                 'text' => 'Eligibility',
-                'route'  => 'admin.gifts.eligibility.hub',
+                'route' => 'admin.gifts.eligibility.hub',
                 'icon' => 'fas fa-users',
             ],
         ],
     ],
 
     [
-        'text'  => 'Pages',
+        'text' => 'Pages',
         'route' => 'admin.pages.index',
-        'icon'  => 'fas fa-fw fa-file-contract',
+        'icon' => 'fas fa-fw fa-file-contract',
     ],
 
 ];

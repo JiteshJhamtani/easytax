@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Agent;
 
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AgentPayout;
 use App\Models\Application;
@@ -26,7 +27,7 @@ class CommissionController extends Controller
         $query = Application::with('service')
             ->where('agent_id', Auth::id())
             ->whereNull('payout_id')
-            ->where('payment_status', \App\Enums\PaymentStatus::PAID->value);
+            ->where('payment_status', PaymentStatus::PAID->value);
 
         return DataTables::eloquent($query)
 

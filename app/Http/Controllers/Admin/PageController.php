@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Page;
 use App\Http\Requests\StorePageRequest;
 use App\Http\Requests\UpdatePageRequest;
+use App\Models\Page;
 use Illuminate\Http\Request;
 
 class PageController extends Controller
@@ -29,7 +29,7 @@ class PageController extends Controller
         // Order
         $orderColumnIndex = $request->input('order.0.column');
         $orderDir = $request->input('order.0.dir');
-        
+
         $columns = [
             0 => 'id',
             1 => 'title',
@@ -38,7 +38,7 @@ class PageController extends Controller
             4 => 'created_at',
         ];
 
-        if (!empty($orderColumnIndex) && isset($columns[$orderColumnIndex])) {
+        if (! empty($orderColumnIndex) && isset($columns[$orderColumnIndex])) {
             $orderColumn = $columns[$orderColumnIndex];
             $query->orderBy($orderColumn, $orderDir);
         } else {
@@ -47,24 +47,24 @@ class PageController extends Controller
 
         // Search
         $search = $request->input('search.value');
-        if (!empty($search)) {
-            $query->where(function($q) use ($search) {
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
                 $q->where('title', 'LIKE', "%{$search}%")
-                  ->orWhere('slug', 'LIKE', "%{$search}%");
+                    ->orWhere('slug', 'LIKE', "%{$search}%");
             });
             $totalFiltered = $query->count();
         }
 
         $pages = $query->offset($start)
-                       ->limit($limit)
-                       ->get();
+            ->limit($limit)
+            ->get();
 
         $data = [];
         foreach ($pages as $page) {
             $editUrl = route('admin.pages.edit', $page->id);
             $toggleUrl = route('admin.pages.toggle', $page->id);
             $deleteUrl = route('admin.pages.destroy', $page->id);
-            
+
             $csrf = csrf_token();
 
             $toggleBtnClass = $page->is_active ? 'btn-warning' : 'btn-success';
@@ -99,15 +99,15 @@ class PageController extends Controller
                 'slug' => $page->slug,
                 'is_active' => $page->is_active,
                 'created_at' => $page->created_at->format('M d, Y H:i'),
-                'action' => $action
+                'action' => $action,
             ];
         }
 
         return response()->json([
-            "draw"            => intval($request->input('draw')),
-            "recordsTotal"    => intval($totalData),
-            "recordsFiltered" => intval($totalFiltered),
-            "data"            => $data
+            'draw' => intval($request->input('draw')),
+            'recordsTotal' => intval($totalData),
+            'recordsFiltered' => intval($totalFiltered),
+            'data' => $data,
         ]);
     }
 
@@ -121,7 +121,7 @@ class PageController extends Controller
         Page::create($request->validated());
 
         return redirect()->route('admin.pages.index')
-                         ->with('success', 'Page created successfully.');
+            ->with('success', 'Page created successfully.');
     }
 
     public function edit(Page $page)
@@ -134,7 +134,7 @@ class PageController extends Controller
         $page->update($request->validated());
 
         return redirect()->route('admin.pages.index')
-                         ->with('success', 'Page updated successfully.');
+            ->with('success', 'Page updated successfully.');
     }
 
     public function destroy(Page $page)
@@ -142,12 +142,12 @@ class PageController extends Controller
         $page->delete();
 
         return redirect()->route('admin.pages.index')
-                         ->with('success', 'Page deleted successfully.');
+            ->with('success', 'Page deleted successfully.');
     }
 
     public function toggle(Page $page)
     {
-        $page->update(['is_active' => !$page->is_active]);
+        $page->update(['is_active' => ! $page->is_active]);
 
         return redirect()->back()->with('success', 'Page status toggled.');
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\NotificationPreference;
 use App\Traits\MasksSensitiveData;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -46,7 +47,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
-            'notification_preference' => \App\Enums\NotificationPreference::class,
+            'notification_preference' => NotificationPreference::class,
         ];
     }
 

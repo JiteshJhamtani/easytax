@@ -11,13 +11,13 @@ class FormValidator
     {
         $serviceConfig = config("service_forms.$serviceSlug");
 
-        if (!$serviceConfig) {
+        if (! $serviceConfig) {
             throw ValidationException::withMessages([
                 'service' => 'Invalid service selected.',
             ]);
         }
 
-        $rules    = [];
+        $rules = [];
         $messages = [];
 
         foreach ($serviceConfig['sections'] as $section) {
@@ -25,11 +25,11 @@ class FormValidator
 
                 $fieldName = $field['name'];
 
-                if (!empty($field['validation'])) {
+                if (! empty($field['validation'])) {
                     $rules[$fieldName] = $field['validation'];
                 }
 
-                if (!empty($field['required']) && $field['required']) {
+                if (! empty($field['required']) && $field['required']) {
                     $messages["{$fieldName}.required"] = "{$field['label']} is required.";
                 }
             }

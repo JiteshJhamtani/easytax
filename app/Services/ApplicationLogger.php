@@ -7,15 +7,13 @@ use Illuminate\Support\Facades\Auth;
 
 class ApplicationLogger
 {
-
     public static function log($applicationId, $event, $meta = [])
     {
         ApplicationLog::create([
             'application_id' => $applicationId,
-            'user_id'        => Auth::id(),
-            'event'          => $event,
-            'meta'           => $meta
+            'user_id' => Auth::id(),
+            'event' => $event,
+            'meta' => $meta,
         ]);
     }
-
 }

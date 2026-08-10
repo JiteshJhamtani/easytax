@@ -10,11 +10,11 @@ class AgentMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || strtoupper(auth()->user()->role) !== 'AGENT') {
+        if (! auth()->check() || strtoupper(auth()->user()->role) !== 'AGENT') {
             abort(403);
         }
 
-        if (!auth()->user()->is_active) {
+        if (! auth()->user()->is_active) {
             abort(403, 'Your account is not active.');
         }
 

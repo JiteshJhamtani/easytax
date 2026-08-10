@@ -18,9 +18,9 @@ class AgentPayout extends Model
 
     protected $casts = [
         'period_start' => 'date',
-        'period_end'   => 'date',
-        'paid_at'      => 'datetime',
-        'amount'       => 'decimal:2',
+        'period_end' => 'date',
+        'paid_at' => 'datetime',
+        'amount' => 'decimal:2',
     ];
 
     public function agent()

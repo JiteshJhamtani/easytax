@@ -30,6 +30,7 @@ class Setting extends Model
     public static function get(string $key, $default = null)
     {
         $settings = static::allCached();
+
         return $settings[$key] ?? $default;
     }
 

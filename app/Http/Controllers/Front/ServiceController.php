@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Front;
 
-use App\Http\Controllers\Controller;
-use App\Models\Service;
-use App\Models\Application;
-use App\Models\Gift;
 use App\Enums\ApplicationStatus;
 use App\FormEngine\Form;
+use App\Http\Controllers\Controller;
+use App\Models\Application;
+use App\Models\Gift;
+use App\Models\Service;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ServiceController extends Controller
 {
@@ -34,7 +34,7 @@ class ServiceController extends Controller
 
     //     return view('front.pages.services.show', compact('service', 'form', 'giftMilestones'));
     // }
-    
+
     public function show(string $slug)
     {
         $service = Service::where('slug', $slug)
@@ -45,7 +45,7 @@ class ServiceController extends Controller
 
         // Commission vars for the payment confirm popup
         $commissionAmount = $service->calculateCommission((float) $service->price);
-        $amountToPay      = max(0, $service->price - $commissionAmount);
+        $amountToPay = max(0, $service->price - $commissionAmount);
 
         // Gift milestones (existing logic — keep as-is)
         $giftMilestones = $this->getGiftMilestones($service);
@@ -60,7 +60,7 @@ class ServiceController extends Controller
     }
     // ── Gift milestone data for the progress bar ──────────────────────────
 
-  // ── Gift milestone data for the progress bar ──────────────────────────
+    // ── Gift milestone data for the progress bar ──────────────────────────
     private function getGiftMilestones(Service $service): array
     {
         $agent = Auth::user();
@@ -103,7 +103,7 @@ class ServiceController extends Controller
             // If we are looking at GST Registration, ENFORCE the Annual Package PAN Match!
             if ($service->slug === 'gst-registration' && $annualPackageService) {
                 $query->whereExists(function ($subquery) use ($agent, $annualPackageService) {
-                    $subquery->select(\Illuminate\Support\Facades\DB::raw(1))
+                    $subquery->select(DB::raw(1))
                         ->from('applications as app2')
                         ->where('app2.agent_id', $agent->id)
                         ->where('app2.service_id', $annualPackageService->id)
@@ -119,15 +119,15 @@ class ServiceController extends Controller
 
             // 3. Sort milestones low → high
             $milestones = $periodGifts
-                ->map(fn(Gift $g) => [
-                    'id'         => $g->id,
-                    'name'       => $g->name,
-                    'min_count'  => $g->conditionGroups
+                ->map(fn (Gift $g) => [
+                    'id' => $g->id,
+                    'name' => $g->name,
+                    'min_count' => $g->conditionGroups
                         ->flatMap->conditions
                         ->where('service_id', $service->id) // Get threshold specifically for this service
                         ->min('min_count') ?? 0,
-                    'icon'       => $g->icon ?? '🎁',
-                    'unlocked'   => false, 
+                    'icon' => $g->icon ?? '🎁',
+                    'unlocked' => false,
                     'banner_url' => $g->hasMedia('gift_banner')
                         ? $g->getFirstMediaUrl('gift_banner')
                         : null,
@@ -136,7 +136,8 @@ class ServiceController extends Controller
                 ->values()
                 ->map(function ($m) use ($count) {
                     $m['unlocked'] = $count >= $m['min_count'];
-                    $m['needed']   = max(0, $m['min_count'] - $count);
+                    $m['needed'] = max(0, $m['min_count'] - $count);
+
                     return $m;
                 })
                 ->all();
@@ -144,16 +145,16 @@ class ServiceController extends Controller
             $maxThreshold = collect($milestones)->max('min_count');
 
             $grouped[] = [
-                'period_type'    => $periodType,
-                'period_label'   => $this->periodLabel($periodType),
-                'period_range'   => $this->periodRangeLabel($periodType),
-                'count'          => $count,
-                'color'          => substr($periodType, 0, 1), 
-                'max_threshold'  => $maxThreshold,
-                'progress_pct'   => $maxThreshold > 0
+                'period_type' => $periodType,
+                'period_label' => $this->periodLabel($periodType),
+                'period_range' => $this->periodRangeLabel($periodType),
+                'count' => $count,
+                'color' => substr($periodType, 0, 1),
+                'max_threshold' => $maxThreshold,
+                'progress_pct' => $maxThreshold > 0
                     ? min(100, round(($count / $maxThreshold) * 100))
                     : 100,
-                'milestones'     => $milestones,
+                'milestones' => $milestones,
                 'unlocked_count' => collect($milestones)->where('unlocked', true)->count(),
             ];
         }
@@ -161,13 +162,12 @@ class ServiceController extends Controller
         $order = ['monthly' => 0, 'quarterly' => 1, 'yearly' => 2];
         usort(
             $grouped,
-            fn($a, $b) =>
-            ($order[$a['period_type']] ?? 9) <=> ($order[$b['period_type']] ?? 9)
+            fn ($a, $b) => ($order[$a['period_type']] ?? 9) <=> ($order[$b['period_type']] ?? 9)
         );
 
         return $grouped;
     }
-    
+
     private function periodRange(string $periodType): array
     {
         return match ($periodType) {
@@ -201,7 +201,7 @@ class ServiceController extends Controller
     {
         return match ($periodType) {
             'monthly' => now()->format('F Y'),
-            'quarterly' => now()->startOfQuarter()->format('j F') . ' - ' . now()->endOfQuarter()->format('j F'), 'yearly' => (string) now()->year,
+            'quarterly' => now()->startOfQuarter()->format('j F').' - '.now()->endOfQuarter()->format('j F'), 'yearly' => (string) now()->year,
             default => '',
         };
     }

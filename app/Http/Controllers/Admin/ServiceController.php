@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreServiceRequest;
 use App\Http\Requests\Admin\UpdateServiceRequest;
 use App\Models\Service;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class ServiceController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
-    | Services List 
+    | Services List
     |--------------------------------------------------------------------------
     */
 
@@ -21,15 +22,16 @@ class ServiceController extends Controller
         return view('admin.services.index');
     }
 
-   public function datatable()
+    public function datatable()
     {
         $services = Service::query()
             ->withCount(['applications' => function ($query) {
                 // Hide Draft, Failed, and Canceled from the total count
                 $query->whereNotIn('status', ['draft', 'failed', 'canceled']);
             }]);
+
         return DataTables::of($services)
-            
+
             // Map the calculated count so the frontend can read it
             ->addColumn('applications', function ($service) {
                 return $service->applications_count;
@@ -44,8 +46,10 @@ class ServiceController extends Controller
             })
 
             // THE FIX: Stop Laravel from running SQL text searches on these virtual columns
-            ->filterColumn('applications', function($query, $keyword) { /* Do nothing */ })
-            ->filterColumn('commission_display', function($query, $keyword) { /* Do nothing */ })
+            ->filterColumn('applications', function ($query, $keyword) { /* Do nothing */
+            })
+            ->filterColumn('commission_display', function ($query, $keyword) { /* Do nothing */
+            })
 
             ->addColumn('action', function ($service) {
                 $toggle = $service->active ? 'Deactivate' : 'Activate';
@@ -82,10 +86,10 @@ class ServiceController extends Controller
         return view('admin.services.create');
     }
 
-  public function store(StoreServiceRequest $request)
+    public function store(StoreServiceRequest $request)
     {
         $data = $request->validated();
-        
+
         // Safely catch the new dynamic field bypassing strict validation
         $data['primary_data_field'] = $request->input('primary_data_field');
         $data['whatsapp_number_field'] = $request->input('whatsapp_number_field'); // <-- ADD THIS LINE
@@ -115,13 +119,13 @@ class ServiceController extends Controller
     {
         $formConfig = config("service_forms.{$service->slug}");
 
-       $stats = [
+        $stats = [
             'total_applications' => $service->applications()
                 ->whereNotIn('status', ['draft', 'failed', 'canceled'])
                 ->count(),
             'total_revenue' => $service->applications()
                 ->whereNotIn('status', ['draft', 'failed', 'canceled'])
-                ->sum(\Illuminate\Support\Facades\DB::raw('amount - commission_amount')),
+                ->sum(DB::raw('amount - commission_amount')),
         ];
 
         return view('admin.services.show', compact('service', 'formConfig', 'stats'));
@@ -140,18 +144,18 @@ class ServiceController extends Controller
         return view('admin.services.edit', compact('service', 'formConfig'));
     }
 
- public function update(UpdateServiceRequest $request, Service $service)
+    public function update(UpdateServiceRequest $request, Service $service)
     {
         $data = $request->validated();
-        
+
         // 🚨 THE FIX: Forcefully grab the JSON data directly from the raw request
         $data['form_schema'] = $request->input('form_schema');
-        
+
         // Safely catch the new dynamic fields
         $data['primary_data_field'] = $request->input('primary_data_field');
-        $data['whatsapp_number_field'] = $request->input('whatsapp_number_field'); 
-        $data['applicant_email_field'] = $request->input('applicant_email_field'); 
-        $data['sort_order'] = $request->input('sort_order', 0); 
+        $data['whatsapp_number_field'] = $request->input('whatsapp_number_field');
+        $data['applicant_email_field'] = $request->input('applicant_email_field');
+        $data['sort_order'] = $request->input('sort_order', 0);
 
         $formSchema = $this->parseFormSchema($data);
         unset($data['form_schema']);
@@ -171,27 +175,27 @@ class ServiceController extends Controller
         // SAVE ENTERPRISE PRICING MATRIX
         // ==========================================
         if ($request->has('pricing_rules')) {
-            $service->pricingRules()->delete(); 
-            
+            $service->pricingRules()->delete();
+
             foreach ($request->pricing_rules as $rule) {
-                if (isset($rule['base_price']) && $rule['base_price'] !== null) { 
+                if (isset($rule['base_price']) && $rule['base_price'] !== null) {
                     $service->pricingRules()->create([
                         // GST Fields
-                        'gst_type'          => empty($rule['gst_type']) ? null : $rule['gst_type'],
-                        'turnover'          => empty($rule['turnover']) ? null : $rule['turnover'],
-                        'frequency'         => empty($rule['frequency']) ? null : $rule['frequency'],
-                        'plan'              => empty($rule['plan']) ? null : $rule['plan'],
-                        
+                        'gst_type' => empty($rule['gst_type']) ? null : $rule['gst_type'],
+                        'turnover' => empty($rule['turnover']) ? null : $rule['turnover'],
+                        'frequency' => empty($rule['frequency']) ? null : $rule['frequency'],
+                        'plan' => empty($rule['plan']) ? null : $rule['plan'],
+
                         // ITR Fields (NEW)
-                        'itr_type'          => empty($rule['itr_type']) ? null : $rule['itr_type'],
-                        'user_type'         => empty($rule['user_type']) ? null : $rule['user_type'],
-                        'itr_salary'        => empty($rule['itr_salary']) ? null : $rule['itr_salary'],
-                        'itr_business'      => empty($rule['itr_business']) ? null : $rule['itr_business'],
+                        'itr_type' => empty($rule['itr_type']) ? null : $rule['itr_type'],
+                        'user_type' => empty($rule['user_type']) ? null : $rule['user_type'],
+                        'itr_salary' => empty($rule['itr_salary']) ? null : $rule['itr_salary'],
+                        'itr_business' => empty($rule['itr_business']) ? null : $rule['itr_business'],
                         'itr_capital_gains' => empty($rule['itr_capital_gains']) ? null : $rule['itr_capital_gains'],
-                        'itr_50l'           => empty($rule['itr_50l']) ? null : $rule['itr_50l'],
+                        'itr_50l' => empty($rule['itr_50l']) ? null : $rule['itr_50l'],
 
                         // Pricing Math
-                        'base_price'        => $rule['base_price'],
+                        'base_price' => $rule['base_price'],
                         'commission_amount' => empty($rule['commission_amount']) ? 0 : $rule['commission_amount'],
                     ]);
                 }

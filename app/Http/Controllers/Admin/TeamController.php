@@ -40,7 +40,12 @@ class TeamController extends Controller
             ->orderBy('updated_at', 'desc')
             ->paginate(15);
 
-        $services = Service::orderBy('name')->get();
+        $currentRates = DB::table('operator_service_rates')
+            ->where('operator_id', $operator->id)
+            ->pluck('price', 'service_id');
+
+        $assignedServices = Service::whereIn('id', $currentRates->keys())->orderBy('name')->get();
+        $unassignedServices = Service::whereNotIn('id', $currentRates->keys())->orderBy('name')->get();
 
         $currentRates = DB::table('operator_service_rates')
             ->where('operator_id', $operator->id)
@@ -58,7 +63,7 @@ class TeamController extends Controller
                 $join->on('applications.service_id', '=', 'operator_service_rates.service_id')
                     ->where('operator_service_rates.operator_id', '=', $operator->id);
             })
-            ->sum('operator_service_rates.price');
+            ->sum(DB::raw('COALESCE(applications.override_payout_amount, operator_service_rates.price)'));
 
         $totalPaid = $payouts->sum('amount');
         $balanceDue = $totalEarned - $totalPaid;
@@ -70,14 +75,14 @@ class TeamController extends Controller
                     ->where('operator_service_rates.operator_id', '=', $operator->id);
             })
             // Groups the completed applications by the Month and Year they were completed
-            ->selectRaw('DATE_FORMAT(applications.updated_at, "%M %Y") as month_name, DATE_FORMAT(applications.updated_at, "%Y-%m") as month_sort, COUNT(applications.id) as total_apps, SUM(operator_service_rates.price) as monthly_total')
+            ->selectRaw('DATE_FORMAT(applications.updated_at, "%M %Y") as month_name, DATE_FORMAT(applications.updated_at, "%Y-%m") as month_sort, COUNT(applications.id) as total_apps, SUM(COALESCE(applications.override_payout_amount, operator_service_rates.price)) as monthly_total')
             ->groupBy('month_name', 'month_sort')
             ->orderBy('month_sort', 'desc')
             ->get();
 
         return view('admin.team.show', compact(
             'operator', 'totalAssigned', 'totalCompleted', 'totalPending',
-            'applications', 'services', 'currentRates', 'payouts',
+            'applications', 'assignedServices', 'unassignedServices', 'currentRates', 'payouts',
             'totalEarned', 'totalPaid', 'balanceDue', 'monthlyEarnings' // Added here
         ));
     }
@@ -94,6 +99,24 @@ class TeamController extends Controller
                 ['operator_id' => $operator->id, 'service_id' => $serviceId],
                 ['price' => $price ?: 0, 'updated_at' => now()]
             );
+        }
+
+        // Check if a new service is being added dynamically
+        if ($request->filled('new_service_id')) {
+            DB::table('operator_service_rates')->updateOrInsert(
+                ['operator_id' => $operator->id, 'service_id' => $request->new_service_id],
+                ['price' => $request->new_service_rate ?: 0, 'updated_at' => now()]
+            );
+        }
+
+        // Handle deletions
+        if ($request->filled('remove_service_id')) {
+            DB::table('operator_service_rates')
+                ->where('operator_id', $operator->id)
+                ->where('service_id', $request->remove_service_id)
+                ->delete();
+
+            return back()->with('success', 'Service removed from operator.');
         }
 
         return back()->with('success', 'Operator Service Rates updated successfully!');
@@ -215,7 +238,7 @@ class TeamController extends Controller
                 $join->on('applications.service_id', '=', 'operator_service_rates.service_id')
                     ->where('operator_service_rates.operator_id', '=', $operator->id);
             })
-            ->sum('operator_service_rates.price');
+            ->sum(DB::raw('COALESCE(applications.override_payout_amount, operator_service_rates.price)'));
 
         $totalPaid = DB::table('operator_payouts')
             ->where('operator_id', $operator->id)
@@ -230,7 +253,7 @@ class TeamController extends Controller
                 $join->on('applications.service_id', '=', 'operator_service_rates.service_id')
                     ->where('operator_service_rates.operator_id', '=', $operator->id);
             })
-            ->selectRaw('DATE_FORMAT(applications.updated_at, "%M %Y") as month_name, SUM(operator_service_rates.price) as monthly_total, DATE_FORMAT(applications.updated_at, "%Y-%m") as month_sort')
+            ->selectRaw('DATE_FORMAT(applications.updated_at, "%M %Y") as month_name, SUM(COALESCE(applications.override_payout_amount, operator_service_rates.price)) as monthly_total, DATE_FORMAT(applications.updated_at, "%Y-%m") as month_sort')
             ->groupBy('month_name', 'month_sort')
             ->orderBy('month_sort', 'asc') // Oldest first!
             ->get();

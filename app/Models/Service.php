@@ -27,19 +27,20 @@ class Service extends Model
     protected function casts(): array
     {
         return [
-            'price'            => 'decimal:2',
+            'price' => 'decimal:2',
             'commission_value' => 'decimal:2',
-            'active'           => 'boolean',
+            'active' => 'boolean',
         ];
     }
 
     /**
-     * THE FIX: Dynamically bind this model to the B2B database 
+     * THE FIX: Dynamically bind this model to the B2B database
      */
     public function getTable()
     {
         $b2bDatabase = config('database.connections.master_connection.database', 'easytax_db');
-        return $b2bDatabase . '.services';
+
+        return $b2bDatabase.'.services';
     }
 
     /*
@@ -50,7 +51,7 @@ class Service extends Model
 
     public function applications(): HasMany
     {
-         return $this->hasMany(Application::class)->setEagerLoads([]);
+        return $this->hasMany(Application::class)->setEagerLoads([]);
     }
 
     public function gifts(): HasMany
@@ -58,7 +59,7 @@ class Service extends Model
         return $this->hasMany(Gift::class);
     }
 
-    public function pricingRules(): HasMany 
+    public function pricingRules(): HasMany
     {
         return $this->hasMany(ServicePricingRule::class);
     }
@@ -71,7 +72,7 @@ class Service extends Model
 
     public function calculateCommission(float $amount): float
     {
-        if (!$this->hasCommission()) {
+        if (! $this->hasCommission()) {
             return 0.0;
         }
 
@@ -85,7 +86,7 @@ class Service extends Model
 
     public function hasCommission(): bool
     {
-        return !empty($this->commission_type) && $this->commission_value > 0;
+        return ! empty($this->commission_type) && $this->commission_value > 0;
     }
 
     /*

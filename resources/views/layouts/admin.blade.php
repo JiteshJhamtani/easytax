@@ -589,6 +589,11 @@ window.userRole = "{{ strtoupper(auth()->user()->role ?? '') }}";
         });
     });
 
+    // Fix for Back-Forward Cache (bfcache) - removes fade-out if user clicks back button
+    window.addEventListener('pageshow', (event) => {
+        document.body.classList.remove('is-leaving');
+    });
+
     // Global Form Submit Spinner
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof jQuery !== 'undefined') {

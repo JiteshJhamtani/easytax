@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\PaymentStatus;
 use App\Models\AgentPayout;
 use App\Models\Application;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,7 @@ class PayoutService
             $query = Application::query()
                 ->whereNull('payout_id')
                 ->whereNotNull('commission_amount')
-                ->where('payment_status', \App\Enums\PaymentStatus::PAID->value)
+                ->where('payment_status', PaymentStatus::PAID->value)
                 ->whereBetween('submitted_at', [$startDate, $endDate]);
 
             if ($agentId) {
@@ -68,7 +69,7 @@ class PayoutService
         $query = Application::query()
             ->whereNull('payout_id')
             ->whereNotNull('commission_amount')
-            ->where('payment_status', \App\Enums\PaymentStatus::PAID->value)
+            ->where('payment_status', PaymentStatus::PAID->value)
             ->whereBetween('submitted_at', [$startDate, $endDate]);
 
         if ($agentId) {

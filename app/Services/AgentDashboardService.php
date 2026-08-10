@@ -122,7 +122,7 @@ class AgentDashboardService
 
             if ($isSingleService) {
                 $serviceGroups = $this->appendSingleServiceGift(
-                    $serviceGroups, $gift, $uniqueServices->first(),  
+                    $serviceGroups, $gift, $uniqueServices->first(),
                     $allConds->first()->service->name ?? 'Unknown', $periodCounts, $minCount
                 );
             } else {
@@ -131,7 +131,7 @@ class AgentDashboardService
                 );
             }
         }
- 
+
         return $this->finalizeGroupStats($serviceGroups);
     }
 

@@ -138,18 +138,49 @@
                 </div>
 
                 <div class="tab-pane fade p-4" id="rates" role="tabpanel">
+                    
+                    {{-- NEW: Dynamic Assignment UI --}}
+                    @if($unassignedServices->count() > 0)
+                    <div class="bg-light p-3 rounded mb-4 border">
+                        <form action="{{ route('admin.team.save-rates', $operator->id) }}" method="POST" class="form-inline d-flex align-items-center">
+                            @csrf
+                            <label class="font-weight-bold mr-3">Assign New Service:</label>
+                            <select name="new_service_id" class="form-control mr-2" style="width: 250px;" required>
+                                <option value="">-- Select Service --</option>
+                                @foreach($unassignedServices as $uSrv)
+                                    <option value="{{ $uSrv->id }}">{{ $uSrv->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="input-group mr-2" style="width: 150px;">
+                                <div class="input-group-prepend"><span class="input-group-text">₹</span></div>
+                                <input type="number" step="0.01" name="new_service_rate" class="form-control" placeholder="0.00" required>
+                            </div>
+                            <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Add Service</button>
+                        </form>
+                    </div>
+                    @endif
+
                     <form action="{{ route('admin.team.save-rates', $operator->id) }}" method="POST">
                         @csrf
                         <div class="row">
-                            @foreach($services as $service)
+                            @forelse($assignedServices as $service)
                             <div class="col-md-4 mb-3">
                                 <label class="font-weight-bold text-dark small">{{ $service->name }}</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend"><span class="input-group-text">₹</span></div>
                                     <input type="number" step="0.01" name="rates[{{ $service->id }}]" class="form-control" value="{{ $currentRates[$service->id] ?? 0 }}" placeholder="0.00">
+                                    <div class="input-group-append">
+                                        <button type="submit" name="remove_service_id" value="{{ $service->id }}" class="btn btn-outline-danger" title="Remove Service">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            @endforeach
+                            @empty
+                            <div class="col-12 text-center text-muted py-4">
+                                <p>No services assigned to this operator yet.</p>
+                            </div>
+                            @endforelse
                         </div>
                         <hr>
                         <div class="text-right">

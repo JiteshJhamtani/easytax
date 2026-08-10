@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\User;
 use App\Models\Page;
+use App\Models\User;
 
 beforeEach(function () {
     // Assuming 'role' or simple boolean for admin state based on application standard

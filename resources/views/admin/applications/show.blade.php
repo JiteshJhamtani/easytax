@@ -335,6 +335,29 @@
                             <i class="fas fa-check-circle mr-2"></i> Mark Completed
                         </button>
                     </form>
+                </div>
+            </div>
+
+            {{-- OPERATOR PAYOUT OVERRIDE --}}
+            <div class="card border-0 shadow-sm mb-4 rounded-lg elegant-border">
+                <div class="card-header bg-white py-3 border-bottom text-center">
+                    <h3 class="card-title font-weight-bold text-dark w-100 float-none mb-0">
+                        <i class="fas fa-rupee-sign text-success mr-2"></i> Operator Payout Override
+                    </h3> 
+                </div>
+                <div class="card-body p-4 bg-light">
+                    <p class="text-xs text-muted mb-3 text-center">Set a custom payout for this specific application to override the operator's default rate.</p>
+                    <form method="POST" action="{{ route('admin.applications.overridePayout', $application->id) }}">
+                        @csrf
+                        @method('PATCH')
+                        <div class="input-group mb-3 shadow-sm">
+                            <div class="input-group-prepend"><span class="input-group-text bg-white border-right-0">₹</span></div>
+                            <input type="number" step="0.01" name="override_payout_amount" class="form-control border-left-0" value="{{ $application->override_payout_amount }}" placeholder="Default Rate">
+                        </div>
+                        <button type="submit" class="btn btn-dark btn-block font-weight-bold shadow-sm">Save Payout Rate</button>
+                    </form>
+                </div>
+            </div>
 
                     @if ($application->status?->value === 'CANCELLED' && strtolower($application->payment_status?->value ?? '') === 'paid')
                         <div class="position-relative my-4">

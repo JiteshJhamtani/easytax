@@ -1,4 +1,5 @@
 <?php
+
 // app/Services/GiftPeriodResolver.php
 
 namespace App\Services;
@@ -22,12 +23,14 @@ class GiftPeriodResolver
     private function monthly(int $year, int $month): array
     {
         $start = Carbon::create($year, $month, 1)->startOfDay();
+
         return [$start, $start->copy()->endOfMonth()];
     }
 
     private function quarterly(int $year, int $quarter): array
     {
         $start = Carbon::create($year, ($quarter - 1) * 3 + 1, 1)->startOfDay();
+
         return [$start, $start->copy()->addMonths(3)->subDay()->endOfDay()];
     }
 

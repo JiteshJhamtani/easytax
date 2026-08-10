@@ -27,7 +27,8 @@ class Page extends Model
     public function getTable()
     {
         $b2bDatabase = config('database.connections.master_connection.database', 'easytax_db');
-        return $b2bDatabase . '.pages';
+
+        return $b2bDatabase.'.pages';
     }
 
     protected static function booted(): void

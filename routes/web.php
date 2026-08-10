@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\ApplicationStatus;
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Admin\AgentController;
 use App\Http\Controllers\Admin\ApplicationController as AdminApplicationController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -25,6 +27,9 @@ use App\Http\Controllers\Front\PageController;
 use App\Http\Controllers\Front\ServiceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Team\DashboardController;
+use App\Models\Application;
+use App\Models\Service;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 // Deprecated KPI and Switch Server routes moved/removed
@@ -35,23 +40,26 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/create-dummies', function() {
-    $service = \App\Models\Service::where('slug', 'like', '%itr%')->first();
-    if (!$service) return 'ITR service not found';
-    
-    $agent = \App\Models\User::where('role', 'AGENT')->first();
-    
-    \App\Models\Application::factory(10)->create([
+Route::get('/create-dummies', function () {
+    $service = Service::where('slug', 'like', '%itr%')->first();
+    if (! $service) {
+        return 'ITR service not found';
+    }
+
+    $agent = User::where('role', 'AGENT')->first();
+
+    Application::factory(10)->create([
         'service_id' => $service->id,
-        'agent_id' => $agent ? $agent->id : \App\Models\User::factory()->create(['role' => 'AGENT'])->id,
-        'status' => \App\Enums\ApplicationStatus::IN_PROGRESS,
-        'payment_status' => \App\Enums\PaymentStatus::PAID,
+        'agent_id' => $agent ? $agent->id : User::factory()->create(['role' => 'AGENT'])->id,
+        'status' => ApplicationStatus::IN_PROGRESS,
+        'payment_status' => PaymentStatus::PAID,
         'form_data' => [
-            'applicant_name' => 'Dummy User ' . rand(1000, 9999),
-            'pan_number' => 'ABCDE' . rand(1000, 9999) . 'F',
-            'mobile' => '9876543210'
-        ]
+            'applicant_name' => 'Dummy User '.rand(1000, 9999),
+            'pan_number' => 'ABCDE'.rand(1000, 9999).'F',
+            'mobile' => '9876543210',
+        ],
     ]);
+
     return 'Dummies created';
 });
 
@@ -272,6 +280,8 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
 
     Route::patch('/applications/{application}/status', [AdminApplicationController::class, 'updateStatus'])
         ->name('applications.updateStatus');
+    Route::patch('/applications/{application}/payout-override', [AdminApplicationController::class, 'updatePayoutOverride'])
+        ->name('applications.overridePayout');
 
     Route::patch('/applications/{application}/payment-status', [AdminApplicationController::class, 'updatePaymentStatus'])
         ->name('applications.updatePaymentStatus');

@@ -1,12 +1,13 @@
 <?php
+
 // app/Services/GiftEligibilityService.php
 
 namespace App\Services;
 
+use App\Enums\ApplicationStatus;
+use App\Models\Application;
 use App\Models\Gift;
 use App\Models\User;
-use App\Models\Application;
-use App\Enums\ApplicationStatus;
 use Illuminate\Support\Collection;
 
 class GiftEligibilityService
@@ -21,15 +22,15 @@ class GiftEligibilityService
     {
         [$from, $to] = $this->resolver->resolve(
             $gift->period_type,
-            $params['year']    ?? null,
+            $params['year'] ?? null,
             $params['quarter'] ?? null,
-            $params['month']   ?? null,
+            $params['month'] ?? null,
         );
 
         $gift->load('conditionGroups.conditions.service');
 
         $serviceIds = $gift->conditionGroups
-            ->flatMap(fn($g) => $g->conditions->pluck('service_id'))
+            ->flatMap(fn ($g) => $g->conditions->pluck('service_id'))
             ->unique();
 
         $submissions = Application::query()
@@ -47,10 +48,11 @@ class GiftEligibilityService
             ->get()
             ->map(function (User $agent) use ($gift, $submissions) {
                 $counts = $submissions->get($agent->id, collect())->keyBy('service_id');
+
                 return [
-                    'agent'    => $agent,
+                    'agent' => $agent,
                     'eligible' => $this->isEligible($gift, $counts),
-                    'counts'   => $counts,
+                    'counts' => $counts,
                 ];
             });
     }
@@ -70,8 +72,11 @@ class GiftEligibilityService
                     break;
                 }
             }
-            if ($groupPasses) return true; 
+            if ($groupPasses) {
+                return true;
+            }
         }
+
         return false;
     }
 
@@ -81,15 +86,18 @@ class GiftEligibilityService
         foreach ($gift->conditionGroups as $group) {
             $groupPasses = true;
             foreach ($group->conditions as $condition) {
-                $row   = $counts->get($condition->service_id);
+                $row = $counts->get($condition->service_id);
                 $total = $row ? (int) $row->total : 0;
                 if ($total < $condition->min_count) {
                     $groupPasses = false;
                     break;
                 }
             }
-            if ($groupPasses) return true; 
+            if ($groupPasses) {
+                return true;
+            }
         }
+
         return false;
     }
 }

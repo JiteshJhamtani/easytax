@@ -3,21 +3,23 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
     public function index()
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = auth()->user();
         $notifications = $user->notifications()->paginate(20);
+
         return view('admin.notifications.index', compact('notifications'));
     }
 
     public function markAsRead(Request $request, $id)
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = auth()->user();
         $notification = $user->notifications()->findOrFail($id);
         $notification->markAsRead();

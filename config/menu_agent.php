@@ -3,32 +3,32 @@
 return [
 
     [
-        'text'  => 'Dashboard',
+        'text' => 'Dashboard',
         'route' => 'agent.dashboard',
-        'icon'  => 'fas fa-fw fa-tachometer-alt',
+        'icon' => 'fas fa-fw fa-tachometer-alt',
     ],
 
     [
-        'text'  => 'New Application',
+        'text' => 'New Application',
         'url' => 'services/itr-filing',
-        'icon'  => 'fas fa-fw fa-plus-circle',
+        'icon' => 'fas fa-fw fa-plus-circle',
     ],
     [
-        'text'  => 'More Application',
+        'text' => 'More Application',
         'route' => 'services.index',
-        'icon'  => 'fas fa-fw fa-plus-circle',
+        'icon' => 'fas fa-fw fa-plus-circle',
     ],
 
     [
-        'text'  => 'My Applications',
+        'text' => 'My Applications',
         'route' => 'agent.applications.index',
-        'icon'  => 'fas fa-fw fa-file-alt',
+        'icon' => 'fas fa-fw fa-file-alt',
     ],
 
     // [
     //     'text'  => 'My Commissions',
     //     'route' => 'agent.commissions',
-    //     'icon'  => 'fas fa-fw fa-coins', 
+    //     'icon'  => 'fas fa-fw fa-coins',
     // ],
 
     // [
