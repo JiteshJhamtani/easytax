@@ -158,9 +158,11 @@ class SidebarBadgeService
      *
      * @return array<string, array<string, int>>
      */
-    public function getTabCounts(): array
+    public function getTabCounts(?int $agentId = null): array
     {
-        return Cache::remember(self::CACHE_KEY, now()->addSeconds(self::CACHE_TTL), function () {
+        $cacheKey = $agentId ? self::CACHE_KEY.'_agent_'.$agentId : self::CACHE_KEY;
+
+        return Cache::remember($cacheKey, now()->addSeconds(self::CACHE_TTL), function () use ($agentId) {
             $today = now()->toDateString();
 
             $specialServiceIds = Service::whereIn('slug', ['itr-filing', 'gst-registration', 'gst-return-filing'])
@@ -173,6 +175,9 @@ class SidebarBadgeService
 
             $rows = DB::table('applications as a')
                 ->whereNull('a.deleted_at')
+                ->when($agentId !== null, function ($query) use ($agentId) {
+                    $query->where('a.agent_id', $agentId);
+                })
                 ->selectRaw("
                     CASE 
                         WHEN a.status IN ('DRAFT', 'CANCELLED', 'FAILED') OR (a.payment_status IN ('FAILED', 'PENDING') AND a.status != 'COMPLETED') THEN 'incomplete'
@@ -240,10 +245,10 @@ class SidebarBadgeService
      *
      * @return array<string, array<int, array<string, mixed>>>
      */
-    public function getAllBadgesForSidebar(): array
+    public function getAllBadgesForSidebar(?int $agentId = null): array
     {
         $configs = $this->getConfigs();
-        $counts = $this->getTabCounts();
+        $counts = $this->getTabCounts($agentId);
         $colors = $this->getColorOptions();
 
         $tabBadges = [];

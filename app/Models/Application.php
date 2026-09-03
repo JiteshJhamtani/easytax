@@ -81,17 +81,16 @@ class Application extends Model implements HasMedia
             }
         });
 
-        static::saved(function () {
+        $clearBadgeCache = function ($app) {
             Cache::forget(SidebarBadgeService::CACHE_KEY);
-        });
+            if (! empty($app->agent_id)) {
+                Cache::forget(SidebarBadgeService::CACHE_KEY.'_agent_'.$app->agent_id);
+            }
+        };
 
-        static::deleted(function () {
-            Cache::forget(SidebarBadgeService::CACHE_KEY);
-        });
-
-        static::restored(function () {
-            Cache::forget(SidebarBadgeService::CACHE_KEY);
-        });
+        static::saved($clearBadgeCache);
+        static::deleted($clearBadgeCache);
+        static::restored($clearBadgeCache);
     }
 
     /*

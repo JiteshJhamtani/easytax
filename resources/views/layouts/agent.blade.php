@@ -103,8 +103,28 @@
         .sb-item.active { background: var(--surface); color: var(--text); border-radius: 0 25px 25px 0; margin-right: 1.5rem; }
         .sb-item.active .sb-item__icon { color: var(--green); opacity: 1; }
         .sb-item__icon { width: 20px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; opacity: 0.8; transition: opacity .2s; }
-        .sb-item:hover .sb-item__icon { opacity: 1; }
         .sb-item__dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; margin-left: auto; flex-shrink: 0; }
+        .sb-item__label { flex: 1; min-width: 0; }
+
+        /* ── SIDEBAR NOTIFICATION BADGES (CIRCLES) ── */
+        .sb-badge-cluster { display: inline-flex; align-items: center; gap: 0.35rem; margin-left: auto; flex-shrink: 0; }
+        .sb-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 20px; height: 20px; padding: 0 5.5px; border-radius: 9999px;
+            font-size: 0.72rem; font-weight: 800; line-height: 1; letter-spacing: -0.01em;
+            color: #ffffff !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+            transition: transform 0.15s ease; cursor: default; user-select: none;
+        }
+        .sb-item:hover .sb-badge { transform: scale(1.08); }
+        .sb-badge--red    { background-color: #ef4444 !important; color: #ffffff !important; }
+        .sb-badge--blue   { background-color: #3b82f6 !important; color: #ffffff !important; }
+        .sb-badge--amber  { background-color: #f97316 !important; color: #ffffff !important; }
+        .sb-badge--green  { background-color: #10b981 !important; color: #ffffff !important; }
+        .sb-badge--purple { background-color: #8b5cf6 !important; color: #ffffff !important; }
+        .sb-badge--pink   { background-color: #ec4899 !important; color: #ffffff !important; }
+        .sb-badge--teal   { background-color: #06b6d4 !important; color: #ffffff !important; }
+        .sb-badge--indigo { background-color: #6366f1 !important; color: #ffffff !important; }
+        .sb-badge--slate  { background-color: #475569 !important; color: #ffffff !important; }
 
         .sb-bottom { padding: 1rem 1.5rem 1.5rem; flex-shrink: 0; display: flex; flex-direction: column; gap: 1rem; margin-top: auto; }
         .sb-illustration { text-align: center; width: 100%; display: flex; align-items: center; justify-content: center; }
@@ -230,7 +250,7 @@
         .shell.sidebar-mini .sidebar { width: var(--sidebar-mini); }
         .shell.sidebar-mini .sb-brand { margin: 1rem 0.5rem; justify-content: center; padding: 0.5rem; }
         .shell.sidebar-mini .sb-brand img { max-height: 24px; }
-        .shell.sidebar-mini .sb-section, .shell.sidebar-mini .sb-item__dot, .shell.sidebar-mini .sb-bottom { display: none; }
+        .shell.sidebar-mini .sb-section, .shell.sidebar-mini .sb-item__dot, .shell.sidebar-mini .sb-bottom, .shell.sidebar-mini .sb-item__label, .shell.sidebar-mini .sb-badge-cluster { display: none; }
         .shell.sidebar-mini .sb-item { justify-content: center; padding: 0.8rem; margin: 0.2rem 0.5rem; border-radius: var(--radius); }
         .shell.sidebar-mini .sb-item.active { margin-right: 0.5rem; }
         .shell.sidebar-mini .sb-item__icon { margin: 0; width: auto; }
@@ -271,22 +291,26 @@
 
             <a href="{{ route('agent.applications.index', ['type' => 'itr-filing']) }}" wire:navigate class="sb-item {{ request()->query('type') === 'itr-filing' ? 'active' : '' }}" data-label="ITR Filing">
                 <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar"></i></span>
-                ITR Filing
+                <span class="sb-item__label">ITR Filing</span>
+                @include('layouts.partials.sidebar-tab-badges', ['tabKey' => 'itr-filing'])
             </a>
 
             <a href="{{ route('agent.applications.index', ['type' => 'gst-registration']) }}" wire:navigate class="sb-item {{ request()->query('type') === 'gst-registration' ? 'active' : '' }}" data-label="GST Registration">
                 <span class="sb-item__icon"><i class="fas fa-id-card"></i></span>
-                GST Registration
+                <span class="sb-item__label">GST Registration</span>
+                @include('layouts.partials.sidebar-tab-badges', ['tabKey' => 'gst-registration'])
             </a>
             
             <a href="{{ route('agent.applications.index', ['type' => 'gst-return-filing']) }}" wire:navigate class="sb-item {{ request()->query('type') === 'gst-return-filing' ? 'active' : '' }}" data-label="GST Return">
                 <span class="sb-item__icon"><i class="fas fa-file-invoice"></i></span>
-                GST Return
+                <span class="sb-item__label">GST Return</span>
+                @include('layouts.partials.sidebar-tab-badges', ['tabKey' => 'gst-return-filing'])
             </a>
 
             <a href="{{ route('agent.applications.index', ['type' => 'other']) }}" wire:navigate class="sb-item {{ request()->query('type', 'other') === 'other' ? 'active' : '' }}" data-label="Other Apps">
                 <span class="sb-item__icon"><i class="fas fa-folder"></i></span>
-                Other Apps
+                <span class="sb-item__label">Other Apps</span>
+                @include('layouts.partials.sidebar-tab-badges', ['tabKey' => 'other'])
             </a>
         </nav>
 
