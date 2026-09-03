@@ -43,3 +43,5 @@ restore_db.php
 /public/*.php
 !/public/index.php
 CLAUDE.md
+
+switching.md
