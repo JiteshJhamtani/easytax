@@ -82,8 +82,14 @@ class Application extends Model implements HasMedia
         });
 
         $clearBadgeCache = function ($app) {
+            $session = $app->session_label ?? SessionResolver::activeSessionLabel();
+            $safeSession = preg_replace('/[^A-Za-z0-9_-]/', '_', $session);
+
+            Cache::forget(SidebarBadgeService::CACHE_KEY.'_'.$safeSession);
             Cache::forget(SidebarBadgeService::CACHE_KEY);
+
             if (! empty($app->agent_id)) {
+                Cache::forget(SidebarBadgeService::CACHE_KEY.'_agent_'.$app->agent_id.'_'.$safeSession);
                 Cache::forget(SidebarBadgeService::CACHE_KEY.'_agent_'.$app->agent_id);
             }
         };

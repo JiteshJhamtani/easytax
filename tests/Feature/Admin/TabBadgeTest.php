@@ -1,6 +1,10 @@
 <?php
 
+use App\Enums\ApplicationStatus;
+use App\Enums\PaymentStatus;
+use App\Models\Application;
 use App\Models\User;
+use App\Services\SessionResolver;
 use App\Services\SidebarBadgeService;
 
 beforeEach(function () {
@@ -78,6 +82,13 @@ it('allows admin to reset badge configurations to defaults', function () {
 });
 
 it('renders sidebar tab badges in admin layout', function () {
+    $currentSession = SessionResolver::activeSessionLabel();
+    Application::factory()->create([
+        'status' => ApplicationStatus::SUBMITTED,
+        'payment_status' => PaymentStatus::PAID,
+        'session_label' => $currentSession,
+    ]);
+
     $this->actingAs($this->admin)
         ->get(route('admin.dashboard'))
         ->assertSuccessful()

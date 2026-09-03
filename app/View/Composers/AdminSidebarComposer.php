@@ -2,6 +2,7 @@
 
 namespace App\View\Composers;
 
+use App\Services\SessionResolver;
 use App\Services\SidebarBadgeService;
 use Illuminate\View\View;
 
@@ -13,6 +14,7 @@ class AdminSidebarComposer
 
     public function compose(View $view): void
     {
-        $view->with('sidebarBadges', $this->badgeService->getAllBadgesForSidebar());
+        $sessionLabel = SessionResolver::activeSessionLabel();
+        $view->with('sidebarBadges', $this->badgeService->getAllBadgesForSidebar(null, $sessionLabel));
     }
 }

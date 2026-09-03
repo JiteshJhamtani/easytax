@@ -1,6 +1,9 @@
-@if(!empty($sidebarBadges[$tabKey]))
+@php
+    $visibleBadges = array_filter($sidebarBadges[$tabKey] ?? [], fn($b) => ($b['count'] ?? 0) > 0);
+@endphp
+@if(!empty($visibleBadges))
     <span class="sb-badge-cluster" style="display: inline-flex; align-items: center; gap: 0.35rem; margin-left: auto; flex-shrink: 0;">
-        @foreach($sidebarBadges[$tabKey] as $b)
+        @foreach($visibleBadges as $b)
             <span class="sb-badge {{ $b['color_class'] }}" 
                   title="{{ $b['tooltip'] }}" 
                   data-toggle="tooltip"

@@ -158,12 +158,15 @@ class SidebarBadgeService
      *
      * @return array<string, array<string, int>>
      */
-    public function getTabCounts(?int $agentId = null): array
+    public function getTabCounts(?int $agentId = null, ?string $sessionLabel = null): array
     {
-        $cacheKey = $agentId ? self::CACHE_KEY.'_agent_'.$agentId : self::CACHE_KEY;
+        $sessionLabel = $sessionLabel ?? SessionResolver::activeSessionLabel();
+        $safeSession = preg_replace('/[^A-Za-z0-9_-]/', '_', $sessionLabel);
+        $cacheKey = $agentId ? self::CACHE_KEY.'_agent_'.$agentId.'_'.$safeSession : self::CACHE_KEY.'_'.$safeSession;
 
-        return Cache::remember($cacheKey, now()->addSeconds(self::CACHE_TTL), function () use ($agentId) {
+        return Cache::remember($cacheKey, now()->addSeconds(self::CACHE_TTL), function () use ($agentId, $sessionLabel) {
             $today = now()->toDateString();
+            $bounds = SessionResolver::fromLabel($sessionLabel);
 
             $specialServiceIds = Service::whereIn('slug', ['itr-filing', 'gst-registration', 'gst-return-filing'])
                 ->pluck('id', 'slug')
@@ -175,6 +178,15 @@ class SidebarBadgeService
 
             $rows = DB::table('applications as a')
                 ->whereNull('a.deleted_at')
+                ->where(function ($q) use ($sessionLabel, $bounds) {
+                    $q->where('a.session_label', $sessionLabel);
+                    if ($bounds) {
+                        $q->orWhere(function ($sub) use ($bounds) {
+                            $sub->whereNull('a.session_label')
+                                ->whereBetween('a.created_at', [$bounds['from'], $bounds['to']]);
+                        });
+                    }
+                })
                 ->when($agentId !== null, function ($query) use ($agentId) {
                     $query->where('a.agent_id', $agentId);
                 })
@@ -245,10 +257,11 @@ class SidebarBadgeService
      *
      * @return array<string, array<int, array<string, mixed>>>
      */
-    public function getAllBadgesForSidebar(?int $agentId = null): array
+    public function getAllBadgesForSidebar(?int $agentId = null, ?string $sessionLabel = null): array
     {
+        $sessionLabel = $sessionLabel ?? SessionResolver::activeSessionLabel();
         $configs = $this->getConfigs();
-        $counts = $this->getTabCounts($agentId);
+        $counts = $this->getTabCounts($agentId, $sessionLabel);
         $colors = $this->getColorOptions();
 
         $tabBadges = [];
@@ -265,6 +278,12 @@ class SidebarBadgeService
 
                 $metric = $cfg['metric'] ?? 'pending';
                 $count = $tabMetrics[$metric] ?? 0;
+
+                // If count is zero or negative, do not render this badge
+                if ($count <= 0) {
+                    continue;
+                }
+
                 $colorKey = $cfg['color'] ?? 'blue';
                 $colorData = $colors[$colorKey] ?? $colors['blue'];
 
