@@ -272,11 +272,14 @@ $(document).ready(function() {
         let exportType = $(this).data('export-type');
         
         // Get all current DataTables parameters (filters, pagination, sort)
-        let params = table ? table.ajax.params() : {};
+        let params = typeof table !== 'undefined' && table && typeof table.ajax.params === 'function' ? (table.ajax.params() || {}) : {};
         
-        // Ensure params exist (it might be undefined if DataTables hasn't loaded properly)
-        if (!params) {
-            params = {};
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!params.type && urlParams.has('type')) {
+            params.type = urlParams.get('type');
+        }
+        if (!params.session && urlParams.has('session')) {
+            params.session = urlParams.get('session');
         }
         
         // Add export type flag
@@ -285,7 +288,7 @@ $(document).ready(function() {
         // Build query string
         let queryString = $.param(params);
         
-        // Use the new dynamic export route
+        // Use the dynamic export route
         let exportUrl = '/admin/applications/export?' + queryString;
         
         // Native browser navigation will download the file since the server sends a download header.

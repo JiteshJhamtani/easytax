@@ -124,7 +124,7 @@
                     <h3 class="card-title font-weight-bold text-dark mb-0">
                         <i class="fas fa-clipboard-list text-primary mr-2"></i> Client Information
                     </h3>
-                    @if(!empty($application->form_data))
+                    @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN' && !empty($application->form_data))
                         <a href="{{ route('admin.applications.exportSingle', $application->id) }}"
                             class="btn btn-sm btn-outline-success font-weight-bold shadow-sm transition-hover">
                             <i class="fas fa-file-excel mr-1"></i> Export to Excel

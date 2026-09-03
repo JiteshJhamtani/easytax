@@ -140,10 +140,14 @@ $(document).ready(function() {
         let exportType = $(this).data('export-type');
         
         // Get all current DataTables parameters (filters, pagination, sort)
-        let params = typeof table !== 'undefined' && table ? table.ajax.params() : {};
+        let params = typeof table !== 'undefined' && table && typeof table.ajax.params === 'function' ? (table.ajax.params() || {}) : {};
         
-        if (!params) {
-            params = {};
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!params.type && urlParams.has('type')) {
+            params.type = urlParams.get('type');
+        }
+        if (!params.session && urlParams.has('session')) {
+            params.session = urlParams.get('session');
         }
         
         params.export_type = exportType;

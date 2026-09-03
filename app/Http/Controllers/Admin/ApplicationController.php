@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
+use App\Services\SessionResolver;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -311,12 +312,20 @@ class ApplicationController extends Controller
     {
         abort_if(strtoupper(auth()->user()->role) === 'SUB-ADMIN', 403, 'Sub-Admins are not authorized to export data.');
 
+        @ini_set('max_execution_time', '300');
+        @ini_set('memory_limit', '512M');
+
         $exportType = $request->query('export_type', 'all_filtered');
 
         $query = Application::with(['agent', 'service']);
 
         if ($exportType !== 'master') {
             $type = $request->type ?? 'other';
+
+            if ($request->filled('session')) {
+                $sessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
+                $query->inSession($sessionLabel);
+            }
 
             if ($type === 'incomplete') {
                 $query->where(function ($q) {
@@ -399,13 +408,40 @@ class ApplicationController extends Controller
             return $app->service->name ?? 'Unknown Service';
         });
 
-        $generateCsvForGroup = function ($apps) {
+        $sanitize = function ($val) {
+            if (is_array($val)) {
+                $hasNested = false;
+                foreach ($val as $sub) {
+                    if (is_array($sub) || is_object($sub)) {
+                        $hasNested = true;
+                        break;
+                    }
+                }
+                $val = $hasNested ? json_encode($val, JSON_UNESCAPED_UNICODE) : implode(', ', $val);
+            } elseif (is_bool($val)) {
+                $val = $val ? 'Yes' : 'No';
+            } elseif (is_object($val)) {
+                $val = json_encode($val, JSON_UNESCAPED_UNICODE);
+            } elseif (is_null($val)) {
+                $val = '';
+            } else {
+                $val = (string) $val;
+            }
+
+            if ($val !== '' && in_array($val[0], ['=', '+', '-', '@', "\t", "\r"])) {
+                $val = "'".$val;
+            }
+
+            return $val;
+        };
+
+        $generateCsvForGroup = function ($apps) use ($sanitize) {
             $dynamicKeys = [];
             foreach ($apps as $app) {
                 $formData = is_string($app->form_data) ? json_decode($app->form_data, true) : $app->form_data;
                 if (is_array($formData)) {
                     foreach (array_keys($formData) as $key) {
-                        if (! in_array($key, $dynamicKeys)) {
+                        if (! in_array($key, $dynamicKeys, true)) {
                             $dynamicKeys[] = $key;
                         }
                     }
@@ -419,7 +455,7 @@ class ApplicationController extends Controller
             $csvHeaders = array_merge($standardColumns, $displayDynamicKeys);
 
             $file = fopen('php://temp', 'r+');
-            fwrite($file, (chr(0xEF).chr(0xBB).chr(0xBF)));
+            fwrite($file, (chr(0xEF).chr(0xBB).chr(0xBF))); // UTF-8 BOM
             fputcsv($file, $csvHeaders);
 
             foreach ($apps as $app) {
@@ -432,23 +468,17 @@ class ApplicationController extends Controller
                 $paymentValue = is_object($app->payment_status) ? $app->payment_status->value : $app->payment_status;
 
                 $row = [
-                    $app->id,
-                    $app->agent->name ?? 'N/A',
-                    $app->service->name ?? 'N/A',
-                    $statusValue,
-                    $paymentValue,
-                    $app->amount,
-                    $app->created_at->format('d M Y h:i A'),
+                    $sanitize($app->id),
+                    $sanitize($app->agent->name ?? 'N/A'),
+                    $sanitize($app->service->name ?? 'N/A'),
+                    $sanitize($statusValue),
+                    $sanitize($paymentValue),
+                    $sanitize($app->amount),
+                    $sanitize($app->created_at?->format('d M Y h:i A') ?? 'N/A'),
                 ];
 
                 foreach ($dynamicKeys as $key) {
-                    $value = $formData[$key] ?? '';
-                    if (is_array($value)) {
-                        $value = implode(', ', $value);
-                    } elseif (is_bool($value)) {
-                        $value = $value ? 'Yes' : 'No';
-                    }
-                    $row[] = (string) $value;
+                    $row[] = $sanitize($formData[$key] ?? '');
                 }
                 fputcsv($file, $row);
             }
@@ -462,14 +492,14 @@ class ApplicationController extends Controller
 
         if ($groupedApplications->count() === 1) {
             $serviceName = $groupedApplications->keys()->first();
-            $safeServiceName = Str::slug($serviceName);
+            $safeServiceName = Str::slug($serviceName) ?: 'service';
             $fileName = "Export_{$safeServiceName}_".date('Y_m_d_His').'.csv';
 
             $csvContent = $generateCsvForGroup($applications);
 
             $headers = [
-                'Content-type' => 'text/csv',
-                'Content-Disposition' => "attachment; filename={$fileName}",
+                'Content-type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
                 'Pragma' => 'no-cache',
                 'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
                 'Expires' => '0',
@@ -478,13 +508,27 @@ class ApplicationController extends Controller
             return response()->make($csvContent, 200, $headers);
         }
 
-        $zipFileName = 'Export_Master_'.date('Y_m_d_His').'.zip';
-        $zipFilePath = storage_path('app/'.$zipFileName);
+        $zipDir = storage_path('app/exports');
+        if (! is_dir($zipDir)) {
+            @mkdir($zipDir, 0755, true);
+        }
+
+        $zipFileName = 'Export_Master_'.date('Y_m_d_His').'_'.Str::random(8).'.zip';
+        $zipFilePath = $zipDir.'/'.$zipFileName;
 
         $zip = new \ZipArchive;
         if ($zip->open($zipFilePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+            $usedSlugs = [];
             foreach ($groupedApplications as $serviceName => $apps) {
-                $safeServiceName = Str::slug($serviceName);
+                $baseSlug = Str::slug($serviceName) ?: 'service';
+                $safeServiceName = $baseSlug;
+                $counter = 1;
+                while (in_array($safeServiceName, $usedSlugs, true)) {
+                    $safeServiceName = "{$baseSlug}_{$counter}";
+                    $counter++;
+                }
+                $usedSlugs[] = $safeServiceName;
+
                 $csvFileName = "{$safeServiceName}_data.csv";
                 $csvContent = $generateCsvForGroup($apps);
 
@@ -761,37 +805,75 @@ class ApplicationController extends Controller
     {
         abort_if(strtoupper(auth()->user()->role) === 'SUB-ADMIN', 403, 'Sub-Admins are not authorized to export data.');
 
-        $formData = $application->form_data ?? [];
-        $fileName = 'Application_'.$application->id.'_Client_Data.csv';
+        $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
+        if (! is_array($formData)) {
+            $formData = [];
+        }
+
+        $sanitize = function ($val) {
+            if (is_array($val)) {
+                $hasNested = false;
+                foreach ($val as $sub) {
+                    if (is_array($sub) || is_object($sub)) {
+                        $hasNested = true;
+                        break;
+                    }
+                }
+                $val = $hasNested ? json_encode($val, JSON_UNESCAPED_UNICODE) : implode(', ', $val);
+            } elseif (is_bool($val)) {
+                $val = $val ? 'Yes' : 'No';
+            } elseif (is_object($val)) {
+                $val = json_encode($val, JSON_UNESCAPED_UNICODE);
+            } elseif (is_null($val)) {
+                $val = '';
+            } else {
+                $val = (string) $val;
+            }
+
+            if ($val !== '' && in_array($val[0], ['=', '+', '-', '@', "\t", "\r"])) {
+                $val = "'".$val;
+            }
+
+            return $val;
+        };
+
+        $file = fopen('php://temp', 'r+');
+        fwrite($file, (chr(0xEF).chr(0xBB).chr(0xBF))); // UTF-8 BOM
+        fputcsv($file, ['Field Name', 'Provided Value']);
+
+        $statusValue = is_object($application->status) ? $application->status->value : $application->status;
+        $paymentValue = is_object($application->payment_status) ? $application->payment_status->value : $application->payment_status;
+
+        fputcsv($file, ['App ID', $sanitize($application->id)]);
+        fputcsv($file, ['Agent Name', $sanitize($application->agent->name ?? 'N/A')]);
+        fputcsv($file, ['Service', $sanitize($application->service->name ?? 'N/A')]);
+        fputcsv($file, ['Status', $sanitize($statusValue)]);
+        fputcsv($file, ['Payment', $sanitize($paymentValue)]);
+        fputcsv($file, ['Amount', $sanitize($application->amount)]);
+        fputcsv($file, ['Submitted Date', $sanitize($application->created_at?->format('d M Y h:i A') ?? 'N/A')]);
+        fputcsv($file, ['', '']); // empty line
+
+        foreach ($formData as $key => $value) {
+            $displayKey = Str::title(str_replace('_', ' ', $key));
+            fputcsv($file, [$displayKey, $sanitize($value)]);
+        }
+
+        rewind($file);
+        $content = stream_get_contents($file);
+        fclose($file);
+
+        $safeServiceName = Str::slug($application->service->name ?? 'application') ?: 'application';
+        $fileName = "Application_{$application->id}_{$safeServiceName}.csv";
 
         $headers = [
-            'Content-type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename={$fileName}",
+            'Content-type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
             'Pragma' => 'no-cache',
             'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
             'Expires' => '0',
         ];
 
-        $columns = ['Field Name', 'Provided Value'];
-
-        $callback = function () use ($formData, $columns) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
-
-            foreach ($formData as $key => $value) {
-                $displayKey = Str::title(str_replace('_', ' ', $key));
-                $displayValue = $value;
-                if (is_array($value)) {
-                    $displayValue = implode(', ', $value);
-                } elseif (is_bool($value)) {
-                    $displayValue = $value ? 'Yes' : 'No';
-                }
-                fputcsv($file, [$displayKey, $displayValue]);
-            }
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return response()->make($content, 200, $headers);
     }
 
     public function balanceSheetForm($id)

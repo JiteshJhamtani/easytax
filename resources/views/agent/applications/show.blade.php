@@ -145,9 +145,12 @@
                             </button>
                         @endif
 
-                        <button onclick="window.print()" class="btn btn-sm btn-primary shadow-sm font-weight-bold">
+                        <button onclick="window.print()" class="btn btn-sm btn-primary shadow-sm font-weight-bold mr-2">
                             <i class="fas fa-print mr-1"></i> Print Summary
                         </button>
+                        <a href="{{ route('agent.applications.exportSingle', $application) }}" class="btn btn-sm btn-outline-success shadow-sm font-weight-bold">
+                            <i class="fas fa-file-excel mr-1"></i> Export Data
+                        </a>
                     </div>
                 </div>
 
