@@ -759,6 +759,8 @@ class ApplicationController extends Controller
 
     public function exportSingle(Application $application)
     {
+        abort_if(strtoupper(auth()->user()->role) === 'SUB-ADMIN', 403, 'Sub-Admins are not authorized to export data.');
+
         $formData = $application->form_data ?? [];
         $fileName = 'Application_'.$application->id.'_Client_Data.csv';
 
