@@ -23,14 +23,14 @@ class AgentController extends Controller
     public function index(Request $request)
     {
         $sessions = SessionResolver::all();
-        $currentSessionLabel = $request->get('session', SessionResolver::current()['label']);
+        $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
         return view('admin.agents.index', compact('sessions', 'currentSessionLabel'));
     }
 
     public function datatable(Request $request)
     {
-        $sessionLabel = $request->get('session');
+        $sessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
         $agents = User::query()
             ->where('role', 'agent')
@@ -150,7 +150,7 @@ class AgentController extends Controller
     public function show(User $agent, Request $request)
     {
         $sessions = SessionResolver::all();
-        $currentSessionLabel = $request->get('session', SessionResolver::current()['label']);
+        $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
         $applications = Application::where('agent_id', $agent->id)->inSession($currentSessionLabel);
 

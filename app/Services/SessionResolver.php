@@ -100,17 +100,83 @@ class SessionResolver
      */
     public static function fromLabel(string $label): ?array
     {
+        $label = trim($label);
         $sessions = self::all();
         $session = $sessions->firstWhere('label', $label);
 
-        if (! $session) {
-            return null;
+        if ($session) {
+            return [
+                'label' => $session['label'],
+                'from' => $session['from'],
+                'to' => $session['to'],
+            ];
         }
 
-        return [
-            'label' => $session['label'],
-            'from' => $session['from'],
-            'to' => $session['to'],
-        ];
+        // Dynamic fallback regex: parses any valid session format (e.g. "2024-25 S1", "2025-26 S2")
+        if (preg_match('/^(\d{4})-(\d{2})\s+(S[12])$/i', $label, $matches)) {
+            $y = (int) $matches[1];
+            $s = strtoupper($matches[3]);
+
+            if ($s === 'S1') {
+                return [
+                    'label' => "{$y}-{$matches[2]} S1",
+                    'from' => Carbon::create($y, 9, 1)->startOfDay(),
+                    'to' => Carbon::create($y + 1, 3, 31)->endOfDay(),
+                ];
+            } else {
+                return [
+                    'label' => "{$y}-{$matches[2]} S2",
+                    'from' => Carbon::create($y + 1, 4, 1)->startOfDay(),
+                    'to' => Carbon::create($y + 1, 8, 31)->endOfDay(),
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the active session label.
+     * Checks requested parameter/query/input, saves to HTTP session, or retrieves from HTTP session, or defaults to current.
+     */
+    public static function activeSessionLabel(?string $requestedLabel = null): string
+    {
+        $label = $requestedLabel;
+
+        if ((empty($label) || !is_string($label)) && function_exists('request') && request()->has('session')) {
+            $label = request()->input('session');
+        }
+
+        // If a specific session was passed/requested and is valid
+        if (!empty($label) && is_string($label) && trim($label) !== '' && $label !== 'null') {
+            $matched = self::fromLabel(trim($label));
+            if ($matched) {
+                if (function_exists('session') && request()->hasSession()) {
+                    session()->put('easytax_active_session', $matched['label']);
+                }
+                return $matched['label'];
+            }
+        }
+
+        // Otherwise check what was previously saved in the user's browser session
+        if (function_exists('session') && request()->hasSession() && session()->has('easytax_active_session')) {
+            $saved = session()->get('easytax_active_session');
+            if (is_string($saved) && self::fromLabel($saved)) {
+                return $saved;
+            }
+        }
+
+        // Fallback to real-time current session
+        return self::current()['label'];
+    }
+
+    /**
+     * Get the active session details (bounds, label, etc.)
+     */
+    public static function active(?string $requestedLabel = null): array
+    {
+        $label = self::activeSessionLabel($requestedLabel);
+
+        return self::fromLabel($label) ?? self::current();
     }
 }

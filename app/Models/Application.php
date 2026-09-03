@@ -71,7 +71,10 @@ class Application extends Model implements HasMedia
         });
 
         static::updating(function ($application) {
-            if ($application->isDirty('submitted_at') && $application->submitted_at) {
+            if (empty($application->session_label)) {
+                $date = $application->submitted_at ?? $application->started_at ?? $application->created_at ?? now();
+                $application->session_label = SessionResolver::forDate($date)['label'];
+            } elseif ($application->isDirty('submitted_at') && $application->submitted_at) {
                 $application->session_label = SessionResolver::forDate($application->submitted_at)['label'];
             }
         });
@@ -176,7 +179,18 @@ class Application extends Model implements HasMedia
 
     public function scopeInSession($query, string $label)
     {
-        return $query->where('session_label', $label);
+        $bounds = SessionResolver::fromLabel($label);
+
+        return $query->where(function ($q) use ($label, $bounds) {
+            $q->where('session_label', $label);
+
+            if ($bounds) {
+                $q->orWhere(function ($sub) use ($bounds) {
+                    $sub->whereNull('session_label')
+                        ->whereBetween('created_at', [$bounds['from'], $bounds['to']]);
+                });
+            }
+        });
     }
 
     public function scopeCurrentSession($query)

@@ -16,7 +16,7 @@ class LeadController extends Controller
         $user = auth()->user();
 
         $sessions = SessionResolver::all();
-        $currentSessionLabel = $request->get('session', SessionResolver::current()['label']);
+        $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
         $sessionData = SessionResolver::fromLabel($currentSessionLabel);
 
         $query = Lead::where('marketer_id', $user->id);

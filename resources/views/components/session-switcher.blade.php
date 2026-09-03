@@ -94,7 +94,7 @@
         </div>
         @foreach($sessions as $session)
             <a class="dropdown-item session-dropdown-item {{ $session['label'] === $currentSessionLabel ? 'active' : '' }}" 
-               href="{{ request()->fullUrlWithQuery(['session' => $session['label']]) }}">
+               href="{{ request()->fullUrlWithQuery(['session' => $session['label'], 'page' => 1]) }}">
                 <span>{{ $session['name'] }}</span>
                 <i class="fas fa-check check-icon"></i>
             </a>

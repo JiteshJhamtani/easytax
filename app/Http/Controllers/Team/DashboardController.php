@@ -18,7 +18,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $sessions = SessionResolver::all();
-        $currentSessionLabel = $request->get('session', SessionResolver::current()['label']);
+        $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
         // Fetch ONLY applications assigned to the logged-in team member
         $applications = Application::with('service')

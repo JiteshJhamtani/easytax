@@ -74,7 +74,7 @@ class AgentDashboardService
     // 2. GIFT MILESTONE LOGIC
     // =========================================================================
 
-    public function getMilestoneGroups(int $agentId): array
+    public function getMilestoneGroups(int $agentId, ?string $sessionLabel = null): array
     {
         $gifts = Gift::where('is_active', true)
             ->with('conditionGroups.conditions.service', 'media')
@@ -84,13 +84,13 @@ class AgentDashboardService
             return [];
         }
 
-        $counts = $this->getSubmissionCountsByPeriod($agentId, $gifts);
+        $counts = $this->getSubmissionCountsByPeriod($agentId, $gifts, $sessionLabel);
         $groups = $this->processGiftsIntoGroups($gifts, $counts);
 
         return $this->sortGroups($groups);
     }
 
-    protected function getSubmissionCountsByPeriod(int $agentId, Collection $gifts): array
+    protected function getSubmissionCountsByPeriod(int $agentId, Collection $gifts, ?string $sessionLabel = null): array
     {
         $allServiceIds = $gifts->flatMap->conditionGroups
             ->flatMap->conditions
@@ -102,7 +102,7 @@ class AgentDashboardService
 
         foreach ($periodTypes as $periodType) {
             // Using the injected resolver to prevent duplicate code!
-            [$from, $to] = $this->periodResolver->resolve($periodType);
+            [$from, $to] = $this->periodResolver->resolve($periodType, sessionLabel: $sessionLabel);
 
             $counts[$periodType] = Application::where('agent_id', $agentId)
                 ->whereIn('service_id', $allServiceIds)
@@ -260,7 +260,7 @@ class AgentDashboardService
             'monthly' => now()->format('F Y'),
             'quarterly' => 'Q'.now()->quarter.' '.now()->year,
             'yearly' => (string) now()->year,
-            'session' => SessionResolver::current()['label'],
+            'session' => SessionResolver::activeSessionLabel(),
             default => '',
         };
     }

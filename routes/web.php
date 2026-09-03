@@ -540,7 +540,7 @@ Route::get('/run-session-migration', function () {
         Artisan::call('migrate', ['--force' => true]);
 
         return 'Migration successful! Output: '.Artisan::output();
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
         return 'Error: '.$e->getMessage();
     }
 });

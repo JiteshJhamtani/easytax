@@ -64,6 +64,11 @@ $(document).ready(function () {
                 if (typeof window.isTrashedView !== 'undefined') {
                     d.is_trashed = window.isTrashedView;
                 }
+                
+                const urlSession = new URLSearchParams(window.location.search).get('session');
+                if (urlSession) {
+                    d.session = urlSession;
+                }
             },
         },
 

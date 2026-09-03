@@ -16,11 +16,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $sessions = SessionResolver::all();
-        $currentSessionLabel = $request->get('session', SessionResolver::current()['label']);
-
-        $selectedSession = SessionResolver::fromLabel($currentSessionLabel)
-            ?? SessionResolver::current();
-        $currentSessionLabel = $selectedSession['label'];
+        $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
         $appQuery = fn () => Application::query()->inSession($currentSessionLabel);
 

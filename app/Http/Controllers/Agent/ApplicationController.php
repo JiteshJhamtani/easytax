@@ -27,8 +27,12 @@ class ApplicationController extends Controller
             default => 'My Other Applications',
         };
 
+        $currentSessionLabel = \App\Services\SessionResolver::activeSessionLabel($request->get('session'));
+
         // --- NEW DYNAMIC KPI LOGIC ---
-        $query = Application::where('agent_id', auth()->id());
+        $query = Application::where('agent_id', auth()->id())
+            ->inSession($currentSessionLabel);
+        
         $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
 
         if ($type === 'other') {
@@ -51,7 +55,7 @@ class ApplicationController extends Controller
 
         $services = Service::where('active', true)->get();
 
-        return view('agent.applications.index', compact('stats', 'services', 'type', 'pageTitle'));
+        return view('agent.applications.index', compact('stats', 'services', 'type', 'pageTitle', 'currentSessionLabel'));
     }
 
     public function data(Request $request)
@@ -62,6 +66,9 @@ class ApplicationController extends Controller
                 $q->whereIn('collection_name', ['itr_acknowledgement', 'computation_sheet', 'balance_sheet']);
             },
         ])->where('agent_id', auth()->id());
+        
+        $sessionLabel = \App\Services\SessionResolver::activeSessionLabel($request->get('session'));
+        $query->inSession($sessionLabel);
 
         // --- FILTERING LOGIC ---
         $type = $request->query('type', 'other');
@@ -216,7 +223,11 @@ class ApplicationController extends Controller
     {
         $exportType = $request->query('export_type', 'all_filtered');
 
-        $query = Application::with(['service'])->where('agent_id', auth()->id());
+        $sessionLabel = \App\Services\SessionResolver::activeSessionLabel($request->get('session'));
+        
+        $query = Application::with(['service'])
+            ->where('agent_id', auth()->id())
+            ->inSession($sessionLabel);
 
         if ($exportType !== 'master') {
             $type = $request->type ?? 'other';

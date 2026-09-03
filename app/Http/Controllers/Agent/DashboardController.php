@@ -22,11 +22,7 @@ class DashboardController extends Controller
         $agentId = auth()->id();
 
         $sessions = SessionResolver::all();
-        $currentSessionLabel = $request->get('session', SessionResolver::current()['label']);
-
-        $selectedSession = SessionResolver::fromLabel($currentSessionLabel)
-            ?? SessionResolver::current();
-        $currentSessionLabel = $selectedSession['label'];
+        $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
         return view('agent.dashboard', [
             'sessions' => $sessions,
@@ -34,14 +30,16 @@ class DashboardController extends Controller
             'stats' => $this->dashboardService->getStats($agentId, $currentSessionLabel),
             'monthlyApplications' => $this->dashboardService->getMonthlyApplications($agentId, $currentSessionLabel),
             'recentApplications' => $this->dashboardService->getRecentApplications($agentId, $currentSessionLabel),
-            'giftGroups' => $this->dashboardService->getMilestoneGroups($agentId),
+            'giftGroups' => $this->dashboardService->getMilestoneGroups($agentId, $currentSessionLabel),
         ]);
     }
 
     public function gifts()
     {
+        $currentSessionLabel = SessionResolver::activeSessionLabel();
+
         return view('agent.gifts.index', [
-            'giftGroups' => $this->dashboardService->getMilestoneGroups(auth()->id()),
+            'giftGroups' => $this->dashboardService->getMilestoneGroups(auth()->id(), $currentSessionLabel),
         ]);
     }
 }
