@@ -373,6 +373,11 @@
             Pages
             @if(request()->is('admin/pages*'))<span class="sb-item__dot"></span>@endif
         </a>
+        <a href="{{ route('admin.bulk-passwords.index') }}" class="sb-item {{ request()->routeIs('admin.bulk-passwords.*') ? 'active' : '' }}" data-label="Bulk Passwords">
+            <span class="sb-item__icon"><i class="fas fa-key"></i></span>
+            Bulk Passwords
+            @if(request()->routeIs('admin.bulk-passwords.*'))<span class="sb-item__dot"></span>@endif
+        </a>
     @endif
 
     {{-- ========================================== --}}

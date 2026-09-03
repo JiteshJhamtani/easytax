@@ -4,6 +4,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Admin\AgentController;
 use App\Http\Controllers\Admin\ApplicationController as AdminApplicationController;
+use App\Http\Controllers\Admin\BulkPasswordController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GiftController;
 use App\Http\Controllers\Admin\GiftEligibilityController;
@@ -241,6 +242,12 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
 
     Route::get('/switch-server/{target}', [AdminDashboardController::class, 'switchServer'])
         ->name('switch_server');
+
+    // ==========================================
+    // ADMIN: BULK PASSWORD MANAGEMENT
+    // ==========================================
+    Route::get('/bulk-passwords', [BulkPasswordController::class, 'index'])->name('bulk-passwords.index');
+    Route::post('/bulk-passwords', [BulkPasswordController::class, 'update'])->name('bulk-passwords.update');
 
     // ==========================================
     // ADMIN: TEAM / OPERATOR MANAGEMENT
@@ -540,7 +547,7 @@ Route::get('/run-session-migration', function () {
         Artisan::call('migrate', ['--force' => true]);
 
         return 'Migration successful! Output: '.Artisan::output();
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         return 'Error: '.$e->getMessage();
     }
 });
