@@ -1,48 +1,84 @@
 <section>
-    <header>
-        <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-            {{ __('Update Password') }}
-        </h2>
-
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {{ __('Ensure your account is using a long, random password to stay secure.') }}
-        </p>
-    </header>
-
-    <form method="post" action="{{ route('password.update') }}" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('password.update') }}" class="space-y-4">
         @csrf
         @method('put')
 
-        <div>
-            <x-input-label for="update_password_current_password" :value="__('Current Password')" />
-            <x-text-input id="update_password_current_password" name="current_password" type="password" class="mt-1 block w-full" autocomplete="current-password" />
-            <x-input-error :messages="$errors->updatePassword->get('current_password')" class="mt-2" />
+        {{-- Current Password --}}
+        <div class="form-group mb-3">
+            <label class="et-form-label" for="update_password_current_password">
+                Current Password <span class="text-danger">*</span>
+            </label>
+            <div class="et-input-group">
+                <span class="et-input-icon">
+                    <i class="fas fa-lock"></i>
+                </span>
+                <input id="update_password_current_password" name="current_password" type="password"
+                    class="et-input @error('current_password', 'updatePassword') is-invalid @enderror"
+                    autocomplete="current-password" placeholder="••••••••" required />
+                <button type="button" class="et-password-toggle" onclick="togglePasswordVisibility('update_password_current_password', this)">
+                    <i class="fas fa-eye text-muted"></i>
+                </button>
+            </div>
+            @error('current_password', 'updatePassword')
+                <span class="et-error-msg"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</span>
+            @enderror
         </div>
 
-        <div>
-            <x-input-label for="update_password_password" :value="__('New Password')" />
-            <x-text-input id="update_password_password" name="password" type="password" class="mt-1 block w-full" autocomplete="new-password" />
-            <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2" />
+        {{-- New Password --}}
+        <div class="form-group mb-3">
+            <label class="et-form-label" for="update_password_password">
+                New Password <span class="text-danger">*</span>
+            </label>
+            <div class="et-input-group">
+                <span class="et-input-icon">
+                    <i class="fas fa-key"></i>
+                </span>
+                <input id="update_password_password" name="password" type="password"
+                    class="et-input @error('password', 'updatePassword') is-invalid @enderror"
+                    autocomplete="new-password" placeholder="At least 8 characters" required />
+                <button type="button" class="et-password-toggle" onclick="togglePasswordVisibility('update_password_password', this)">
+                    <i class="fas fa-eye text-muted"></i>
+                </button>
+            </div>
+            @error('password', 'updatePassword')
+                <span class="et-error-msg"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</span>
+            @enderror
         </div>
 
-        <div>
-            <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" />
-            <x-text-input id="update_password_password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full" autocomplete="new-password" />
-            <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
+        {{-- Confirm Password --}}
+        <div class="form-group mb-4">
+            <label class="et-form-label" for="update_password_password_confirmation">
+                Confirm New Password <span class="text-danger">*</span>
+            </label>
+            <div class="et-input-group">
+                <span class="et-input-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </span>
+                <input id="update_password_password_confirmation" name="password_confirmation" type="password"
+                    class="et-input @error('password_confirmation', 'updatePassword') is-invalid @enderror"
+                    autocomplete="new-password" placeholder="Repeat new password" required />
+                <button type="button" class="et-password-toggle" onclick="togglePasswordVisibility('update_password_password_confirmation', this)">
+                    <i class="fas fa-eye text-muted"></i>
+                </button>
+            </div>
+            @error('password_confirmation', 'updatePassword')
+                <span class="et-error-msg"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</span>
+            @enderror
         </div>
 
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+        {{-- Submit & Feedback --}}
+        <div class="d-flex align-items-center justify-content-between pt-3 border-top">
+            <div>
+                @if (session('status') === 'password-updated')
+                    <span class="et-status-pill text-success font-weight-bold">
+                        <i class="fas fa-check-circle mr-1"></i> Password changed securely!
+                    </span>
+                @endif
+            </div>
 
-            @if (session('status') === 'password-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600 dark:text-gray-400"
-                >{{ __('Saved.') }}</p>
-            @endif
+            <button type="submit" class="et-btn et-btn-slate">
+                <i class="fas fa-lock mr-1"></i> Update Password
+            </button>
         </div>
     </form>
 </section>

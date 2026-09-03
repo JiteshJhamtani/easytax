@@ -12,6 +12,17 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string|null $mobile_number
+ * @property string|null $whatsapp_no
+ * @property string|null $address
+ * @property string|null $agent_code
+ * @property string|null $role
+ * @property NotificationPreference|null $notification_preference
+ */
 class User extends Authenticatable
 {
     use HasFactory, HasRoles, MasksSensitiveData, Notifiable, SoftDeletes;

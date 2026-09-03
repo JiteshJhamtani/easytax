@@ -1,55 +1,86 @@
-<section class="space-y-6">
-    <header>
-        <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-            {{ __('Delete Account') }}
-        </h2>
-
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
-        </p>
-    </header>
-
-    <x-danger-button
-        x-data=""
-        x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
-    >{{ __('Delete Account') }}</x-danger-button>
-
-    <x-modal name="confirm-user-deletion" :show="$errors->userDeletion->isNotEmpty()" focusable>
-        <form method="post" action="{{ route('profile.destroy') }}" class="p-6">
-            @csrf
-            @method('delete')
-
-            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                {{ __('Are you sure you want to delete your account?') }}
-            </h2>
-
-            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
-            </p>
-
-            <div class="mt-6">
-                <x-input-label for="password" value="{{ __('Password') }}" class="sr-only" />
-
-                <x-text-input
-                    id="password"
-                    name="password"
-                    type="password"
-                    class="mt-1 block w-3/4"
-                    placeholder="{{ __('Password') }}"
-                />
-
-                <x-input-error :messages="$errors->userDeletion->get('password')" class="mt-2" />
+<section class="space-y-4">
+    <div class="p-3 rounded-lg border border-red-200 bg-red-50/50 mb-3">
+        <div class="d-flex align-items-start gap-2">
+            <i class="fas fa-exclamation-triangle text-danger mt-1"></i>
+            <div>
+                <span class="font-weight-bold text-danger d-block">Warning: Permanent Action</span>
+                <p class="text-muted small mb-0 mt-1">
+                    Once your account is deleted, your access will be revoked immediately and your profile marked as inactive.
+                </p>
             </div>
+        </div>
+    </div>
 
-            <div class="mt-6 flex justify-end">
-                <x-secondary-button x-on:click="$dispatch('close')">
-                    {{ __('Cancel') }}
-                </x-secondary-button>
+    <div class="d-flex justify-content-between align-items-center pt-2">
+        <span class="text-xs text-muted">Requires password confirmation</span>
+        <button type="button" class="et-btn et-btn-danger" data-toggle="modal" data-target="#deleteAccountModal"
+            onclick="openDeleteModal()">
+            <i class="fas fa-trash-alt mr-1"></i> Delete Account
+        </button>
+    </div>
 
-                <x-danger-button class="ms-3">
-                    {{ __('Delete Account') }}
-                </x-danger-button>
+    {{-- Confirmation Modal (Bootstrap 4 & Alpine Compatible) --}}
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg rounded-2xl overflow-hidden">
+                <form method="post" action="{{ route('profile.destroy') }}">
+                    @csrf
+                    @method('delete')
+
+                    <div class="modal-header bg-red-50 border-bottom border-red-100 py-3 px-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-red-100 text-danger d-flex align-items-center justify-content-center">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h5 class="modal-title font-weight-bold text-danger mb-0" id="deleteModalTitle">
+                                Confirm Account Deletion
+                            </h5>
+                        </div>
+                        <button type="button" class="close text-muted" data-dismiss="modal" aria-label="Close" onclick="closeDeleteModal()">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body p-4">
+                        <p class="text-secondary mb-3">
+                            Are you sure you want to delete your account? All your personal data and active sessions will be permanently terminated.
+                        </p>
+                        <p class="text-sm font-weight-bold text-dark mb-2">
+                            Please enter your current password to authorize this action:
+                        </p>
+
+                        <div class="et-input-group mb-2">
+                            <span class="et-input-icon">
+                                <i class="fas fa-lock text-muted"></i>
+                            </span>
+                            <input id="delete_password" name="password" type="password"
+                                class="et-input @error('password', 'userDeletion') is-invalid @enderror"
+                                placeholder="Enter your current password" required />
+                        </div>
+
+                        @error('password', 'userDeletion')
+                            <span class="et-error-msg d-block mt-1"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="modal-footer bg-light px-4 py-3 border-top d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary font-weight-bold rounded-lg px-3" data-dismiss="modal" onclick="closeDeleteModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="et-btn et-btn-danger">
+                            <i class="fas fa-trash-alt mr-1"></i> Yes, Delete My Account
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
-    </x-modal>
+        </div>
+    </div>
 </section>
+
+@if ($errors->userDeletion->isNotEmpty())
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            openDeleteModal();
+        });
+    </script>
+@endif

@@ -27,7 +27,10 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
-            'notification_preference' => ['sometimes', 'string', Rule::in(NotificationPreference::cases())],
+            'mobile_number' => ['nullable', 'string', 'max:20'],
+            'whatsapp_no' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'notification_preference' => ['sometimes', 'nullable', 'string', Rule::in(NotificationPreference::cases())],
         ];
     }
 }
