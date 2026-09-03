@@ -65,6 +65,60 @@
         padding: 0;
     }
 
+    /* ── DYNAMIC TOP AGENTS STYLING ── */
+    .rank-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.78rem;
+        border-radius: 20px;
+        min-width: 28px;
+        height: 24px;
+        padding: 0 6px;
+    }
+    .rank-pill.rank-1 {
+        background: linear-gradient(135deg, #F59E0B, #D97706);
+        color: #fff;
+    }
+    .rank-pill.rank-2 {
+        background: linear-gradient(135deg, #94A3B8, #64748B);
+        color: #fff;
+    }
+    .rank-pill.rank-3 {
+        background: linear-gradient(135deg, #D97706, #B45309);
+        color: #fff;
+    }
+    .rank-pill.rank-other {
+        background: #F1F5F9;
+        color: #64748B;
+        border: 1px solid #E2E8F0;
+        font-weight: 700;
+    }
+    .agent-mini-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #0044B2, #1E9C5D);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .agent-profile-link {
+        color: var(--slate-dark);
+        font-weight: 700;
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+    .agent-profile-link:hover {
+        color: #0044B2;
+        text-decoration: underline;
+    }
+
     /* ── NEW FUNNEL CARDS (3x2 Layout) ── */
     .funnel-container {
         background: var(--green-light, #f0fdf4); 
@@ -326,15 +380,37 @@
     <div class="row mb-4">
         <div class="col-lg-7 mb-4 mb-lg-0">
             <div class="dash-panel">
-                <div class="dash-panel-header">
-                    <h3 class="dash-panel-title"><i class="fas fa-trophy text-warning"></i> Top 10 Agents</h3>
+                <div class="dash-panel-header d-flex justify-content-between align-items-center flex-wrap" style="gap: 10px;">
+                    <h3 class="dash-panel-title m-0">
+                        <i class="fas fa-trophy text-warning"></i>
+                        <span id="topAgentsHeading">
+                            @if($topAgentsLimit === 'all')
+                                All Agents ({{ $totalAgentsCount }})
+                            @else
+                                Top {{ $topAgentsLimit }} Agents
+                            @endif
+                        </span>
+                    </h3>
+                    <div class="d-flex align-items-center" style="gap: 8px;">
+                        <span class="text-xs font-weight-bold text-muted text-uppercase d-none d-sm-inline">Show:</span>
+                        <select id="topAgentsLimitSelect" class="custom-select custom-select-sm" style="width: auto; border-radius: 8px; font-weight: 700; font-size: 0.82rem; border-color: #cbd5e1; cursor: pointer; height: 32px;">
+                            @foreach($topAgentsOptions as $val => $label)
+                                <option value="{{ $val }}" {{ (string)$topAgentsLimit === (string)$val ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
-                <div class="dash-panel-body no-padding">
+                <div class="dash-panel-body no-padding" style="position: relative;">
+                    <div id="topAgentsLoadingOverlay" style="display: none; position: absolute; inset: 0; background: rgba(255,255,255,0.7); z-index: 10; align-items: center; justify-content: center;">
+                        <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+                    </div>
                     <div class="table-responsive">
                         <table class="responsive-card-table mini-table agents-table">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th class="text-center" style="width: 50px;">#</th>
                                     <th>Agent</th>
                                     <th class="text-center">Apps</th>
                                     @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
@@ -343,25 +419,8 @@
                                     @endif
                                 </tr>
                             </thead>
-                            <tbody>
-                                @forelse($topAgents as $i => $agent)
-                                <tr>
-                                    <td class="font-weight-bold text-muted">{{ $i + 1 }}</td>
-                                    <td>
-                                        <div class="font-weight-bold" style="color: var(--slate-dark);">{{ $agent->name }}</div>
-                                        <div class="code-tag mt-1" style="display:inline-block;">{{ $agent->agent_code }}</div>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="custom-badge badge-info-soft">{{ $agent->applications_count }}</span>
-                                    </td>
-                                    @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
-                                    <td class="text-right font-weight-bold" style="color: var(--green);">₹{{ number_format($agent->total_revenue, 2) }}</td>
-                                    <td class="text-right font-weight-bold" style="color: var(--slate);">₹{{ number_format($agent->commission_earned, 2) }}</td>
-                                    @endif
-                                </tr>
-                                @empty
-                                <tr><td colspan="5" class="text-center text-muted py-4">No data available</td></tr>
-                                @endforelse
+                            <tbody id="topAgentsTableBody">
+                                @include('admin.dashboard_top_agents_rows', ['topAgents' => $topAgents])
                             </tbody>
                         </table>
                     </div>
@@ -527,5 +586,51 @@
             }
         }
     });
+
+    // ── Dynamic Top Agents Selector Handler ──
+    const topAgentsSelect = document.getElementById('topAgentsLimitSelect');
+    const topAgentsHeading = document.getElementById('topAgentsHeading');
+    const topAgentsTbody = document.getElementById('topAgentsTableBody');
+    const topAgentsOverlay = document.getElementById('topAgentsLoadingOverlay');
+
+    if (topAgentsSelect && topAgentsTbody) {
+        topAgentsSelect.addEventListener('change', function() {
+            const limitVal = this.value;
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('top_agents_limit', limitVal);
+
+            if (topAgentsOverlay) {
+                topAgentsOverlay.style.display = 'flex';
+            }
+            topAgentsTbody.style.opacity = '0.5';
+
+            fetch(currentUrl.toString(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    topAgentsTbody.innerHTML = data.html;
+                    if (topAgentsHeading && data.title) {
+                        topAgentsHeading.textContent = data.title;
+                    }
+                    // Update URL silently without reload
+                    window.history.replaceState({}, '', currentUrl.toString());
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching top agents:', err);
+                window.location.href = currentUrl.toString();
+            })
+            .finally(() => {
+                if (topAgentsOverlay) {
+                    topAgentsOverlay.style.display = 'none';
+                }
+                topAgentsTbody.style.opacity = '1';
+            });
+        });
+    }
 </script>
 @endsection

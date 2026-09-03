@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\NotificationPreference;
 use App\Traits\MasksSensitiveData;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -23,6 +25,7 @@ class User extends Authenticatable
         'mobile_number',
         'whatsapp_no',
         'address',
+        'marketer_id',
     ];
 
     /**
@@ -70,9 +73,14 @@ class User extends Authenticatable
         return $this->hasMany(Application::class, 'agent_id');
     }
 
-    public function assignedApplications()
+    public function assignedApplications(): HasMany
     {
         return $this->hasMany(Application::class, 'assigned_to');
+    }
+
+    public function marketer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'marketer_id');
     }
 
     /*

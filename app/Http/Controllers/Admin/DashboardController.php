@@ -85,7 +85,34 @@ class DashboardController extends Controller
         $chartApplications = $monthlyData->pluck('applications_count')->toArray();
         $chartRevenue = $monthlyData->pluck('revenue')->map(fn ($v) => (float) $v)->toArray();
 
-        // ── Top 10 Agents ──
+        // ── Top Agents (Dynamic Sequence) ──
+        $totalAgentsCount = (int) ($kpis['total_agents'] ?? 0);
+        if ($totalAgentsCount === 0) {
+            $totalAgentsCount = User::query()->where('role', 'AGENT')->where('is_active', true)->count();
+        }
+
+        // Generate dynamic sequential options based on total agents count
+        $potentialSteps = [10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250, 500];
+        $topAgentsOptions = [];
+
+        foreach ($potentialSteps as $step) {
+            if ($step < $totalAgentsCount) {
+                $topAgentsOptions[(string) $step] = "Top {$step}";
+            }
+        }
+
+        $topAgentsOptions['all'] = "All Agents ({$totalAgentsCount})";
+
+        // Current requested limit
+        $topAgentsLimit = (string) $request->get('top_agents_limit', '10');
+        if (! array_key_exists($topAgentsLimit, $topAgentsOptions)) {
+            $topAgentsLimit = array_key_first($topAgentsOptions) ?? '10';
+        }
+
+        $numericLimit = ($topAgentsLimit === 'all')
+            ? max(1000, $totalAgentsCount)
+            : (int) $topAgentsLimit;
+
         $topAgents = User::query()
             ->select(
                 'users.id',
@@ -102,8 +129,23 @@ class DashboardController extends Controller
             ->where('applications.payment_status', '!=', 'FAILED')
             ->groupBy('users.id', 'users.agent_code', 'users.name')
             ->orderByDesc('total_revenue')
-            ->limit(10)
+            ->limit($numericLimit)
             ->get();
+
+        // AJAX response for live dynamic updating
+        if ($request->ajax() && $request->has('top_agents_limit')) {
+            $title = ($topAgentsLimit === 'all')
+                ? "All Agents ({$totalAgentsCount})"
+                : "Top {$numericLimit} Agents";
+
+            return response()->json([
+                'success' => true,
+                'title' => $title,
+                'limit' => $topAgentsLimit,
+                'count' => $topAgents->count(),
+                'html' => view('admin.dashboard_top_agents_rows', compact('topAgents'))->render(),
+            ]);
+        }
 
         // ── Top 10 Services (Fixed for Cross-Server databases) ──
 
@@ -147,6 +189,9 @@ class DashboardController extends Controller
             'chartApplications',
             'chartRevenue',
             'topAgents',
+            'topAgentsLimit',
+            'topAgentsOptions',
+            'totalAgentsCount',
             'topServices',
             'recentApplications'
         ));

@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AgentPayout;
 use App\Models\Application;
 use App\Models\User;
 use App\Services\AgentCodeService;
 use App\Services\SessionResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
 use Yajra\DataTables\Facades\DataTables;
 
 class AgentController extends Controller
@@ -147,22 +147,97 @@ class AgentController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function show(User $agent, Request $request)
+    public function show(User $agent, Request $request): View
     {
         $sessions = SessionResolver::all();
         $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
-        $applications = Application::where('agent_id', $agent->id)->inSession($currentSessionLabel);
+        $agent->loadMissing(['marketer']);
+
+        $baseAppQuery = Application::where('agent_id', $agent->id)->inSession($currentSessionLabel);
+
+        $totalApplications = (clone $baseAppQuery)->count();
+        $completedApplications = (clone $baseAppQuery)->where('status', 'COMPLETED')->count();
+        $pendingApplications = (clone $baseAppQuery)
+            ->whereNotIn('status', ['COMPLETED', 'DRAFT', 'CANCELLED', 'REJECTED'])
+            ->where('payment_status', '!=', 'FAILED')
+            ->count();
+        $incompleteApplications = (clone $baseAppQuery)
+            ->where(function ($q) {
+                $q->whereIn('status', ['DRAFT', 'CANCELLED', 'REJECTED'])
+                    ->orWhere('payment_status', 'FAILED');
+            })
+            ->count();
+
+        $totalRevenue = (clone $baseAppQuery)
+            ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'REJECTED'])
+            ->where('payment_status', '!=', 'FAILED')
+            ->sum('amount');
+
+        $commissionTotal = (clone $baseAppQuery)
+            ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'REJECTED'])
+            ->where('payment_status', '!=', 'FAILED')
+            ->sum('commission_amount');
+
+        $netRevenue = max(0, $totalRevenue - $commissionTotal);
+        $avgCommission = $totalApplications > 0 ? round($commissionTotal / $totalApplications, 2) : 0;
+        $completionRate = $totalApplications > 0 ? round(($completedApplications / $totalApplications) * 100, 1) : 0;
 
         $stats = [
-            'applications' => $applications->count(),
-            'submitted' => $applications->clone()->where('status', 'SUBMITTED')->count(),
-            'commission_total' => $applications->clone()->sum('commission_amount'),
-            'commission_unpaid' => $applications->clone()->whereNull('payout_id')->sum('commission_amount'),
-            'payouts_total' => AgentPayout::where('agent_id', $agent->id)->sum('amount'),
+            'applications' => $totalApplications,
+            'completed' => $completedApplications,
+            'pending' => $pendingApplications,
+            'incomplete' => $incompleteApplications,
+            'completion_rate' => $completionRate,
+            'total_revenue' => $totalRevenue,
+            'commission_total' => $commissionTotal,
+            'net_revenue' => $netRevenue,
+            'avg_commission' => $avgCommission,
         ];
 
-        return view('admin.agents.show', compact('agent', 'stats', 'sessions', 'currentSessionLabel'));
+        // Service-wise breakdown
+        $serviceStats = (clone $baseAppQuery)
+            ->selectRaw('service_id, COUNT(id) as count, COALESCE(SUM(amount), 0) as total_amount, COALESCE(SUM(commission_amount), 0) as total_commission')
+            ->groupBy('service_id')
+            ->with('service:id,name,slug')
+            ->orderByDesc('count')
+            ->get();
+
+        // Applications list with quick status filter
+        $statusFilter = $request->get('status', 'all');
+        $applicationsListQuery = (clone $baseAppQuery)->with(['service:id,name,slug']);
+
+        if ($statusFilter === 'completed') {
+            $applicationsListQuery->where('status', 'COMPLETED');
+        } elseif ($statusFilter === 'pending') {
+            $applicationsListQuery->whereNotIn('status', ['COMPLETED', 'DRAFT', 'CANCELLED', 'REJECTED'])
+                ->where('payment_status', '!=', 'FAILED');
+        } elseif ($statusFilter === 'incomplete') {
+            $applicationsListQuery->where(function ($q) {
+                $q->whereIn('status', ['DRAFT', 'CANCELLED', 'REJECTED'])
+                    ->orWhere('payment_status', 'FAILED');
+            });
+        }
+
+        if ($search = $request->get('search')) {
+            $applicationsListQuery->where(function ($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                    ->orWhere('form_data', 'like', "%{$search}%")
+                    ->orWhereHas('service', fn ($sq) => $sq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $applications = $applicationsListQuery->latest()->paginate(15)->withQueryString();
+
+        return view('admin.agents.show', compact(
+            'agent',
+            'stats',
+            'sessions',
+            'currentSessionLabel',
+            'serviceStats',
+            'applications',
+            'statusFilter'
+        ));
     }
 
     /*
