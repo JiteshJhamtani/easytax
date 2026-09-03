@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\View\Composers\AdminSidebarComposer;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Blade;
@@ -40,6 +41,9 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('unreadCount', $user->unreadNotifications()->count());
             }
         });
+
+        // Dynamic sidebar tab count badges
+        View::composer('layouts.admin', AdminSidebarComposer::class);
 
         // 3. Custom EasyTax Password Reset Email Template
         ResetPassword::toMailUsing(function (object $notifiable, string $token) {

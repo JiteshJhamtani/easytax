@@ -5,12 +5,14 @@ namespace App\Models;
 use App\Enums\ApplicationStatus;
 use App\Enums\PaymentStatus;
 use App\Services\SessionResolver;
+use App\Services\SidebarBadgeService;
 use App\Traits\MasksSensitiveData;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\MediaLibrary\HasMedia;
@@ -77,6 +79,18 @@ class Application extends Model implements HasMedia
             } elseif ($application->isDirty('submitted_at') && $application->submitted_at) {
                 $application->session_label = SessionResolver::forDate($application->submitted_at)['label'];
             }
+        });
+
+        static::saved(function () {
+            Cache::forget(SidebarBadgeService::CACHE_KEY);
+        });
+
+        static::deleted(function () {
+            Cache::forget(SidebarBadgeService::CACHE_KEY);
+        });
+
+        static::restored(function () {
+            Cache::forget(SidebarBadgeService::CACHE_KEY);
         });
     }
 

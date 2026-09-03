@@ -281,3 +281,44 @@ html, body {
         justify-content: center;
     }
 }
+
+/* ═══════════════════════════════════════════════════
+   SIDEBAR TAB BADGES
+   ═══════════════════════════════════════════════════ */
+.sb-badge-cluster {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+.sb-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5.5px;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s cubic-bezier(.4, 0, .2, 1);
+    cursor: default;
+    user-select: none;
+}
+.sb-item:hover .sb-badge {
+    transform: scale(1.08);
+}
+.sb-badge--red    { background-color: #ef4444; }
+.sb-badge--blue   { background-color: #3b82f6; }
+.sb-badge--amber  { background-color: #f97316; }
+.sb-badge--green  { background-color: #10b981; }
+.sb-badge--purple { background-color: #8b5cf6; }
+.sb-badge--pink   { background-color: #ec4899; }
+.sb-badge--teal   { background-color: #06b6d4; }
+.sb-badge--indigo { background-color: #6366f1; }
+.sb-badge--slate  { background-color: #64748b; }

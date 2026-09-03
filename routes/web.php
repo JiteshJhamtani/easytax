@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\MarketerController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PayoutController;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
+use App\Http\Controllers\Admin\TabBadgeController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Agent\ApplicationController as AgentApplicationController;
 use App\Http\Controllers\Agent\CommissionController;
@@ -421,6 +422,11 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
     Route::post('/coupons', [App\Http\Controllers\Admin\CouponController::class, 'store'])->name('coupons.store');
     Route::post('/coupons/{id}/toggle', [App\Http\Controllers\Admin\CouponController::class, 'toggle'])->name('coupons.toggle');
     Route::delete('/coupons/{id}', [App\Http\Controllers\Admin\CouponController::class, 'destroy'])->name('coupons.destroy');
+
+    // Dynamic Tab Badges Configuration
+    Route::get('/tab-badges', [TabBadgeController::class, 'index'])->name('tab-badges.index');
+    Route::post('/tab-badges', [TabBadgeController::class, 'update'])->name('tab-badges.update');
+    Route::post('/tab-badges/reset', [TabBadgeController::class, 'reset'])->name('tab-badges.reset');
 
 });
 
