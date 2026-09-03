@@ -173,7 +173,6 @@ return [
                             'user' => 'User / Citizen',
                         ],
                     ],
-
                     [
                         'name' => 'has_salary',
                         'label' => 'Salary Income?',
@@ -5266,17 +5265,6 @@ return [
                             '2027-2028' => '2027-2028',
                         ],
                     ],
-                    [
-                        'name' => 'turnover',
-                        'label' => 'Total Bills',
-                        'type' => 'select',
-                        'required' => true,
-                        'validation' => 'required|string',
-                        'options' => [
-                            'less_than_15' => 'Less than 15',
-                            'more_than_15' => 'More than 15',
-                        ],
-                    ],
                 ],
             ],
         ],
@@ -5284,7 +5272,7 @@ return [
             [
                 'name' => 'bill_doc_1',
                 'label' => 'Bill Document 1',
-                'required' => true,
+                'required' => false,
                 'mimes' => [
                     'pdf',
                     'jpg',
