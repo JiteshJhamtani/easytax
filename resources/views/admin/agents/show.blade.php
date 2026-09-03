@@ -5,7 +5,10 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center mb-3 mt-2 flex-wrap" style="gap: 10px;">
         <h1 class="m-0 text-dark font-weight-bold" style="font-size: 1.5rem;">Agent Overview</h1>
-        <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Agents</a>
+        <div class="d-flex align-items-center" style="gap: 1rem;">
+            <x-session-switcher :sessions="$sessions" :current-session-label="$currentSessionLabel" />
+            <a href="javascript:history.back()" class="btn-back-modern"><i class="fas fa-arrow-left"></i> Back to Agents</a>
+        </div>
     </div>
 @stop
 

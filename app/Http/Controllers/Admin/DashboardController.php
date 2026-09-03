@@ -6,31 +6,42 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
+use App\Services\SessionResolver;
 use Illuminate\Encryption\Encrypter;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $sessions = SessionResolver::all();
+        $currentSessionLabel = $request->get('session', SessionResolver::current()['label']);
+
+        $selectedSession = SessionResolver::fromLabel($currentSessionLabel)
+            ?? SessionResolver::current();
+        $currentSessionLabel = $selectedSession['label'];
+
+        $appQuery = fn () => Application::query()->inSession($currentSessionLabel);
+
         // ── KPI Cards ──
         $kpis = [
             // 1. Total Active (Excludes Drafts, Cancelled, and Failed)
-            'total_applications' => Application::query()
+            'total_applications' => $appQuery()
                 ->whereNotIn('status', ['DRAFT', 'CANCELLED'])
                 ->where('payment_status', '!=', 'FAILED')
                 ->count(),
 
-            'completed_applications' => Application::query()->where('status', 'COMPLETED')->count(),
+            'completed_applications' => $appQuery()->where('status', 'COMPLETED')->count(),
 
             // 2. Pending Active
-            'pending_applications' => Application::query()
+            'pending_applications' => $appQuery()
                 ->whereNotIn('status', ['COMPLETED', 'DRAFT', 'CANCELLED'])
                 ->where('payment_status', '!=', 'FAILED')
                 ->count(),
 
             // 3. NEW: Processed (Drafts, Cancelled, or Failed Payments)
-            'processed_applications' => Application::query()
+            'processed_applications' => $appQuery()
                 ->where(function ($query) {
                     $query->whereIn('status', ['DRAFT', 'CANCELLED'])
                         ->orWhere('payment_status', 'FAILED');
@@ -38,12 +49,12 @@ class DashboardController extends Controller
                 ->count(),
 
             // 4. Financials & Agents (Now perfectly synced with the tables & charts)
-            'total_revenue' => Application::query()
+            'total_revenue' => $appQuery()
                 ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
                 ->where('payment_status', '!=', 'FAILED')
                 ->sum(DB::raw('amount - commission_amount')),
 
-            'total_commission' => Application::query()
+            'total_commission' => $appQuery()
                 ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
                 ->where('payment_status', '!=', 'FAILED')
                 ->sum('commission_amount'),
@@ -60,8 +71,8 @@ class DashboardController extends Controller
                 ->count(),
         ];
 
-        // ── Monthly Charts (last 12 months) ──
-        $monthlyData = Application::query()
+        // ── Monthly Charts (scoped to session) ──
+        $monthlyData = $appQuery()
             ->select(
                 DB::raw("DATE_FORMAT(submitted_at, '%Y-%m') as month"),
                 DB::raw('COUNT(*) as applications_count'),
@@ -70,7 +81,6 @@ class DashboardController extends Controller
             ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
             ->where('payment_status', '!=', 'FAILED')
             ->whereNotNull('submitted_at')
-            ->where('submitted_at', '>=', now()->subMonths(11)->startOfMonth())
             ->groupBy('month')
             ->orderBy('month')
             ->get();
@@ -90,6 +100,7 @@ class DashboardController extends Controller
                 DB::raw('COALESCE(SUM(applications.commission_amount), 0) as commission_earned')
             )
             ->join('applications', 'users.id', '=', 'applications.agent_id')
+            ->where('applications.session_label', $currentSessionLabel)
             ->where('users.role', 'AGENT')
             ->whereNotIn('applications.status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
             ->where('applications.payment_status', '!=', 'FAILED')
@@ -101,7 +112,7 @@ class DashboardController extends Controller
         // ── Top 10 Services (Fixed for Cross-Server databases) ──
 
         // 1. We query the LOCAL applications table first (keeping your filters intact)
-        $topServicesStats = Application::query()
+        $topServicesStats = $appQuery()
             ->selectRaw('service_id, COUNT(id) as applications_count, COALESCE(SUM(amount - commission_amount), 0) as revenue')
             ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
             ->where('payment_status', '!=', 'FAILED')
@@ -124,7 +135,7 @@ class DashboardController extends Controller
         });
 
         // ── Recent 10 Applications ──
-        $recentApplications = Application::query()
+        $recentApplications = $appQuery()
             ->with(['agent:id,name', 'service:id,name'])
             ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
             ->where('payment_status', '!=', 'FAILED')
@@ -133,6 +144,8 @@ class DashboardController extends Controller
             ->get();
 
         return view('admin.dashboard', compact(
+            'sessions',
+            'currentSessionLabel',
             'kpis',
             'chartLabels',
             'chartApplications',

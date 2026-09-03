@@ -297,6 +297,23 @@
                 <button id="toggleTrashBtn" class="btn btn-outline-danger ml-2" type="button" style="color: #dc2626; border-color: #fca5a5; background: #fff; font-weight: 700; font-size: 0.9rem; padding: 0.7rem 1.4rem; border-radius: 8px; border: 1px solid #fca5a5; cursor: pointer; transition: all 0.2s ease;">
                     <i class="fas fa-trash"></i> View Trash
                 </button>
+                <div class="dropdown d-inline-block ml-2">
+                    <button class="btn btn-light dropdown-toggle" type="button" id="exportMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #4b5563; font-weight: 700; font-size: 0.9rem; padding: 0.7rem 1.4rem; border-radius: 8px; border: 1px solid #d1d5db; cursor: pointer; transition: all 0.2s ease;">
+                        <i class="fas fa-file-export text-primary"></i> Export Data
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="exportMenu">
+                        <a class="dropdown-item no-transition ds-export-btn" href="#" data-export-type="current_page">
+                            <i class="fas fa-file-alt text-secondary"></i> Export Current Page
+                        </a>
+                        <a class="dropdown-item no-transition ds-export-btn" href="#" data-export-type="all_filtered">
+                            <i class="fas fa-filter text-primary"></i> Export All Filtered Data
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item no-transition ds-export-btn" href="#" data-export-type="master">
+                            <i class="fas fa-database text-success"></i> Master Export (All Data)
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </header>

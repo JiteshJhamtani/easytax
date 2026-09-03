@@ -29,7 +29,7 @@ class GiftController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'period_type' => 'required|in:monthly,quarterly,yearly',
+            'period_type' => 'required|in:monthly,quarterly,yearly,session',
             'banner' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
             'groups' => 'required|array|min:1',
             'groups.*.conditions' => 'required|array|min:1',
@@ -80,7 +80,7 @@ class GiftController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'period_type' => 'required|in:monthly,quarterly,yearly',
+            'period_type' => 'required|in:monthly,quarterly,yearly,session',
             'banner' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
             'groups' => 'required|array|min:1',
             'groups.*.conditions' => 'required|array|min:1',

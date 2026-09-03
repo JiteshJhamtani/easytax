@@ -127,3 +127,24 @@ $(document).ready(function () {
         table.search("").draw();
     });
 });
+// Export Logic for Dynamic DataTables
+$(document).ready(function() {
+    $('.ds-export-btn').on('click', function(e) {
+        e.preventDefault();
+        
+        let exportType = $(this).data('export-type');
+        
+        // Get all current DataTables parameters (filters, pagination, sort)
+        let params = typeof table !== 'undefined' && table ? table.ajax.params() : {};
+        
+        if (!params) {
+            params = {};
+        }
+        
+        params.export_type = exportType;
+        let queryString = $.param(params);
+        let exportUrl = '/agent/applications/export?' + queryString;
+        
+        window.location.href = exportUrl;
+    });
+});

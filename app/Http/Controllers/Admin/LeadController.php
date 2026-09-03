@@ -5,26 +5,37 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Lead;
 use App\Models\User;
+use App\Services\SessionResolver;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
 class LeadController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $user = auth()->user();
 
-        // Gather quick stats for the Marketer
-        $totalLeads = Lead::where('marketer_id', $user->id)->count();
-        $convertedLeads = Lead::where('marketer_id', $user->id)->where('status', 'CONVERTED')->count();
-        $lostLeads = Lead::where('marketer_id', $user->id)->where('status', 'LOST')->count();
+        $sessions = SessionResolver::all();
+        $currentSessionLabel = $request->get('session', SessionResolver::current()['label']);
+        $sessionData = SessionResolver::fromLabel($currentSessionLabel);
 
-        $recentLeads = Lead::where('marketer_id', $user->id)
+        $query = Lead::where('marketer_id', $user->id);
+
+        if ($sessionData) {
+            $query->whereBetween('created_at', [$sessionData['from'], $sessionData['to']]);
+        }
+
+        // Gather quick stats for the Marketer
+        $totalLeads = (clone $query)->count();
+        $convertedLeads = (clone $query)->where('status', 'CONVERTED')->count();
+        $lostLeads = (clone $query)->where('status', 'LOST')->count();
+
+        $recentLeads = (clone $query)
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
 
-        return view('marketer.dashboard', compact('totalLeads', 'convertedLeads', 'lostLeads', 'recentLeads'));
+        return view('marketer.dashboard', compact('totalLeads', 'convertedLeads', 'lostLeads', 'recentLeads', 'sessions', 'currentSessionLabel'));
     }
 
     public function index()

@@ -30,6 +30,7 @@ use App\Http\Controllers\Team\DashboardController;
 use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 // Deprecated KPI and Switch Server routes moved/removed
@@ -160,6 +161,12 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
 
     Route::get('/applications/data', [AgentApplicationController::class, 'data'])
         ->name('applications.data');
+
+    Route::get('/applications/export', [AgentApplicationController::class, 'export'])
+        ->name('applications.export');
+
+    Route::get('/applications/{application}/export-single', [AgentApplicationController::class, 'exportSingle'])
+        ->name('applications.exportSingle');
 
     Route::get('/applications/{application}', [AgentApplicationController::class, 'show'])
         ->name('applications.show');
@@ -522,6 +529,21 @@ Route::post('/payment/webhook', [ApplicationController::class, 'webhook'])
     ->name('payment.webhook');
 
 // B2B Sync routes removed as requested
+
+/*
+|--------------------------------------------------------------------------
+| Temporary Migration Route
+|--------------------------------------------------------------------------
+*/
+Route::get('/run-session-migration', function () {
+    try {
+        Artisan::call('migrate', ['--force' => true]);
+
+        return 'Migration successful! Output: '.Artisan::output();
+    } catch (Exception $e) {
+        return 'Error: '.$e->getMessage();
+    }
+});
 
 /*
 |--------------------------------------------------------------------------

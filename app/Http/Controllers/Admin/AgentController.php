@@ -7,6 +7,7 @@ use App\Models\AgentPayout;
 use App\Models\Application;
 use App\Models\User;
 use App\Services\AgentCodeService;
+use App\Services\SessionResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Yajra\DataTables\Facades\DataTables;
@@ -19,17 +20,30 @@ class AgentController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.agents.index');
+        $sessions = SessionResolver::all();
+        $currentSessionLabel = $request->get('session', SessionResolver::current()['label']);
+
+        return view('admin.agents.index', compact('sessions', 'currentSessionLabel'));
     }
 
     public function datatable(Request $request)
     {
+        $sessionLabel = $request->get('session');
+
         $agents = User::query()
             ->where('role', 'agent')
-            ->withCount(['applications'])
-            ->withSum('applications as commission_total', 'commission_amount')
+            ->withCount(['applications' => function ($query) use ($sessionLabel) {
+                if ($sessionLabel) {
+                    $query->inSession($sessionLabel);
+                }
+            }])
+            ->withSum(['applications as commission_total' => function ($query) use ($sessionLabel) {
+                if ($sessionLabel) {
+                    $query->inSession($sessionLabel);
+                }
+            }], 'commission_amount')
             ->withSum('payouts as payouts_total', 'amount');
 
         if ($request->is_trashed == 'true') {
@@ -133,9 +147,12 @@ class AgentController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function show(User $agent)
+    public function show(User $agent, Request $request)
     {
-        $applications = Application::where('agent_id', $agent->id);
+        $sessions = SessionResolver::all();
+        $currentSessionLabel = $request->get('session', SessionResolver::current()['label']);
+
+        $applications = Application::where('agent_id', $agent->id)->inSession($currentSessionLabel);
 
         $stats = [
             'applications' => $applications->count(),
@@ -145,7 +162,7 @@ class AgentController extends Controller
             'payouts_total' => AgentPayout::where('agent_id', $agent->id)->sum('amount'),
         ];
 
-        return view('admin.agents.show', compact('agent', 'stats'));
+        return view('admin.agents.show', compact('agent', 'stats', 'sessions', 'currentSessionLabel'));
     }
 
     /*

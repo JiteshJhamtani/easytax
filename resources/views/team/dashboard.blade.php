@@ -44,7 +44,8 @@
             <h1 class="page-title">💼 My Assigned Applications</h1>
             <p class="page-subtitle">Process and update your assigned applications.</p>
         </div>
-        <div class="d-flex align-items-center">
+        <div class="d-flex align-items-center" style="gap: 1rem;">
+            <x-session-switcher :sessions="$sessions" :current-session-label="$currentSessionLabel" />
             <span class="badge px-3 py-2" style="background-color: #dbeafe; color: #1e40af; border-radius: 50px; font-size: 0.8rem; font-weight: 700;">
                 <i class="fas fa-headset mr-1"></i> Support Helpline: +91 77259 81022
             </span>

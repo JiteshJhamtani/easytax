@@ -7,7 +7,8 @@
         <div>
             <h2 class="font-weight-bold text-dark mb-0">Here is your lead generation performance at a glance.</h2>
         </div>
-        <div>
+        <div class="d-flex align-items-center" style="gap: 1rem;">
+            <x-session-switcher :sessions="$sessions" :current-session-label="$currentSessionLabel" />
             <span class="badge px-3 py-2" style="background-color: #dbeafe; color: #1e40af; border-radius: 50px; font-size: 0.8rem; font-weight: 700;">
                 <i class="fas fa-headset mr-1"></i> Support Helpline: +91 77259 81022
             </span>

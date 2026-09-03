@@ -23,10 +23,13 @@ class AgentDashboardService
     // 1. DASHBOARD STATS & CHARTS
     // =========================================================================
 
-    public function getStats($agentId)
+    public function getStats($agentId, ?string $sessionLabel = null)
     {
-        return Cache::remember("agent_dashboard_stats_$agentId", 30, function () use ($agentId) {
+        $sessionLabel = $sessionLabel ?? SessionResolver::current()['label'];
+
+        return Cache::remember("agent_dashboard_stats_{$agentId}_{$sessionLabel}", 30, function () use ($agentId, $sessionLabel) {
             return Application::where('agent_id', $agentId)
+                ->inSession($sessionLabel)
                 ->selectRaw("
                     COUNT(*) as total_applications,
                     SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed_applications,
@@ -40,22 +43,28 @@ class AgentDashboardService
         });
     }
 
-    public function getMonthlyApplications($agentId)
+    public function getMonthlyApplications($agentId, ?string $sessionLabel = null)
     {
+        $sessionLabel = $sessionLabel ?? SessionResolver::current()['label'];
+
         return Application::select(
             DB::raw('MONTH(created_at) as month'),
             DB::raw('COUNT(*) as total')
         )
             ->where('agent_id', $agentId)
+            ->inSession($sessionLabel)
             ->groupBy('month')
             ->orderBy('month')
             ->get();
     }
 
-    public function getRecentApplications($agentId)
+    public function getRecentApplications($agentId, ?string $sessionLabel = null)
     {
+        $sessionLabel = $sessionLabel ?? SessionResolver::current()['label'];
+
         return Application::with('service')
             ->where('agent_id', $agentId)
+            ->inSession($sessionLabel)
             ->latest()
             ->limit(10)
             ->get();
@@ -240,6 +249,7 @@ class AgentDashboardService
             'monthly' => 'This month',
             'quarterly' => 'This quarter',
             'yearly' => 'This year',
+            'session' => 'This session',
             default => ucfirst($type),
         };
     }
@@ -250,6 +260,7 @@ class AgentDashboardService
             'monthly' => now()->format('F Y'),
             'quarterly' => 'Q'.now()->quarter.' '.now()->year,
             'yearly' => (string) now()->year,
+            'session' => SessionResolver::current()['label'],
             default => '',
         };
     }

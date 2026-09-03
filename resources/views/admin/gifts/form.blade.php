@@ -238,7 +238,7 @@
                             <label class="custom-label" for="period_type">Period Type <span class="req">*</span></label>
                             <select id="period_type" name="period_type" class="custom-input @error('period_type') is-invalid @enderror" required>
                                 <option value="">— Select —</option>
-                                @foreach(['monthly' => 'Monthly', 'quarterly' => 'Quarterly', 'yearly' => 'Yearly'] as $value => $label)
+                                @foreach(['monthly' => 'Monthly', 'quarterly' => 'Quarterly', 'yearly' => 'Yearly', 'session' => 'Per Session (S1/S2)'] as $value => $label)
                                     <option value="{{ $value }}" @selected(old('period_type', $gift->period_type ?? '') === $value)>{{ $label }}</option>
                                 @endforeach
                             </select>

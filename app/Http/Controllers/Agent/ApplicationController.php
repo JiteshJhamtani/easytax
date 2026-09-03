@@ -212,6 +212,235 @@ class ApplicationController extends Controller
             ->make(true);
     }
 
+    public function export(Request $request)
+    {
+        $exportType = $request->query('export_type', 'all_filtered');
+
+        $query = Application::with(['service'])->where('agent_id', auth()->id());
+
+        if ($exportType !== 'master') {
+            $type = $request->type ?? 'other';
+
+            if ($type === 'incomplete') {
+                $query->where(function ($q) {
+                    $q->whereIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+                        ->orWhere(function ($subQ) {
+                            $subQ->whereIn('payment_status', ['FAILED', 'PENDING'])
+                                ->where('status', '!=', 'COMPLETED');
+                        });
+                });
+            } else {
+                $query->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED']);
+            }
+
+            $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
+            if ($type !== 'incomplete') {
+                if ($type === 'other') {
+                    $query->whereHas('service', function ($q) use ($specialSlugs) {
+                        $q->whereNotIn('slug', $specialSlugs);
+                    });
+                } elseif (in_array($type, $specialSlugs)) {
+                    $query->whereHas('service', function ($q) use ($type) {
+                        $q->where('slug', $type);
+                    });
+                }
+            }
+
+            if ($request->service) {
+                $query->where('service_id', $request->service);
+            }
+            if ($request->status) {
+                $query->where('status', $request->status);
+            }
+            if ($request->payment) {
+                $query->where('payment_status', $request->payment);
+            }
+            if ($request->date_from) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+            if ($request->date_to) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+
+            if ($request->has('search') && ! empty($request->search['value'])) {
+                $keyword = $request->search['value'];
+                $query->where(function ($q) use ($keyword) {
+                    $q->where('id', 'like', "%$keyword%")
+                        ->orWhereHas('service', function ($q) use ($keyword) {
+                            $q->where('name', 'like', "%$keyword%");
+                        })
+                        ->orWhere('form_data', 'like', "%$keyword%");
+                });
+            }
+
+            if ($exportType === 'current_page') {
+                if ($request->has('start')) {
+                    $query->skip($request->start);
+                }
+                if ($request->has('length') && $request->length > 0) {
+                    $query->take($request->length);
+                }
+            }
+        }
+
+        $applications = $query->get();
+
+        if ($applications->isEmpty()) {
+            return back()->with('error', 'No applications found for this export.');
+        }
+
+        $groupedApplications = $applications->groupBy(function ($app) {
+            return $app->service->name ?? 'Unknown Service';
+        });
+
+        $generateCsvForGroup = function ($apps) {
+            $dynamicKeys = [];
+            foreach ($apps as $app) {
+                $formData = is_string($app->form_data) ? json_decode($app->form_data, true) : $app->form_data;
+                if (is_array($formData)) {
+                    foreach (array_keys($formData) as $key) {
+                        if (! in_array($key, $dynamicKeys)) {
+                            $dynamicKeys[] = $key;
+                        }
+                    }
+                }
+            }
+
+            $standardColumns = ['App ID', 'Service', 'Status', 'Payment', 'Amount', 'Submitted Date'];
+            $displayDynamicKeys = array_map(function ($key) {
+                return Str::title(str_replace('_', ' ', $key));
+            }, $dynamicKeys);
+            $csvHeaders = array_merge($standardColumns, $displayDynamicKeys);
+
+            $file = fopen('php://temp', 'r+');
+            fwrite($file, (chr(0xEF).chr(0xBB).chr(0xBF)));
+            fputcsv($file, $csvHeaders);
+
+            foreach ($apps as $app) {
+                $formData = is_string($app->form_data) ? json_decode($app->form_data, true) : $app->form_data;
+                if (! is_array($formData)) {
+                    $formData = [];
+                }
+
+                $statusValue = is_object($app->status) ? $app->status->value : $app->status;
+                $paymentValue = is_object($app->payment_status) ? $app->payment_status->value : $app->payment_status;
+
+                $row = [
+                    $app->id,
+                    $app->service->name ?? 'N/A',
+                    $statusValue,
+                    $paymentValue,
+                    $app->amount,
+                    $app->created_at->format('d M Y h:i A'),
+                ];
+
+                foreach ($dynamicKeys as $key) {
+                    $value = $formData[$key] ?? '';
+                    if (is_array($value)) {
+                        $value = implode(', ', $value);
+                    } elseif (is_bool($value)) {
+                        $value = $value ? 'Yes' : 'No';
+                    }
+                    $row[] = (string) $value;
+                }
+                fputcsv($file, $row);
+            }
+
+            rewind($file);
+            $content = stream_get_contents($file);
+            fclose($file);
+
+            return $content;
+        };
+
+        if ($groupedApplications->count() === 1) {
+            $serviceName = $groupedApplications->keys()->first();
+            $safeServiceName = Str::slug($serviceName);
+            $fileName = "Export_{$safeServiceName}_".date('Y_m_d_His').'.csv';
+
+            $csvContent = $generateCsvForGroup($applications);
+
+            $headers = [
+                'Content-type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename={$fileName}",
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0',
+            ];
+
+            return response()->make($csvContent, 200, $headers);
+        }
+
+        $zipFileName = 'Export_Master_'.date('Y_m_d_His').'.zip';
+        $zipFilePath = storage_path('app/'.$zipFileName);
+
+        $zip = new \ZipArchive;
+        if ($zip->open($zipFilePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+            foreach ($groupedApplications as $serviceName => $apps) {
+                $safeServiceName = Str::slug($serviceName);
+                $csvFileName = "{$safeServiceName}_data.csv";
+                $csvContent = $generateCsvForGroup($apps);
+
+                $zip->addFromString($csvFileName, $csvContent);
+            }
+            $zip->close();
+        } else {
+            return back()->with('error', 'Failed to create zip archive.');
+        }
+
+        return response()->download($zipFilePath)->deleteFileAfterSend(true);
+    }
+
+    public function exportSingle(Application $application)
+    {
+        abort_if($application->agent_id !== auth()->id(), 403);
+
+        $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
+        if (! is_array($formData)) {
+            $formData = [];
+        }
+
+        $headers = ['Field', 'Value'];
+        $file = fopen('php://temp', 'r+');
+        fwrite($file, (chr(0xEF).chr(0xBB).chr(0xBF)));
+        fputcsv($file, $headers);
+
+        fputcsv($file, ['App ID', $application->id]);
+        fputcsv($file, ['Service', $application->service->name ?? 'N/A']);
+        fputcsv($file, ['Status', is_object($application->status) ? $application->status->value : $application->status]);
+        fputcsv($file, ['Payment', is_object($application->payment_status) ? $application->payment_status->value : $application->payment_status]);
+        fputcsv($file, ['Amount', $application->amount]);
+        fputcsv($file, ['Submitted Date', $application->created_at->format('d M Y h:i A')]);
+        fputcsv($file, ['', '']); // empty line
+
+        foreach ($formData as $key => $value) {
+            $formattedKey = Str::title(str_replace('_', ' ', $key));
+            if (is_array($value)) {
+                $value = implode(', ', $value);
+            } elseif (is_bool($value)) {
+                $value = $value ? 'Yes' : 'No';
+            }
+            fputcsv($file, [$formattedKey, (string) $value]);
+        }
+
+        rewind($file);
+        $content = stream_get_contents($file);
+        fclose($file);
+
+        $safeServiceName = Str::slug($application->service->name ?? 'application');
+        $fileName = "Application_{$application->id}_{$safeServiceName}.csv";
+
+        $responseHeaders = [
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        return response()->make($content, 200, $responseHeaders);
+    }
+
     public function show(Application $application)
     {
         abort_if($application->agent_id !== auth()->id(), 403);

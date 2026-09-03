@@ -4,22 +4,32 @@ namespace App\Http\Controllers\Team;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
+use App\Services\SessionResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class DashboardController extends Controller
 {
-    // 1. The Main Dashboard List
-    public function index()
+    public function index(Request $request)
     {
+        $sessions = SessionResolver::all();
+        $currentSessionLabel = $request->get('session', SessionResolver::current()['label']);
+
         // Fetch ONLY applications assigned to the logged-in team member
         $applications = Application::with('service')
             ->where('assigned_to', Auth::id())
+            ->inSession($currentSessionLabel)
             ->orderBy('created_at', 'desc')
             ->get();
 
         // NEW: Calculate Financial Summary for the Operator
-        $totalEarned = \App\Models\Application::where('assigned_to', Auth::id())
+        $totalEarned = Application::where('assigned_to', Auth::id())
+            ->inSession($currentSessionLabel)
             ->where('status', 'COMPLETED')
             ->join('operator_service_rates', function ($join) {
                 $join->on('applications.service_id', '=', 'operator_service_rates.service_id')
@@ -27,13 +37,16 @@ class DashboardController extends Controller
             })
             ->sum('operator_service_rates.price');
 
-        $totalPaid = \Illuminate\Support\Facades\DB::table('operator_payouts')
+        // Payouts might span across sessions, but typically operators want to see overall balance,
+        // so we'll leave totalPaid unscoped or we can scope it. The user said "payouts don't need changes"
+        // earlier, so we will leave operator_payouts all-time.
+        $totalPaid = DB::table('operator_payouts')
             ->where('operator_id', Auth::id())
             ->sum('amount');
 
         $balanceDue = $totalEarned - $totalPaid;
 
-        return view('team.dashboard', compact('applications', 'totalEarned', 'totalPaid', 'balanceDue'));
+        return view('team.dashboard', compact('applications', 'totalEarned', 'totalPaid', 'balanceDue', 'sessions', 'currentSessionLabel'));
     }
 
     // 2. The Detailed View Page (Privacy Enforced!)
@@ -68,7 +81,7 @@ class DashboardController extends Controller
         $status = $request->status;
 
         // 1. Save the new status and note
-        \Illuminate\Support\Facades\DB::transaction(function () use ($application, $status, $request) {
+        DB::transaction(function () use ($application, $status, $request) {
             $application->update([
                 'status' => $status,
                 'pending_reason' => $request->pending_reason,
@@ -97,11 +110,11 @@ class DashboardController extends Controller
                     : ($formData['email'] ?? $formData['email_id'] ?? $formData['applicant_email'] ?? null);
 
                 $clientName = $formData['applicant_name'] ?? $formData['name'] ?? $formData['full_name'] ?? $formData['company_name'] ?? $formData['firm_name'] ?? 'Valued Client';
-                $trackingUrl = \Illuminate\Support\Facades\URL::signedRoute('tracking.show', ['application' => $application->id]);
+                $trackingUrl = URL::signedRoute('tracking.show', ['application' => $application->id]);
 
                 if ($clientEmail && filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
                     try {
-                        \Illuminate\Support\Facades\Mail::send('emails.application_completed', [
+                        Mail::send('emails.application_completed', [
                             'application' => $application,
                             'clientName' => $clientName,
                             'trackingUrl' => $trackingUrl,
@@ -158,7 +171,7 @@ class DashboardController extends Controller
 
     public function deleteDocument($mediaId)
     {
-        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);
+        $media = Media::findOrFail($mediaId);
         $application = Application::findOrFail($media->model_id);
 
         // Security: Only the assigned operator can delete docs
@@ -173,7 +186,7 @@ class DashboardController extends Controller
 
     public function viewDocument($mediaId)
     {
-        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);
+        $media = Media::findOrFail($mediaId);
         $application = Application::findOrFail($media->model_id);
 
         if ($application->assigned_to !== Auth::id()) {
@@ -181,7 +194,7 @@ class DashboardController extends Controller
         }
 
         $headers = [];
-        if (\Illuminate\Support\Str::endsWith(strtolower($media->file_name), '.pdf')) {
+        if (Str::endsWith(strtolower($media->file_name), '.pdf')) {
             $headers['Content-Type'] = 'application/pdf';
         }
 
@@ -190,7 +203,7 @@ class DashboardController extends Controller
 
     public function downloadDocument($mediaId)
     {
-        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);
+        $media = Media::findOrFail($mediaId);
         $application = Application::findOrFail($media->model_id);
 
         if ($application->assigned_to !== Auth::id()) {

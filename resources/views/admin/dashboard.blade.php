@@ -204,6 +204,7 @@
             <h1 class="page-title">Analytics Dashboard</h1>
         </div>
         <div class="d-flex align-items-center header-badges-wrapper" style="gap: 1rem;">
+            <x-session-switcher :sessions="$sessions" :current-session-label="$currentSessionLabel" />
             <div>
                 <span class="custom-badge badge-info-soft" style="font-size: 0.8rem; text-transform: none; letter-spacing: normal; padding: 0.5rem 1rem;">
                     <i class="fas fa-headset mr-1"></i> Support Helpline: +91 77259 81022

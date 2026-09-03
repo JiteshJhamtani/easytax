@@ -2,22 +2,21 @@
 
 @section('title', 'Agent Workspace | EasyTax')
 
-@section('content_header')
-    <div class="workspace-header">
-        <div>
-            <h1 class="workspace-title">Welcome back, {{ optional(Auth::user())->name ?? 'Agent' }}</h1>
-            <p class="workspace-subtitle">Here is what's happening with your applications today.</p>
-        </div>
-        <div class="workspace-actions">
-            <a href="{{ route('services.index') }}" class="btn btn-primary shadow-sm">
-                <i class="fas fa-plus mr-2"></i> New Application
-            </a>
-        </div>
-    </div>
-@stop
-
 @section('content')
     <div class="dashboard-container">
+
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap" style="gap: 1rem;">
+            <div>
+                <h1 class="font-weight-bold text-dark m-0" style="font-size: 1.25rem;">Workspace Overview</h1>
+                <p class="text-muted small m-0 mt-1">Here is what's happening with your applications today.</p>
+            </div>
+            <div class="d-flex align-items-center" style="gap: 1rem;">
+                <x-session-switcher :sessions="$sessions" :current-session-label="$currentSessionLabel" />
+                <a href="{{ route('services.index') }}" class="btn btn-primary shadow-sm" style="border-radius: 8px; font-weight: 600;">
+                    <i class="fas fa-plus mr-2"></i> New Application
+                </a>
+            </div>
+        </div>
 
         {{-- 1. KPI ROW (Using Blade Components) --}}
         <div class="kpi-section-wrapper mb-4">

@@ -8,7 +8,7 @@ use Carbon\Carbon;
 
 class GiftPeriodResolver
 {
-    public function resolve(string $periodType, ?int $year = null, ?int $quarter = null, ?int $month = null): array
+    public function resolve(string $periodType, ?int $year = null, ?int $quarter = null, ?int $month = null, ?string $sessionLabel = null): array
     {
         $year ??= now()->year;
 
@@ -16,6 +16,7 @@ class GiftPeriodResolver
             'monthly' => $this->monthly($year, $month ?? now()->month),
             'quarterly' => $this->quarterly($year, $quarter ?? now()->quarter),
             'yearly' => $this->yearly($year),
+            'session' => $this->session($sessionLabel),
             default => $this->yearly($year),
         };
     }
@@ -40,5 +41,19 @@ class GiftPeriodResolver
             Carbon::create($year, 1, 1)->startOfDay(),
             Carbon::create($year, 12, 31)->endOfDay(),
         ];
+    }
+
+    private function session(?string $sessionLabel = null): array
+    {
+        if ($sessionLabel) {
+            $session = SessionResolver::fromLabel($sessionLabel)
+                ?? SessionResolver::current();
+
+            return [$session['from'], $session['to']];
+        }
+
+        $session = SessionResolver::current();
+
+        return [$session['from'], $session['to']];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ApplicationStatus;
 use App\Enums\PaymentStatus;
+use App\Services\SessionResolver;
 use App\Traits\MasksSensitiveData;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,6 +40,7 @@ class Application extends Model implements HasMedia
         'submitted_at',
         'completed_at',
         'payout_id',
+        'session_label',
         'source_server', 'original_id',
     ];
 
@@ -52,6 +54,28 @@ class Application extends Model implements HasMedia
         'amount' => 'decimal:2',
         'commission_amount' => 'decimal:2',
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Booted
+    |--------------------------------------------------------------------------
+    */
+
+    protected static function booted()
+    {
+        static::creating(function ($application) {
+            if (empty($application->session_label)) {
+                $date = $application->submitted_at ?? $application->started_at ?? now();
+                $application->session_label = SessionResolver::forDate($date)['label'];
+            }
+        });
+
+        static::updating(function ($application) {
+            if ($application->isDirty('submitted_at') && $application->submitted_at) {
+                $application->session_label = SessionResolver::forDate($application->submitted_at)['label'];
+            }
+        });
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -142,5 +166,23 @@ class Application extends Model implements HasMedia
             ->logOnly(['status', 'payment_status'])
             ->logOnlyDirty()
             ->useLogName('application');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
+
+    public function scopeInSession($query, string $label)
+    {
+        return $query->where('session_label', $label);
+    }
+
+    public function scopeCurrentSession($query)
+    {
+        $currentLabel = SessionResolver::current()['label'];
+
+        return $query->where('session_label', $currentLabel);
     }
 }
