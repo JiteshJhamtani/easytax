@@ -34,8 +34,10 @@ class ApplicationController extends Controller
         $agents = User::where('role', 'agent')->get();
 
         // --- NEW DYNAMIC KPI LOGIC ---
+        $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
-        $query = Application::with(['service', 'agent']);
+        $query = Application::with(['service', 'agent'])
+            ->inSession($currentSessionLabel);
 
         if ($type === 'incomplete') {
             $query->where(function ($q) {
@@ -77,12 +79,14 @@ class ApplicationController extends Controller
             ->get();
 
         return view('admin.applications.index', compact(
-            'services', 'agents', 'stats', 'type', 'pageTitle', 'teamMembers'
+            'services', 'agents', 'stats', 'type', 'pageTitle', 'teamMembers', 'currentSessionLabel'
         ));
     }
 
     public function data(Request $request)
     {
+        $sessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
+
         // 2. FORM DATA EXPORTS
         $query = Application::with([
             'service',
@@ -90,7 +94,7 @@ class ApplicationController extends Controller
             'media' => function ($q) {
                 $q->whereIn('collection_name', ['itr_acknowledgement', 'computation_sheet', 'balance_sheet']);
             },
-        ]);
+        ])->inSession($sessionLabel);
 
         $type = $request->type ?? 'other';
 
@@ -317,15 +321,12 @@ class ApplicationController extends Controller
 
         $exportType = $request->query('export_type', 'all_filtered');
 
-        $query = Application::with(['agent', 'service']);
+        $sessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
+        $query = Application::with(['agent', 'service'])
+            ->inSession($sessionLabel);
 
         if ($exportType !== 'master') {
             $type = $request->type ?? 'other';
-
-            if ($request->filled('session')) {
-                $sessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
-                $query->inSession($sessionLabel);
-            }
 
             if ($type === 'incomplete') {
                 $query->where(function ($q) {

@@ -63,6 +63,11 @@ $(document).ready(function () {
                 d.date_from = $("#filterDateFrom").val();
                 d.date_to = $("#filterDateTo").val();
                 d.is_trashed = window.isTrashedView || false;
+                
+                const urlSession = new URLSearchParams(window.location.search).get('session');
+                if (urlSession) {
+                    d.session = urlSession;
+                }
             }
         },
           
