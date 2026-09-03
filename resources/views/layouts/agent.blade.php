@@ -13,15 +13,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { 
-            darkMode: 'class',
-            corePlugins: {
-                preflight: false, // CRITICAL: This stops Tailwind from breaking your Bootstrap Sidebar! 
-            }
-        }
-    </script>
     
     @yield('css')
 
@@ -289,25 +280,25 @@
        <div class="sb-section">Application Types</div>
 
 
-            <a href="{{ route('agent.applications.index', ['type' => 'itr-filing']) }}" wire:navigate class="sb-item {{ request()->query('type') === 'itr-filing' ? 'active' : '' }}" data-label="ITR Filing">
+            <a href="{{ route('agent.applications.index', ['type' => 'itr-filing']) }}" class="sb-item {{ request()->query('type') === 'itr-filing' ? 'active' : '' }}" data-label="ITR Filing">
                 <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar"></i></span>
                 <span class="sb-item__label">ITR Filing</span>
                 @include('layouts.partials.sidebar-tab-badges', ['tabKey' => 'itr-filing'])
             </a>
 
-            <a href="{{ route('agent.applications.index', ['type' => 'gst-registration']) }}" wire:navigate class="sb-item {{ request()->query('type') === 'gst-registration' ? 'active' : '' }}" data-label="GST Registration">
+            <a href="{{ route('agent.applications.index', ['type' => 'gst-registration']) }}" class="sb-item {{ request()->query('type') === 'gst-registration' ? 'active' : '' }}" data-label="GST Registration">
                 <span class="sb-item__icon"><i class="fas fa-id-card"></i></span>
                 <span class="sb-item__label">GST Registration</span>
                 @include('layouts.partials.sidebar-tab-badges', ['tabKey' => 'gst-registration'])
             </a>
             
-            <a href="{{ route('agent.applications.index', ['type' => 'gst-return-filing']) }}" wire:navigate class="sb-item {{ request()->query('type') === 'gst-return-filing' ? 'active' : '' }}" data-label="GST Return">
+            <a href="{{ route('agent.applications.index', ['type' => 'gst-return-filing']) }}" class="sb-item {{ request()->query('type') === 'gst-return-filing' ? 'active' : '' }}" data-label="GST Return">
                 <span class="sb-item__icon"><i class="fas fa-file-invoice"></i></span>
                 <span class="sb-item__label">GST Return</span>
                 @include('layouts.partials.sidebar-tab-badges', ['tabKey' => 'gst-return-filing'])
             </a>
 
-            <a href="{{ route('agent.applications.index', ['type' => 'other']) }}" wire:navigate class="sb-item {{ request()->query('type', 'other') === 'other' ? 'active' : '' }}" data-label="Other Apps">
+            <a href="{{ route('agent.applications.index', ['type' => 'other']) }}" class="sb-item {{ request()->query('type', 'other') === 'other' ? 'active' : '' }}" data-label="Other Apps">
                 <span class="sb-item__icon"><i class="fas fa-folder"></i></span>
                 <span class="sb-item__label">Other Apps</span>
                 @include('layouts.partials.sidebar-tab-badges', ['tabKey' => 'other'])

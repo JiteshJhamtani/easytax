@@ -328,7 +328,7 @@
         </div>
         <div class="metric-data">
             <span class="metric-label">Total Volume</span>
-            <strong class="metric-value">{{ $stats->total ?? 0 }}</strong>
+            <strong class="metric-value" id="agent-kpi-total">{{ $stats->total ?? 0 }}</strong>
         </div>
     </div>
     <div class="metric-card">
@@ -337,7 +337,7 @@
         </div>
         <div class="metric-data">
             <span class="metric-label">Pending Review</span>
-            <strong class="metric-value">{{ $stats->pending ?? 0 }}</strong>
+            <strong class="metric-value" id="agent-kpi-pending">{{ $stats->pending ?? 0 }}</strong>
         </div>
     </div>
     <div class="metric-card">
@@ -346,7 +346,7 @@
         </div>
         <div class="metric-data">
             <span class="metric-label">Failed Payments</span>
-            <strong class="metric-value">{{ $stats->failed ?? 0 }}</strong>
+            <strong class="metric-value" id="agent-kpi-failed">{{ $stats->failed ?? 0 }}</strong>
         </div>
     </div>
     <div class="metric-card">
@@ -355,7 +355,7 @@
         </div>
         <div class="metric-data">
             <span class="metric-label">Processed This Month</span>
-            <strong class="metric-value">{{ $stats->monthly ?? 0 }}</strong>
+            <strong class="metric-value" id="agent-kpi-monthly">{{ $stats->monthly ?? 0 }}</strong>
         </div>
     </div>
 </div>
@@ -483,5 +483,5 @@
             });
         });
     </script>
-    <script src="{{ asset('assets/js/applications.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('assets/js/applications.js') }}?v={{ file_exists(public_path('assets/js/applications.js')) ? filemtime(public_path('assets/js/applications.js')) : '1' }}"></script>
 @endsection

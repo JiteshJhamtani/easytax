@@ -97,6 +97,16 @@ $(document).ready(function () {
         },
     });
 
+    // Live update agent KPI metrics from server response
+    table.on('xhr.dt', function (e, settings, json) {
+        if (json && json.stats) {
+            $('#agent-kpi-total').text(json.stats.total ?? 0);
+            $('#agent-kpi-pending').text(json.stats.pending ?? 0);
+            $('#agent-kpi-failed').text(json.stats.failed ?? 0);
+            $('#agent-kpi-monthly').text(json.stats.monthly ?? 0);
+        }
+    });
+
     // 6. Quick Tab Click Logic
     $(".app-filter").click(function () {
         // Toggle active visual state

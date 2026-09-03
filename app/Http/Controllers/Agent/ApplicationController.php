@@ -115,7 +115,21 @@ class ApplicationController extends Controller
             $query->onlyTrashed();
         }
 
+        $statsQuery = clone $query;
+        $stats = $statsQuery->selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN status != 'COMPLETED' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN payment_status = 'FAILED' THEN 1 ELSE 0 END) as failed,
+            SUM(CASE WHEN MONTH(created_at) = MONTH(CURRENT_DATE()) THEN 1 ELSE 0 END) as monthly
+        ")->first();
+
         return datatables()->of($query)
+            ->with('stats', [
+                'total' => (int) ($stats->total ?? 0),
+                'pending' => (int) ($stats->pending ?? 0),
+                'failed' => (int) ($stats->failed ?? 0),
+                'monthly' => (int) ($stats->monthly ?? 0),
+            ])
             ->filterColumn('service.name', function ($query, $keyword) {
                 $query->where(function ($q) use ($keyword) {
                     $q->whereHas('service', function ($q2) use ($keyword) {

@@ -15,16 +15,6 @@
     <link rel="icon" type="image/png" href="{{ asset('assets/images/fav3.png') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { 
-            darkMode: 'class',
-            corePlugins: {
-                preflight: false, // CRITICAL: Stops Tailwind from breaking Bootstrap
-            } 
-           
-        }
-    </script>
     
     @yield('css')
 
@@ -204,15 +194,8 @@
         .user-pill__logout:hover { background: #FEE2E2; color: #DC2626; }
         .user-pill__logout svg { width: 18px; height: 18px; }
 
-        /* ── SMOOTH PAGE TRANSITION ── */
-        .content-body { flex: 1; padding: 2rem; opacity: 0; animation: pageFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes pageFadeIn { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
-        
-        /* Fade Out ENTIRE PAGE for Native SPA feel (prevents sidebar flick) */
-        body.is-leaving {
-            animation: bodyFadeOut 0.2s forwards;
-        }
-        @keyframes bodyFadeOut { from { opacity: 1; } to { opacity: 0; } }
+        /* ── CONTENT BODY ── */
+        .content-body { flex: 1; padding: 2rem; }
 
         /* ── MOBILE & MINI MODE ── */
         @media (max-width: 991px) {
@@ -611,24 +594,6 @@ window.userRole = "{{ strtoupper(auth()->user()->role ?? '') }}";
 </div>
 
 <script>
-    // Smooth native page transitions
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript"]):not(.no-transition)').forEach(link => {
-            link.addEventListener('click', e => {
-                if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
-                let href = link.getAttribute('href');
-                if (href && href !== '#' && !href.startsWith('javascript')) {
-                    document.body.classList.add('is-leaving');
-                }
-            });
-        });
-    });
-
-    // Fix for Back-Forward Cache (bfcache) - removes fade-out if user clicks back button
-    window.addEventListener('pageshow', (event) => {
-        document.body.classList.remove('is-leaving');
-    });
-
     // Global Form Submit Spinner
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof jQuery !== 'undefined') {

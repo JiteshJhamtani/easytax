@@ -4,8 +4,6 @@
 
 @section('css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
-   @section('css')
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap4.min.css">
     <style>
 
         /* Typeform Balance Sheet Modal Styles */
@@ -131,17 +129,50 @@
         .page-item.active .page-link { background: var(--slate-dark); border-color: var(--slate-dark); color: #fff; border-radius: 6px; }
         .page-link { color: var(--slate); border: 1px solid var(--border); border-radius: 6px; margin: 0 2px; font-size: 0.85rem; font-weight: 600; }
 
+        /* ── APPLICATION TYPE TABS ── */
+        .applications-type-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1.25rem;
+        }
+        .app-tab-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1.1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            outline: none !important;
+        }
+        .app-tab-btn:hover {
+            color: var(--slate-dark);
+            background: var(--ink-100);
+            text-decoration: none;
+        }
+        .app-tab-btn.active {
+            background: var(--slate-dark);
+            color: #fff !important;
+            border-color: var(--slate-dark);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        }
         
     </style>
-    <link rel="stylesheet" href="{{ asset('assets/css/applications.css') }}">
-@endsection
     <link rel="stylesheet" href="{{ asset('assets/css/applications.css') }}">
 @endsection
 
 @section('content')
     <div class="page-header">
         <div>
-            <h1>{{ $pageTitle }}</h1>
+            <h1 id="pageTitleHeading">{{ $pageTitle }}</h1>
             <p class="page-subtitle">Monitor, filter, and manage all agent submissions.</p>
         </div>
         <div>
@@ -180,7 +211,7 @@
             <div class="kpi-card kpi-blue">
                 <div class="kpi-icon"><i class="fas fa-layer-group"></i></div>
                 <div class="kpi-body">
-                    <div class="kpi-value">{{ $stats->total ?? 0 }}</div>
+                    <div class="kpi-value" id="kpi-total">{{ $stats->total ?? 0 }}</div>
                     <div class="kpi-label">Total Volume</div>
                 </div>
             </div>
@@ -189,7 +220,7 @@
             <div class="kpi-card kpi-orange">
                 <div class="kpi-icon"><i class="fas fa-clock"></i></div>
                 <div class="kpi-body">
-                    <div class="kpi-value">{{ $stats->pending ?? 0 }}</div>
+                    <div class="kpi-value" id="kpi-pending">{{ $stats->pending ?? 0 }}</div>
                     <div class="kpi-label">Pending Review</div>
                 </div>
             </div>
@@ -198,7 +229,7 @@
             <div class="kpi-card kpi-green">
                 <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
                 <div class="kpi-body">
-                    <div class="kpi-value">{{ $stats->completed ?? 0 }}</div>
+                    <div class="kpi-value" id="kpi-completed">{{ $stats->completed ?? 0 }}</div>
                     <div class="kpi-label">Completed</div>
                 </div>
             </div>
@@ -207,11 +238,30 @@
             <div class="kpi-card kpi-red">
                 <div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
                 <div class="kpi-body">
-                    <div class="kpi-value">{{ $stats->failed ?? 0 }}</div>
+                    <div class="kpi-value" id="kpi-failed">{{ $stats->failed ?? 0 }}</div>
                     <div class="kpi-label">Failed Payments</div>
                 </div>
             </div>
         </div>
+    </div>
+
+    {{-- APPLICATION TYPE TABS --}}
+    <div class="applications-type-tabs">
+        <button type="button" class="app-tab-btn {{ $type === 'other' ? 'active' : '' }}" data-type="other" data-title="Other Applications">
+            <i class="fas fa-folder"></i> Other Apps
+        </button>
+        <button type="button" class="app-tab-btn {{ $type === 'itr-filing' ? 'active' : '' }}" data-type="itr-filing" data-title="ITR Filing Applications">
+            <i class="fas fa-file-invoice-dollar"></i> ITR Filing
+        </button>
+        <button type="button" class="app-tab-btn {{ $type === 'gst-registration' ? 'active' : '' }}" data-type="gst-registration" data-title="GST Registration Applications">
+            <i class="fas fa-id-card"></i> GST Registration
+        </button>
+        <button type="button" class="app-tab-btn {{ $type === 'gst-return-filing' ? 'active' : '' }}" data-type="gst-return-filing" data-title="GST Return Applications">
+            <i class="fas fa-file-invoice"></i> GST Return
+        </button>
+        <button type="button" class="app-tab-btn {{ $type === 'incomplete' ? 'active text-danger' : '' }}" data-type="incomplete" data-title="Incomplete & Abandoned Apps">
+            <i class="fas fa-exclamation-triangle"></i> Incomplete
+        </button>
     </div>
 
     {{-- FILTER BAR --}}
@@ -278,7 +328,7 @@
 
 {{-- DATA TABLE --}}
 <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-    <table id="applicationsTable" class="responsive-card-table table w-100 @if($type === 'itr-filing') is-itr @endif">
+    <table id="applicationsTable" class="responsive-card-table table w-100">
        <thead>
             <tr>
                 <th>App ID</th>
@@ -290,11 +340,9 @@
                 @if(strtoupper(auth()->user()->role) !== 'SUB-ADMIN')
                 <th>Amount</th>
                 @endif
-                @if($type === 'itr-filing')
-                    <th>ACK NO</th>
-                    <th>COMPUTATION</th>
-                    <th>BALANCE SHEET</th>
-                @endif
+                <th>ACK NO</th>
+                <th>COMPUTATION</th>
+                <th>BALANCE SHEET</th>
                 <th>Date Submitted</th>
 <th style="min-width: 160px; vertical-align: top;" class="text-center">
     <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
@@ -462,7 +510,7 @@
 @section('js')
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
-    <script src="{{ asset('assets/js/admin-applications.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('assets/js/admin-applications.js') }}?v={{ file_exists(public_path('assets/js/admin-applications.js')) ? filemtime(public_path('assets/js/admin-applications.js')) : '1' }}"></script>
 
     <script>
         $(document).ready(function() {

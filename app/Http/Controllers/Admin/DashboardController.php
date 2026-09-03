@@ -20,51 +20,36 @@ class DashboardController extends Controller
 
         $appQuery = fn () => Application::query()->inSession($currentSessionLabel);
 
-        // ── KPI Cards ──
+        // ── KPI Cards (Aggregated in 2 fast queries) ──
+        $appStats = $appQuery()
+            ->selectRaw("
+                COUNT(CASE WHEN status NOT IN ('DRAFT', 'CANCELLED') AND payment_status != 'FAILED' THEN 1 END) as total_applications,
+                COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) as completed_applications,
+                COUNT(CASE WHEN status NOT IN ('COMPLETED', 'DRAFT', 'CANCELLED') AND payment_status != 'FAILED' THEN 1 END) as pending_applications,
+                COUNT(CASE WHEN status IN ('DRAFT', 'CANCELLED') OR payment_status = 'FAILED' THEN 1 END) as processed_applications,
+                COALESCE(SUM(CASE WHEN status NOT IN ('DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed') AND payment_status != 'FAILED' THEN (amount - commission_amount) END), 0) as total_revenue,
+                COALESCE(SUM(CASE WHEN status NOT IN ('DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed') AND payment_status != 'FAILED' THEN commission_amount END), 0) as total_commission
+            ")
+            ->first();
+
+        $userCounts = User::query()
+            ->where('is_active', true)
+            ->whereIn('role', ['AGENT', 'agent', 'MARKETER', 'marketer'])
+            ->selectRaw("
+                COUNT(CASE WHEN role IN ('AGENT', 'agent') THEN 1 END) as total_agents,
+                COUNT(CASE WHEN role IN ('MARKETER', 'marketer') THEN 1 END) as total_marketers
+            ")
+            ->first();
+
         $kpis = [
-            // 1. Total Active (Excludes Drafts, Cancelled, and Failed)
-            'total_applications' => $appQuery()
-                ->whereNotIn('status', ['DRAFT', 'CANCELLED'])
-                ->where('payment_status', '!=', 'FAILED')
-                ->count(),
-
-            'completed_applications' => $appQuery()->where('status', 'COMPLETED')->count(),
-
-            // 2. Pending Active
-            'pending_applications' => $appQuery()
-                ->whereNotIn('status', ['COMPLETED', 'DRAFT', 'CANCELLED'])
-                ->where('payment_status', '!=', 'FAILED')
-                ->count(),
-
-            // 3. NEW: Processed (Drafts, Cancelled, or Failed Payments)
-            'processed_applications' => $appQuery()
-                ->where(function ($query) {
-                    $query->whereIn('status', ['DRAFT', 'CANCELLED'])
-                        ->orWhere('payment_status', 'FAILED');
-                })
-                ->count(),
-
-            // 4. Financials & Agents (Now perfectly synced with the tables & charts)
-            'total_revenue' => $appQuery()
-                ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
-                ->where('payment_status', '!=', 'FAILED')
-                ->sum(DB::raw('amount - commission_amount')),
-
-            'total_commission' => $appQuery()
-                ->whereNotIn('status', ['DRAFT', 'CANCELLED', 'CANCELED', 'FAILED', 'draft', 'cancelled', 'canceled', 'failed'])
-                ->where('payment_status', '!=', 'FAILED')
-                ->sum('commission_amount'),
-
-            'total_agents' => User::query()
-                ->where('role', 'AGENT')
-                ->where('is_active', true)
-                ->count(),
-
-            // NEW: Count active marketers (checking both cases just to be safe!)
-            'total_marketers' => User::query()
-                ->whereIn('role', ['marketer', 'MARKETER'])
-                ->where('is_active', true)
-                ->count(),
+            'total_applications' => (int) ($appStats->total_applications ?? 0),
+            'completed_applications' => (int) ($appStats->completed_applications ?? 0),
+            'pending_applications' => (int) ($appStats->pending_applications ?? 0),
+            'processed_applications' => (int) ($appStats->processed_applications ?? 0),
+            'total_revenue' => (float) ($appStats->total_revenue ?? 0),
+            'total_commission' => (float) ($appStats->total_commission ?? 0),
+            'total_agents' => (int) ($userCounts->total_agents ?? 0),
+            'total_marketers' => (int) ($userCounts->total_marketers ?? 0),
         ];
 
         // ── Monthly Charts (scoped to session) ──

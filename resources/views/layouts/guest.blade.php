@@ -9,8 +9,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
+
 
     <style>
         .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }

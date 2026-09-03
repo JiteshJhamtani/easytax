@@ -163,7 +163,21 @@ class ApplicationController extends Controller
             ->whereNotIn('name', ['Super Admin', 'Rahul Sharma'])
             ->get();
 
+        $statsQuery = clone $query;
+        $stats = $statsQuery->selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN status != 'COMPLETED' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN payment_status = 'FAILED' THEN 1 ELSE 0 END) as failed
+        ")->first();
+
         return datatables()->of($query)
+            ->with('stats', [
+                'total' => (int) ($stats->total ?? 0),
+                'pending' => (int) ($stats->pending ?? 0),
+                'completed' => (int) ($stats->completed ?? 0),
+                'failed' => (int) ($stats->failed ?? 0),
+            ])
             ->filterColumn('agent', function ($query, $keyword) {
                 $query->whereHas('agent', function ($q) use ($keyword) {
                     $q->where('name', 'like', "%{$keyword}%");
@@ -202,21 +216,6 @@ class ApplicationController extends Controller
                 if ($ackMedia) {
                     $downloadUrl = route('admin.documents.download', $ackMedia->id);
                     $ackNumber = $ackMedia->getCustomProperty('ack_number');
-
-                    if (! $ackNumber) {
-                        try {
-                            $parser = new Parser;
-                            $pdf = $parser->parseFile($ackMedia->getPath());
-                            $text = substr($pdf->getText(), 0, 2000);
-
-                            if (preg_match('/\b(\d{15})\b/', $text, $matches)) {
-                                $ackNumber = $matches[1];
-                                $ackMedia->setCustomProperty('ack_number', $ackNumber);
-                                $ackMedia->save();
-                            }
-                        } catch (\Exception $e) {
-                        }
-                    }
 
                     $html = '';
                     if ($ackNumber) {
@@ -558,7 +557,7 @@ class ApplicationController extends Controller
 
     public function show(Application $application)
     {
-        $application->load(['service', 'agent']);
+        $application->load(['service', 'agent', 'media']);
 
         return view('admin.applications.show', compact('application'));
     }

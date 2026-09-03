@@ -8,7 +8,7 @@ $(document).ready(function () {
 
     // 1. Check the URL to see what page we are on BEFORE initializing the table
     const urlParams = new URLSearchParams(window.location.search);
-    const pageType = urlParams.get('type') || 'other';
+    let pageType = urlParams.get('type') || 'other';
 
     // 2. Define the base columns everyone gets
     let tableColumns = [
@@ -24,12 +24,10 @@ $(document).ready(function () {
         tableColumns.push({ data: "amount", name: "amount", className: "text-right tabular-nums" });
     }
 
-    // 3. Inject ITR specific columns ONLY if we are on the ITR page
-    if (pageType === 'itr-filing') {
-        tableColumns.push({ data: 'ack_no', name: 'ack_no', orderable: false, searchable: false });
-        tableColumns.push({ data: 'computation', name: 'computation', orderable: false, searchable: false }); // NEW COMPUTATION COLUMN
-        tableColumns.push({ data: 'balance_sheet', name: 'balance_sheet', orderable: false, searchable: false });
-    }
+    // 3. ITR specific columns (dynamic visibility)
+    tableColumns.push({ data: 'ack_no', name: 'ack_no', orderable: false, searchable: false, visible: (pageType === 'itr-filing') });
+    tableColumns.push({ data: 'computation', name: 'computation', orderable: false, searchable: false, visible: (pageType === 'itr-filing') });
+    tableColumns.push({ data: 'balance_sheet', name: 'balance_sheet', orderable: false, searchable: false, visible: (pageType === 'itr-filing') });
 
     // 4. Add the final columns that go at the end
     tableColumns.push({ data: "date", name: "created_at" });
@@ -121,6 +119,87 @@ $(document).ready(function () {
             $(this).css({ 'color': '#dc2626', 'border-color': '#fca5a5' });
         }
         table.draw();
+    });
+
+    // 9. Live Update KPI summary cards from server response
+    table.on('xhr.dt', function (e, settings, json) {
+        if (json && json.stats) {
+            $('#kpi-total').text(json.stats.total ?? 0);
+            $('#kpi-pending').text(json.stats.pending ?? 0);
+            $('#kpi-completed').text(json.stats.completed ?? 0);
+            $('#kpi-failed').text(json.stats.failed ?? 0);
+        }
+    });
+
+    // 10. Instant Asynchronous Tab Switching
+    function switchApplicationType(newType, newTitle, pushHistory = true) {
+        if (pageType === newType) return;
+        pageType = newType;
+
+        // Update active state on tab buttons
+        $('.app-tab-btn').removeClass('active');
+        $('.app-tab-btn[data-type="' + newType + '"]').addClass('active');
+
+        // Sync sidebar active state
+        $('.sb-item[data-label]').each(function () {
+            let href = $(this).attr('href');
+            if (href && href.indexOf('type=' + newType) !== -1) {
+                $('.sb-item').removeClass('active');
+                $(this).addClass('active');
+            }
+        });
+
+        if (newTitle) {
+            $('#pageTitleHeading').text(newTitle);
+            document.title = newTitle + ' | EasyTax';
+        }
+
+        // Toggle ITR columns visibility dynamically
+        const isItr = (newType === 'itr-filing');
+        table.column('ack_no:name').visible(isItr);
+        table.column('computation:name').visible(isItr);
+        table.column('balance_sheet:name').visible(isItr);
+
+        // Update browser URL without full-page navigation
+        if (pushHistory) {
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('type', newType);
+            window.history.pushState({ type: newType, title: newTitle }, '', currentUrl.toString());
+        }
+
+        // Clear pagination state and reload table data instantly
+        table.state.clear();
+        table.ajax.reload();
+    }
+
+    // Top quick-filter tab clicks
+    $(document).on('click', '.app-tab-btn', function (e) {
+        e.preventDefault();
+        const type = $(this).data('type');
+        const title = $(this).data('title');
+        switchApplicationType(type, title, true);
+    });
+
+    // Sidebar navigation clicks when on /admin/applications
+    $(document).on('click', '.sb-item', function (e) {
+        const href = $(this).attr('href');
+        if (href && href.indexOf('/admin/applications') !== -1 && window.location.pathname.indexOf('/admin/applications') !== -1) {
+            const match = href.match(/type=([^&]+)/);
+            const clickedType = match ? match[1] : 'other';
+            const tabBtn = $('.app-tab-btn[data-type="' + clickedType + '"]');
+            const title = tabBtn.data('title') || $(this).data('label');
+            e.preventDefault();
+            switchApplicationType(clickedType, title, true);
+        }
+    });
+
+    // Browser back/forward navigation support
+    window.addEventListener('popstate', function () {
+        const params = new URLSearchParams(window.location.search);
+        const type = params.get('type') || 'other';
+        const tabBtn = $('.app-tab-btn[data-type="' + type + '"]');
+        const title = tabBtn.data('title') || 'Applications';
+        switchApplicationType(type, title, false);
     });
 
 }); // <--- THIS IS THE CLOSING BRACKET FOR DOCUMENT.READY. EVERYTHING BELOW IS NOW GLOBAL!

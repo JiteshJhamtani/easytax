@@ -147,10 +147,13 @@ class SidebarBadgeService
      *
      * @param  array<int, array<string, mixed>>  $configs
      */
+    protected array $memoizedCounts = [];
+
     public function saveConfigs(array $configs): void
     {
         Setting::set('sidebar_badge_configs', json_encode(array_values($configs)));
         Cache::forget(self::CACHE_KEY);
+        $this->memoizedCounts = [];
     }
 
     /**
@@ -164,7 +167,11 @@ class SidebarBadgeService
         $safeSession = preg_replace('/[^A-Za-z0-9_-]/', '_', $sessionLabel);
         $cacheKey = $agentId ? self::CACHE_KEY.'_agent_'.$agentId.'_'.$safeSession : self::CACHE_KEY.'_'.$safeSession;
 
-        return Cache::remember($cacheKey, now()->addSeconds(self::CACHE_TTL), function () use ($agentId, $sessionLabel) {
+        if (isset($this->memoizedCounts[$cacheKey])) {
+            return $this->memoizedCounts[$cacheKey];
+        }
+
+        return $this->memoizedCounts[$cacheKey] = Cache::remember($cacheKey, now()->addSeconds(self::CACHE_TTL), function () use ($agentId, $sessionLabel) {
             $today = now()->toDateString();
             $bounds = SessionResolver::fromLabel($sessionLabel);
 
