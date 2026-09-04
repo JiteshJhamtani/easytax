@@ -37,6 +37,33 @@
 @stop
 
 @section('content')
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show font-weight-bold shadow-sm mb-4" role="alert" style="border-radius: 8px;">
+            <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show font-weight-bold shadow-sm mb-4" role="alert" style="border-radius: 8px;">
+            <i class="fas fa-exclamation-triangle mr-2"></i> {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show font-weight-bold shadow-sm mb-4" role="alert" style="border-radius: 8px;">
+            <i class="fas fa-exclamation-circle mr-2"></i> {{ $errors->first() }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     <div class="row">
 
         {{-- ── LEFT COLUMN ── --}}
@@ -310,27 +337,32 @@
                     </h3> 
                 </div>
                 <div class="card-body p-4">
-                    <form method="POST" action="{{ route('admin.applications.updateStatus', $application->id) }}">
+                    <form method="POST" action="{{ route('admin.applications.updateStatus', $application->id) }}" class="no-loader">
                         @csrf
                         @method('PATCH')
+                        <input type="hidden" name="status" id="adminAppStatusField" value="">
 
                         <button type="submit" name="status" value="IN_PROGRESS"
+                            onclick="document.getElementById('adminAppStatusField').value = 'IN_PROGRESS'"
                             class="btn btn-warning btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
                             <i class="fas fa-spinner mr-2"></i> Mark In Progress
                         </button>
 
-                        @if($application->service->slug === 'itr-filing')
+                        @if(($application->service?->slug ?? '') === 'itr-filing')
                             <button type="submit" name="status" value="E_FILING"
+                                onclick="document.getElementById('adminAppStatusField').value = 'E_FILING'"
                                 class="btn btn-info btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover text-white">
                                 <i class="fas fa-laptop-code mr-2"></i> Mark E-Filing
                             </button>
                             <button type="submit" name="status" value="OTP_VERIFICATION"
+                                onclick="document.getElementById('adminAppStatusField').value = 'OTP_VERIFICATION'"
                                 class="btn btn-primary btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
                                 <i class="fas fa-mobile-alt mr-2"></i> Mark OTP Verification
                             </button>
                         @endif
 
                         <button type="submit" name="status" value="COMPLETED"
+                            onclick="document.getElementById('adminAppStatusField').value = 'COMPLETED'"
                             class="btn btn-success btn-block mb-3 py-2 shadow-sm d-flex justify-content-center align-items-center font-weight-bold transition-hover">
                             <i class="fas fa-check-circle mr-2"></i> Mark Completed
                         </button>

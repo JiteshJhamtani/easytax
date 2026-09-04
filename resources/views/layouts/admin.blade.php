@@ -603,9 +603,11 @@ window.userRole = "{{ strtoupper(auth()->user()->role ?? '') }}";
 
             jQuery('form:not(.no-loader)').on('submit', function() {
                 let $btn = jQuery(this).find('button[type="submit"]');
-                if (!$btn.prop('disabled')) {
-                    $btn.prop('disabled', true).append(' <i class="fas fa-spinner fa-spin ml-2"></i>');
-                }
+                setTimeout(function() {
+                    if (!$btn.prop('disabled')) {
+                        $btn.prop('disabled', true).append(' <i class="fas fa-spinner fa-spin ml-2"></i>');
+                    }
+                }, 0);
             });
         }
     });
