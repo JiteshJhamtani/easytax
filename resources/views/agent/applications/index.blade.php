@@ -393,6 +393,8 @@
                             <option value="DRAFT">Draft</option>
                             <option value="SUBMITTED">Submitted</option>
                             <option value="IN_PROGRESS">In Progress</option>
+                            <option value="E_FILING">E-Filing</option>
+                            <option value="OTP_VERIFICATION">OTP Verification</option>
                             <option value="COMPLETED">Completed</option>
                             <option value="CANCELLED">Cancelled</option>
                         </select>
