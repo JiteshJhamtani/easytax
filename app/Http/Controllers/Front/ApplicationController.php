@@ -14,7 +14,9 @@ use App\Notifications\ApplicationSubmittedNotification;
 use App\Services\ApplicationDocumentService;
 use App\Services\ApplicationLogger;
 use App\Services\FormValidator;
+use App\Services\ParentMarginRefundService;
 use App\Services\RazorpayService;
+use App\Services\SubAgentPricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -252,15 +254,46 @@ class ApplicationController extends Controller
         }
         // ==========================================
 
-        // Amount to charge via Razorpay
-        $amountToPay = max(0, $finalPrice - $commission);
+        // ==========================================
+        // Sub-Agent vs Direct Agent Pricing Resolution
+        // ==========================================
+        $currentUser = auth()->user();
+        $isSubAgent = $currentUser && $currentUser->isSubAgent();
+        $agentId = $isSubAgent ? $currentUser->effectiveParentId() : auth()->id();
+        $subAgentId = $isSubAgent ? $currentUser->id : null;
+
+        $subAgentAmount = null;
+        $subAgentCommission = null;
+        $companyMinimumAmount = null;
+        $parentMargin = 0.0;
+
+        if ($isSubAgent) {
+            $pricingService = app(SubAgentPricingService::class);
+            $pricing = $pricingService->resolveForSubAgent($service, $currentUser, (float) $finalPrice, (float) $commission);
+
+            $amountToPay = $pricing['sub_agent_payable'];
+            $subAgentAmount = $pricing['sub_agent_price'];
+            $subAgentCommission = $pricing['sub_agent_commission'];
+            $companyMinimumAmount = $pricing['company_minimum'];
+            $parentMargin = $pricing['parent_margin'];
+        } else {
+            // Amount to charge via Razorpay for parent / direct agent
+            $amountToPay = max(0, $finalPrice - $commission);
+            $companyMinimumAmount = $amountToPay;
+        }
 
         $application = Application::create([
-            'agent_id' => auth()->id(),
+            'agent_id' => $agentId,
+            'sub_agent_id' => $subAgentId,
             'service_id' => $service->id,
             'form_data' => $validated,
             'amount' => $finalPrice,
             'commission_amount' => $commission,
+            'sub_agent_amount' => $subAgentAmount,
+            'sub_agent_commission' => $subAgentCommission,
+            'company_minimum_amount' => $companyMinimumAmount,
+            'parent_margin' => $parentMargin,
+            'parent_margin_status' => $parentMargin > 0 ? 'PENDING' : 'NONE',
 
             // ── SAVE COUPON TO DATABASE ──
             'coupon_id' => $couponId,
@@ -289,7 +322,8 @@ class ApplicationController extends Controller
             (int) round($amountToPay * 100), // Amount in paise
             [
                 'application_id' => $application->id,
-                'agent_id' => auth()->id(),
+                'agent_id' => $agentId,
+                'sub_agent_id' => $subAgentId,
                 'service_name' => $service->name,
             ]
         );
@@ -336,8 +370,12 @@ class ApplicationController extends Controller
             'razorpay_signature' => 'required|string',
         ]);
 
+        $userId = auth()->id();
         $application = Application::where('payment_reference', $validated['razorpay_order_id'])
-            ->where('agent_id', auth()->id())
+            ->where(function ($q) use ($userId) {
+                $q->where('agent_id', $userId)
+                    ->orWhere('sub_agent_id', $userId);
+            })
             ->firstOrFail();
 
         // Verify signature
@@ -427,8 +465,12 @@ class ApplicationController extends Controller
                 ->with('error', 'Invalid payment reference.');
         }
 
+        $userId = auth()->id();
         $application = Application::where('payment_reference', $orderId)
-            ->where('agent_id', auth()->id())
+            ->where(function ($q) use ($userId) {
+                $q->where('agent_id', $userId)
+                    ->orWhere('sub_agent_id', $userId);
+            })
             ->first();
 
         if (! $application) {
@@ -567,8 +609,10 @@ class ApplicationController extends Controller
             return back()->with('success', 'Your earlier payment was successful — no need to pay again.');
         }
 
-        // Re-use stored commission
-        $amountToPay = max(0, $application->amount - $application->commission_amount);
+        // Re-use stored commission / sub-agent pricing
+        $amountToPay = ($application->sub_agent_id && $application->sub_agent_amount !== null)
+            ? max(0, (float) $application->sub_agent_amount - (float) ($application->sub_agent_commission ?? 0))
+            : max(0, (float) $application->amount - (float) $application->commission_amount);
         $receiptId = 'APP_'.$application->id.'_RETRY_'.time();
         $orderResponse = $razorpay->createOrder(
             $receiptId,
@@ -729,10 +773,14 @@ class ApplicationController extends Controller
             ]);
         }
 
-        // 2. Fallback: check Payment Logs (rare cases), scoped to the agent's own applications
+        // 2. Fallback: check Payment Logs (rare cases), scoped to the agent or sub-agent's own applications
+        $userId = auth()->id();
         $log = PaymentLog::where('transaction_id', $transactionId)
             ->whereIn('application_id', Application::withTrashed()
-                ->where('agent_id', auth()->id())
+                ->where(function ($q) use ($userId) {
+                    $q->where('agent_id', $userId)
+                        ->orWhere('sub_agent_id', $userId);
+                })
                 ->select('id'))
             ->latest()
             ->first();
@@ -786,6 +834,11 @@ class ApplicationController extends Controller
 
             ApplicationLogger::log($lockedApplication->id, $logEvent);
 
+            // Automated margin refund processing for parent agent
+            if ($lockedApplication->sub_agent_id && (float) $lockedApplication->parent_margin > 0) {
+                app(ParentMarginRefundService::class)->processMarginRefund($lockedApplication);
+            }
+
             return true;
         });
     }
@@ -796,9 +849,15 @@ class ApplicationController extends Controller
      */
     private function expectedPaise(Application $application): int
     {
-        return $application->expected_amount_paise !== null
-            ? (int) $application->expected_amount_paise
-            : (int) round(max(0, $application->amount - $application->commission_amount) * 100);
+        if ($application->expected_amount_paise !== null) {
+            return (int) $application->expected_amount_paise;
+        }
+
+        if ($application->sub_agent_id && $application->sub_agent_amount !== null) {
+            return (int) round(max(0, (float) $application->sub_agent_amount - (float) ($application->sub_agent_commission ?? 0)) * 100);
+        }
+
+        return (int) round(max(0, (float) $application->amount - (float) $application->commission_amount) * 100);
     }
 
     /**

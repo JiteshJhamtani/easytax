@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('media')) {
+        if (! Schema::hasTable('media')) {
             try {
                 Schema::create('media', function (Blueprint $table) {
                     $table->id();
@@ -30,8 +30,10 @@ return new class extends Migration
 
                     $table->nullableTimestamps();
                 });
-            } catch (\Exception $e) {
-                if (strpos($e->getMessage(), 'already exists') === false) throw $e;
+            } catch (Exception $e) {
+                if (strpos($e->getMessage(), 'already exists') === false) {
+                    throw $e;
+                }
             }
         }
     }

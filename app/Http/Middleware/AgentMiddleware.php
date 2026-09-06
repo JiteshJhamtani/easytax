@@ -14,8 +14,15 @@ class AgentMiddleware
             abort(403);
         }
 
-        if (! auth()->user()->is_active) {
+        $user = auth()->user();
+
+        if (! $user->is_active) {
             abort(403, 'Your account is not active.');
+        }
+
+        // If sub-agent, check if parent agent is also active
+        if ($user->isSubAgent() && $user->parentAgent && ! $user->parentAgent->is_active) {
+            abort(403, 'Your parent agency account is currently deactivated. Please contact your agency administrator.');
         }
 
         return $next($request);

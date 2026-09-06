@@ -34,6 +34,8 @@ class AgentController extends Controller
 
         $agents = User::query()
             ->where('role', 'agent')
+            ->whereNull('parent_id')
+            ->withCount('subAgents')
             ->withCount(['applications' => function ($query) use ($sessionLabel) {
                 if ($sessionLabel) {
                     $query->inSession($sessionLabel);
@@ -53,6 +55,9 @@ class AgentController extends Controller
         return DataTables::of($agents)
 
             // 1. Map the calculated database columns to the Javascript names
+            ->addColumn('sub_agents_count', function ($agent) {
+                return $agent->sub_agents_count ?? 0;
+            })
             ->addColumn('applications', function ($agent) {
                 return $agent->applications_count;
             })
@@ -64,6 +69,8 @@ class AgentController extends Controller
             })
 
             // 2. STOP Laravel from crashing by disabling SQL text searches on math columns
+            ->filterColumn('sub_agents_count', function ($query, $keyword) { /* Do nothing */
+            })
             ->filterColumn('applications', function ($query, $keyword) { /* Do nothing */
             })
             ->filterColumn('commission', function ($query, $keyword) { /* Do nothing */
@@ -152,7 +159,13 @@ class AgentController extends Controller
         $sessions = SessionResolver::all();
         $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
-        $agent->loadMissing(['marketer']);
+        $agent->loadMissing(['marketer', 'subAgents' => function ($q) {
+            $q->withCount('subAgentApplications');
+        }]);
+
+        $totalMarginAccrued = (float) $agent->marginEarnings()->where('status', 'ACCRUED')->sum('margin_amount');
+        $totalMarginSettled = (float) $agent->marginEarnings()->where('status', 'PAID')->sum('margin_amount');
+        $totalMarginEarned = $totalMarginAccrued + $totalMarginSettled;
 
         $baseAppQuery = Application::where('agent_id', $agent->id)->inSession($currentSessionLabel);
 
@@ -205,7 +218,7 @@ class AgentController extends Controller
 
         // Applications list with quick status filter
         $statusFilter = $request->get('status', 'all');
-        $applicationsListQuery = (clone $baseAppQuery)->with(['service:id,name,slug']);
+        $applicationsListQuery = (clone $baseAppQuery)->with(['service:id,name,slug', 'subAgent:id,name,agent_code']);
 
         if ($statusFilter === 'completed') {
             $applicationsListQuery->where('status', 'COMPLETED');
@@ -236,7 +249,10 @@ class AgentController extends Controller
             'currentSessionLabel',
             'serviceStats',
             'applications',
-            'statusFilter'
+            'statusFilter',
+            'totalMarginEarned',
+            'totalMarginAccrued',
+            'totalMarginSettled'
         ));
     }
 

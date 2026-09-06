@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up()
     {
-        if (!Schema::hasColumn('coupons', 'target_services')) {
+        if (! Schema::hasColumn('coupons', 'target_services')) {
             Schema::table('coupons', function (Blueprint $table) {
                 $table->json('target_services')->nullable()->after('target_agents');
             });

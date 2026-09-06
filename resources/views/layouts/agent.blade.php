@@ -303,6 +303,32 @@
                 <span class="sb-item__label">Other Apps</span>
                 @include('layouts.partials.sidebar-tab-badges', ['tabKey' => 'other'])
             </a>
+
+            @if(auth()->check() && !auth()->user()->isSubAgent())
+            <div class="sb-section">Team & Margins</div>
+
+            <a href="{{ route('agent.sub-agents.index') }}" class="sb-item {{ request()->routeIs('agent.sub-agents.*') ? 'active' : '' }}" data-label="My Team">
+                <span class="sb-item__icon"><i class="fas fa-users"></i></span>
+                <span class="sb-item__label">My Team</span>
+            </a>
+
+            <a href="{{ route('agent.team-pricing.index') }}" class="sb-item {{ request()->routeIs('agent.team-pricing.*') ? 'active' : '' }}" data-label="Team Pricing">
+                <span class="sb-item__icon"><i class="fas fa-tags"></i></span>
+                <span class="sb-item__label">Team Pricing</span>
+            </a>
+
+            <a href="{{ route('agent.margin-ledger.index') }}" class="sb-item {{ request()->routeIs('agent.margin-ledger.*') ? 'active' : '' }}" data-label="Margin Earnings">
+                <span class="sb-item__icon"><i class="fas fa-coins"></i></span>
+                <span class="sb-item__label">Margin Earnings</span>
+            </a>
+
+            <div class="sb-section">Rewards</div>
+
+            <a href="{{ route('agent.gifts') }}" class="sb-item {{ request()->routeIs('agent.gifts') ? 'active' : '' }}" data-label="Gifts & Rewards">
+                <span class="sb-item__icon"><i class="fas fa-gift"></i></span>
+                <span class="sb-item__label">Gifts & Rewards</span>
+            </a>
+            @endif
         </nav>
 
         <div class="sb-bottom">
@@ -337,7 +363,7 @@
                     
                     <a href="{{ route('profile.edit') }}" class="user-pill__info">
                         <span class="user-pill__name">{{ Auth::user()->name ?? 'Agent' }}</span>
-                        <span class="user-pill__role">Workspace</span>
+                        <span class="user-pill__role">{{ Auth::user()->isSubAgent() ? 'Sub-Agent' : 'Agency' }} ({{ Auth::user()->agent_code ?? 'AGT' }})</span>
                     </a>
                     
                     <div class="user-pill__divider"></div>

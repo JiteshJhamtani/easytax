@@ -11,7 +11,7 @@ class RestrictToB2BDomains
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -25,7 +25,7 @@ class RestrictToB2BDomains
             'b2b.easytax.live',
         ];
 
-        if (!in_array($request->getHost(), $allowedDomains)) {
+        if (! in_array($request->getHost(), $allowedDomains)) {
             abort(403, 'This feature is not available on this server environment.');
         }
 

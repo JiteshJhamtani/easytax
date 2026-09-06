@@ -143,17 +143,18 @@ class SessionResolver
     {
         $label = $requestedLabel;
 
-        if ((empty($label) || !is_string($label)) && function_exists('request') && request()->has('session')) {
+        if ((empty($label) || ! is_string($label)) && function_exists('request') && request()->has('session')) {
             $label = request()->input('session');
         }
 
         // If a specific session was passed/requested and is valid
-        if (!empty($label) && is_string($label) && trim($label) !== '' && $label !== 'null') {
+        if (! empty($label) && is_string($label) && trim($label) !== '' && $label !== 'null') {
             $matched = self::fromLabel(trim($label));
             if ($matched) {
                 if (function_exists('session') && request()->hasSession()) {
                     session()->put('easytax_active_session', $matched['label']);
                 }
+
                 return $matched['label'];
             }
         }

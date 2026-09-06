@@ -4,14 +4,15 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
     // database/migrations/xxxx_create_gifts_table.php
     public function up(): void
     {
-        if (!Schema::hasTable('gifts')) {
+        if (! Schema::hasTable('gifts')) {
             try {
                 Schema::create('gifts', function (Blueprint $table) {
                     $table->id();
@@ -21,8 +22,10 @@ return new class extends Migration {
                     $table->boolean('is_active')->default(true);
                     $table->timestamps();
                 });
-            } catch (\Exception $e) {
-                if (strpos($e->getMessage(), 'already exists') === false) throw $e;
+            } catch (Exception $e) {
+                if (strpos($e->getMessage(), 'already exists') === false) {
+                    throw $e;
+                }
             }
         }
     }

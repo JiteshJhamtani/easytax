@@ -14,6 +14,7 @@ $(document).ready(function () {
     let tableColumns = [
         { data: "id", name: "id" },
         { data: "service", name: "service.name" },
+        { data: "submitted_by", name: "submitted_by" },
         { data: "status", name: "status" },
         { data: "payment", name: "payment_status" },
         { data: "amount", name: "amount" }
@@ -56,6 +57,7 @@ $(document).ready(function () {
 
                 // Advanced dropdown/date filters
                 d.service = $("#filterService").val();
+                d.sub_agent_id = $("#filterSubAgent").val();
                 d.status = $("#filterStatus").val();
                 d.payment = $("#filterPayment").val();
                 d.date_from = $("#filterDateFrom").val();
@@ -121,7 +123,7 @@ $(document).ready(function () {
 
     // 7. Trigger reload when any Advanced Filter dropdown changes
     $(
-        "#filterService, #filterStatus, #filterPayment, #filterDateFrom, #filterDateTo",
+        "#filterService, #filterSubAgent, #filterStatus, #filterPayment, #filterDateFrom, #filterDateTo",
     ).on("change", function () {
         table.ajax.reload();
     });
@@ -130,7 +132,7 @@ $(document).ready(function () {
     $("#resetFilters").click(function () {
         // Reset dropdowns and dates
         $(
-            "#filterService, #filterStatus, #filterPayment, #filterDateFrom, #filterDateTo",
+            "#filterService, #filterSubAgent, #filterStatus, #filterPayment, #filterDateFrom, #filterDateTo",
         ).val("");
 
         // Reset Quick Tabs to 'All Applications'

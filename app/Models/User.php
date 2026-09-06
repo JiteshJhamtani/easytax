@@ -37,6 +37,13 @@ class User extends Authenticatable
         'whatsapp_no',
         'address',
         'marketer_id',
+        'parent_id',
+        'is_active',
+        'bank_name',
+        'bank_account_number',
+        'bank_ifsc',
+        'bank_account_holder',
+        'bank_upi_id',
     ];
 
     /**
@@ -94,6 +101,31 @@ class User extends Authenticatable
         return $this->belongsTo(User::class, 'marketer_id');
     }
 
+    public function parentAgent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'parent_id');
+    }
+
+    public function subAgents(): HasMany
+    {
+        return $this->hasMany(User::class, 'parent_id');
+    }
+
+    public function subAgentApplications(): HasMany
+    {
+        return $this->hasMany(Application::class, 'sub_agent_id');
+    }
+
+    public function customPricingRules(): HasMany
+    {
+        return $this->hasMany(SubAgentServicePricing::class, 'parent_agent_id');
+    }
+
+    public function marginEarnings(): HasMany
+    {
+        return $this->hasMany(AgentMarginLog::class, 'parent_agent_id');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Helpers
@@ -107,7 +139,22 @@ class User extends Authenticatable
 
     public function isAgent(): bool
     {
-        return $this->role === 'AGENT';
+        return strtoupper($this->role) === 'AGENT';
+    }
+
+    public function isSubAgent(): bool
+    {
+        return $this->isAgent() && ! is_null($this->parent_id);
+    }
+
+    public function isParentAgent(): bool
+    {
+        return $this->isAgent() && is_null($this->parent_id);
+    }
+
+    public function effectiveParentId(): int
+    {
+        return $this->parent_id ?? $this->id;
     }
 
     public function isActive(): bool
@@ -118,5 +165,10 @@ class User extends Authenticatable
     public function payouts()
     {
         return $this->hasMany(AgentPayout::class, 'agent_id');
+    }
+
+    public function marginPayouts(): HasMany
+    {
+        return $this->hasMany(AgentMarginPayout::class, 'parent_agent_id');
     }
 }

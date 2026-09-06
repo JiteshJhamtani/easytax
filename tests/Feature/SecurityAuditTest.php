@@ -1,13 +1,14 @@
 <?php
 
-use App\Models\User;
-use App\Models\Application;
 use App\Enums\PaymentStatus;
+use App\Models\Application;
+use App\Models\PaymentLog;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use function Pest\Laravel\postJson;
+
 use function Pest\Laravel\actingAs;
-use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\patch;
+use function Pest\Laravel\postJson;
 
 // uses(RefreshDatabase::class);
 
@@ -31,9 +32,9 @@ it('cannot process the same razorpay webhook twice', function () {
                     'id' => 'pay_abc456',
                     'order_id' => 'order_xyz123',
                     'amount' => 90000, // (1000 - 100) * 100
-                ]
-            ]
-        ]
+                ],
+            ],
+        ],
     ];
     $jsonPayload = json_encode($payload);
 
@@ -43,14 +44,14 @@ it('cannot process the same razorpay webhook twice', function () {
 
     // 2. Act: Send the webhook TWICE concurrently (simulated)
     $response1 = postJson(route('payment.webhook'), $payload, [
-        'X-Razorpay-Signature' => $signature
+        'X-Razorpay-Signature' => $signature,
     ]);
 
     $response2 = postJson(route('payment.webhook'), $payload, [
-        'X-Razorpay-Signature' => $signature
+        'X-Razorpay-Signature' => $signature,
     ]);
 
-    // 3. Assert: Both return 200, but only ONE payment log is created 
+    // 3. Assert: Both return 200, but only ONE payment log is created
     // and payment_status is PAID
     $response1->assertOk();
     $response2->assertOk();
@@ -58,7 +59,7 @@ it('cannot process the same razorpay webhook twice', function () {
     expect($application->fresh()->payment_status)->toBe(PaymentStatus::PAID);
 
     // Assert only one webhook_captured event exists for this payment
-    $logsCount = \App\Models\PaymentLog::where('application_id', $application->id)
+    $logsCount = PaymentLog::where('application_id', $application->id)
         ->where('event', 'webhook_captured')
         ->count();
 

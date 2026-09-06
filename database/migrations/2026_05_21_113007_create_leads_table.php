@@ -25,8 +25,10 @@ return new class extends Migration
                     $table->foreignId('marketer_id')->nullable()->constrained('users')->nullOnDelete();
                     $table->timestamps();
                 });
-            } catch (\Exception $e) {
-                if (strpos($e->getMessage(), 'already exists') === false) throw $e;
+            } catch (Exception $e) {
+                if (strpos($e->getMessage(), 'already exists') === false) {
+                    throw $e;
+                }
             }
         }
     }

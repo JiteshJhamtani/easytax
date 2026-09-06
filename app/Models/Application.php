@@ -44,6 +44,13 @@ class Application extends Model implements HasMedia
         'payout_id',
         'session_label',
         'source_server', 'original_id',
+        'sub_agent_id',
+        'sub_agent_amount',
+        'sub_agent_commission',
+        'company_minimum_amount',
+        'parent_margin',
+        'parent_margin_status',
+        'parent_margin_refunded_at',
     ];
 
     protected $casts = [
@@ -53,8 +60,13 @@ class Application extends Model implements HasMedia
         'started_at' => 'datetime',
         'submitted_at' => 'datetime',
         'completed_at' => 'datetime',
+        'parent_margin_refunded_at' => 'datetime',
         'amount' => 'decimal:2',
         'commission_amount' => 'decimal:2',
+        'sub_agent_amount' => 'decimal:2',
+        'sub_agent_commission' => 'decimal:2',
+        'company_minimum_amount' => 'decimal:2',
+        'parent_margin' => 'decimal:2',
     ];
 
     /*
@@ -108,6 +120,16 @@ class Application extends Model implements HasMedia
     public function agent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'agent_id');
+    }
+
+    public function subAgent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sub_agent_id');
+    }
+
+    public function marginLog()
+    {
+        return $this->hasOne(AgentMarginLog::class, 'application_id');
     }
 
     public function service(): BelongsTo

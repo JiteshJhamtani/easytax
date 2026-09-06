@@ -95,6 +95,11 @@
                             <div class="overflow-hidden">
                                 <h6 class="text-muted text-uppercase text-xs font-weight-bold mb-1">Assigned Agent</h6>
                                 <h5 class="mb-0 font-weight-bold text-dark text-truncate">{{ $application->agent->name ?? 'Unassigned' }}</h5>
+                                @if($application->sub_agent_id && $application->subAgent)
+                                    <div class="mt-1">
+                                        <span class="badge badge-info text-dark" style="font-size: 0.75rem;"><i class="fas fa-users mr-1"></i>Team: {{ $application->subAgent->name }} ({{ $application->subAgent->agent_code }})</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -140,6 +145,28 @@
                                 <td class="text-muted text-uppercase text-xs font-weight-bold w-30 align-middle pl-4">Application ID</td>
                                 <td><span class="text-muted font-weight-bold">#{{ $application->id }}</span></td>
                             </tr>
+                            @if($application->sub_agent_id && $application->subAgent)
+                            <tr>
+                                <td class="text-muted text-uppercase text-xs font-weight-bold w-30 align-middle pl-4">Submitted By (Team)</td>
+                                <td>
+                                    <strong>{{ $application->subAgent->name }}</strong>
+                                    <span class="badge badge-secondary ml-1">{{ $application->subAgent->agent_code }}</span>
+                                    <span class="text-muted ml-2">({{ $application->subAgent->email }})</span>
+                                </td>
+                            </tr>
+                            @if($application->parent_margin > 0)
+                            <tr>
+                                <td class="text-muted text-uppercase text-xs font-weight-bold w-30 align-middle pl-4">Parent Margin Refund</td>
+                                <td>
+                                    <span class="badge badge-success font-weight-bold" style="font-size: 0.85rem;">₹{{ number_format($application->parent_margin, 2) }}</span>
+                                    <span class="text-muted ml-2">Status: <strong>{{ $application->parent_margin_status ?? 'PENDING' }}</strong></span>
+                                    @if($application->parent_margin_refunded_at)
+                                        <small class="text-muted d-block mt-1"><i class="fas fa-check-circle text-success mr-1"></i>Credited at {{ $application->parent_margin_refunded_at->format('d M Y, h:i A') }}</small>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endif
+                            @endif
                         </tbody>
                     </table>
                 </div>

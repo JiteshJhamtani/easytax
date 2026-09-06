@@ -4,13 +4,14 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        if (!Schema::hasTable('application_logs')) {
+        if (! Schema::hasTable('application_logs')) {
             try {
                 Schema::create('application_logs', function (Blueprint $table) {
 
@@ -32,8 +33,10 @@ return new class extends Migration {
                     $table->timestamps();
 
                 });
-            } catch (\Exception $e) {
-                if (strpos($e->getMessage(), 'already exists') === false) throw $e;
+            } catch (Exception $e) {
+                if (strpos($e->getMessage(), 'already exists') === false) {
+                    throw $e;
+                }
             }
         }
     }

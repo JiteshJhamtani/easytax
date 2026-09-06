@@ -4,14 +4,15 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
     // database/migrations/xxxx_create_gift_conditions_table.php
     public function up(): void
     {
-        if (!Schema::hasTable('gift_conditions')) {
+        if (! Schema::hasTable('gift_conditions')) {
             try {
                 Schema::create('gift_conditions', function (Blueprint $table) {
                     $table->id();
@@ -20,8 +21,10 @@ return new class extends Migration {
                     $table->unsignedInteger('min_count');
                     $table->timestamps();
                 });
-            } catch (\Exception $e) {
-                if (strpos($e->getMessage(), 'already exists') === false) throw $e;
+            } catch (Exception $e) {
+                if (strpos($e->getMessage(), 'already exists') === false) {
+                    throw $e;
+                }
             }
         }
     }

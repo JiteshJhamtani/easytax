@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\ApplicationStatus;
 use App\Models\Application;
 use App\Models\Gift;
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -23,51 +24,94 @@ class AgentDashboardService
     // 1. DASHBOARD STATS & CHARTS
     // =========================================================================
 
-    public function getStats($agentId, ?string $sessionLabel = null)
+    public function getStats($agentId, ?string $sessionLabel = null, ?int $subAgentId = null)
     {
         $sessionLabel = $sessionLabel ?? SessionResolver::current()['label'];
+        $cacheKey = $subAgentId
+            ? "sub_agent_dashboard_stats_{$subAgentId}_{$sessionLabel}"
+            : "agent_dashboard_stats_{$agentId}_{$sessionLabel}";
 
-        return Cache::remember("agent_dashboard_stats_{$agentId}_{$sessionLabel}", 30, function () use ($agentId, $sessionLabel) {
-            return Application::where('agent_id', $agentId)
-                ->inSession($sessionLabel)
-                ->selectRaw("
+        return Cache::remember($cacheKey, 30, function () use ($agentId, $sessionLabel, $subAgentId) {
+            $query = Application::query()->inSession($sessionLabel);
+
+            if ($subAgentId) {
+                $query->where('sub_agent_id', $subAgentId);
+            } else {
+                $query->where('agent_id', $agentId);
+            }
+
+            return $query->selectRaw("
                     COUNT(*) as total_applications,
                     SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed_applications,
                     SUM(CASE WHEN status = 'IN_PROGRESS' THEN 1 ELSE 0 END) as pending_applications,
                     SUM(CASE WHEN payment_status = 'PAID' THEN 1 ELSE 0 END) as successful_payments,
                     SUM(commission_amount) as total_commission,
                     SUM(CASE WHEN payout_id IS NULL THEN commission_amount ELSE 0 END) as pending_commission,
-                    SUM(CASE WHEN payout_id IS NOT NULL THEN commission_amount ELSE 0 END) as paid_commission
+                    SUM(CASE WHEN payout_id IS NOT NULL THEN commission_amount ELSE 0 END) as paid_commission,
+                    SUM(parent_margin) as total_parent_margin
                 ")
                 ->first();
         });
     }
 
-    public function getMonthlyApplications($agentId, ?string $sessionLabel = null)
+    public function getMonthlyApplications($agentId, ?string $sessionLabel = null, ?int $subAgentId = null)
     {
         $sessionLabel = $sessionLabel ?? SessionResolver::current()['label'];
 
-        return Application::select(
+        $query = Application::select(
             DB::raw('MONTH(created_at) as month'),
             DB::raw('COUNT(*) as total')
-        )
-            ->where('agent_id', $agentId)
-            ->inSession($sessionLabel)
-            ->groupBy('month')
+        )->inSession($sessionLabel);
+
+        if ($subAgentId) {
+            $query->where('sub_agent_id', $subAgentId);
+        } else {
+            $query->where('agent_id', $agentId);
+        }
+
+        return $query->groupBy('month')
             ->orderBy('month')
             ->get();
     }
 
-    public function getRecentApplications($agentId, ?string $sessionLabel = null)
+    public function getRecentApplications($agentId, ?string $sessionLabel = null, ?int $subAgentId = null)
     {
         $sessionLabel = $sessionLabel ?? SessionResolver::current()['label'];
 
-        return Application::with('service')
-            ->where('agent_id', $agentId)
-            ->inSession($sessionLabel)
-            ->latest()
+        $query = Application::with('service')->inSession($sessionLabel);
+
+        if ($subAgentId) {
+            $query->where('sub_agent_id', $subAgentId);
+        } else {
+            $query->where('agent_id', $agentId);
+        }
+
+        return $query->latest()
             ->limit(10)
             ->get();
+    }
+
+    public function getTeamStats(int $parentAgentId, ?string $sessionLabel = null): array
+    {
+        $sessionLabel = $sessionLabel ?? SessionResolver::current()['label'];
+
+        $subAgents = User::where('parent_id', $parentAgentId)->get();
+        $totalMembers = $subAgents->count();
+        $activeMembers = $subAgents->where('is_active', true)->count();
+
+        $appsQuery = Application::where('agent_id', $parentAgentId)
+            ->whereNotNull('sub_agent_id')
+            ->inSession($sessionLabel);
+
+        $teamAppsCount = (clone $appsQuery)->count();
+        $teamMarginEarned = (clone $appsQuery)->where('payment_status', 'PAID')->sum('parent_margin');
+
+        return [
+            'total_members' => $totalMembers,
+            'active_members' => $activeMembers,
+            'team_applications' => $teamAppsCount,
+            'team_margin_earned' => (float) $teamMarginEarned,
+        ];
     }
 
     // =========================================================================

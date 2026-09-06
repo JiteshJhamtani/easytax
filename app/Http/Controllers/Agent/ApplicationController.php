@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Agent;
 
 use App\Enums\ApplicationStatus;
 use App\Http\Controllers\Controller;
+use App\Models\AgentMarginLog;
 use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
@@ -11,6 +12,7 @@ use App\Notifications\ApplicationCancelledNotification;
 use App\Services\SessionResolver;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Smalot\PdfParser\Parser;
@@ -28,11 +30,25 @@ class ApplicationController extends Controller
             default => 'My Other Applications',
         };
 
+        $user = auth()->user();
+        $isSubAgent = $user->isSubAgent();
         $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
-        // --- NEW DYNAMIC KPI LOGIC ---
-        $query = Application::where('agent_id', auth()->id())
-            ->inSession($currentSessionLabel);
+        // --- DYNAMIC KPI LOGIC ---
+        $query = Application::query()->inSession($currentSessionLabel);
+
+        if ($isSubAgent) {
+            $query->where('sub_agent_id', $user->id);
+        } else {
+            $query->where('agent_id', $user->id);
+            if ($request->filled('sub_agent_id')) {
+                if ($request->sub_agent_id === 'self') {
+                    $query->whereNull('sub_agent_id');
+                } else {
+                    $query->where('sub_agent_id', $request->sub_agent_id);
+                }
+            }
+        }
 
         $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
 
@@ -55,18 +71,36 @@ class ApplicationController extends Controller
         // -----------------------------
 
         $services = Service::where('active', true)->get();
+        $subAgents = ! $isSubAgent ? User::where('parent_id', $user->id)->orderBy('name')->get() : collect();
 
-        return view('agent.applications.index', compact('stats', 'services', 'type', 'pageTitle', 'currentSessionLabel'));
+        return view('agent.applications.index', compact('stats', 'services', 'type', 'pageTitle', 'currentSessionLabel', 'subAgents', 'isSubAgent'));
     }
 
     public function data(Request $request)
     {
+        $user = auth()->user();
+        $isSubAgent = $user->isSubAgent();
+
         $query = Application::with([
             'service',
+            'subAgent',
             'media' => function ($q) {
                 $q->whereIn('collection_name', ['itr_acknowledgement', 'computation_sheet', 'balance_sheet']);
             },
-        ])->where('agent_id', auth()->id());
+        ]);
+
+        if ($isSubAgent) {
+            $query->where('sub_agent_id', $user->id);
+        } else {
+            $query->where('agent_id', $user->id);
+            if ($request->filled('sub_agent_id')) {
+                if ($request->sub_agent_id === 'self') {
+                    $query->whereNull('sub_agent_id');
+                } else {
+                    $query->where('sub_agent_id', $request->sub_agent_id);
+                }
+            }
+        }
 
         $sessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
         $query->inSession($sessionLabel);
@@ -209,6 +243,16 @@ class ApplicationController extends Controller
 
                 return '<a href="'.$url.'" class="btn btn-sm btn-outline-success font-weight-bold" style="white-space: nowrap;"><i class="fas fa-file-excel mr-1"></i> Generate</a>';
             })
+            ->addColumn('submitted_by', function ($a) use ($isSubAgent) {
+                if ($isSubAgent) {
+                    return '<span class="badge badge-light">Self</span>';
+                }
+                if ($a->sub_agent_id && $a->subAgent) {
+                    return '<span class="badge badge-info text-dark" title="Sub-Agent"><i class="fas fa-users mr-1"></i>'.e($a->subAgent->name).'</span>';
+                }
+
+                return '<span class="badge badge-secondary">Direct</span>';
+            })
             ->addColumn('actions', function ($a) use ($request) {
                 if ($request->is_trashed == 'true') {
                     return '
@@ -230,7 +274,7 @@ class ApplicationController extends Controller
 
                 return $html;
             })
-            ->rawColumns(['status', 'payment', 'ack_no', 'computation', 'balance_sheet', 'actions'])
+            ->rawColumns(['status', 'payment', 'ack_no', 'computation', 'balance_sheet', 'submitted_by', 'actions'])
             ->make(true);
     }
 
@@ -241,7 +285,22 @@ class ApplicationController extends Controller
 
         $exportType = $request->query('export_type', 'all_filtered');
 
-        $query = Application::with(['service'])->where('agent_id', auth()->id());
+        $user = auth()->user();
+        $isSubAgent = $user->isSubAgent();
+
+        $query = Application::with(['service']);
+        if ($isSubAgent) {
+            $query->where('sub_agent_id', $user->id);
+        } else {
+            $query->where('agent_id', $user->id);
+            if ($request->filled('sub_agent_id')) {
+                if ($request->sub_agent_id === 'self') {
+                    $query->whereNull('sub_agent_id');
+                } else {
+                    $query->where('sub_agent_id', $request->sub_agent_id);
+                }
+            }
+        }
 
         if ($exportType !== 'master') {
             $sessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
@@ -531,7 +590,7 @@ class ApplicationController extends Controller
 
     public function show(Application $application)
     {
-        abort_if($application->agent_id !== auth()->id(), 403);
+        abort_if(! $this->canAgentAccessApplication($application), 403);
 
         $application->load(['service', 'media']);
 
@@ -540,7 +599,7 @@ class ApplicationController extends Controller
 
     public function cancel(Application $application)
     {
-        abort_if($application->agent_id !== auth()->id(), 403);
+        abort_if(! $this->canAgentAccessApplication($application), 403);
 
         if ($application->status === ApplicationStatus::CANCELLED) {
             return back()->with('error', 'Application is already cancelled.');
@@ -549,7 +608,17 @@ class ApplicationController extends Controller
         $application->update([
             'status' => ApplicationStatus::CANCELLED,
             'commission_amount' => 0,
+            'parent_margin_status' => $application->parent_margin_status === 'ACCRUED' ? 'CANCELLED' : $application->parent_margin_status,
         ]);
+
+        if ($application->sub_agent_id) {
+            AgentMarginLog::where('application_id', $application->id)
+                ->where('status', 'ACCRUED')
+                ->update([
+                    'status' => 'CANCELLED',
+                    'notes' => DB::raw("CONCAT(COALESCE(notes, ''), ' [Application cancelled by agent]')"),
+                ]);
+        }
 
         activity('application')
             ->performedOn($application)
@@ -564,7 +633,7 @@ class ApplicationController extends Controller
 
     public function destroy(Application $application)
     {
-        abort_if($application->agent_id !== auth()->id(), 403);
+        abort_if(! $this->canAgentAccessApplication($application), 403);
 
         $application->delete();
 
@@ -574,7 +643,7 @@ class ApplicationController extends Controller
     public function restore($id)
     {
         $application = Application::withTrashed()->findOrFail($id);
-        abort_if($application->agent_id !== auth()->id(), 403);
+        abort_if(! $this->canAgentAccessApplication($application), 403);
 
         $application->restore();
 
@@ -591,7 +660,7 @@ class ApplicationController extends Controller
     {
         $media = Media::findOrFail($mediaId);
 
-        if (strtoupper(auth()->user()->role) !== 'AGENT' || $media->model->agent_id !== auth()->id()) {
+        if (strtoupper(auth()->user()->role) !== 'AGENT' || ! $this->canAgentAccessApplication($media->model)) {
             abort(403, 'Unauthorized access to this document.');
         }
 
@@ -613,7 +682,7 @@ class ApplicationController extends Controller
     {
         $media = Media::findOrFail($mediaId);
 
-        if (strtoupper(auth()->user()->role) !== 'AGENT' || $media->model->agent_id !== auth()->id()) {
+        if (strtoupper(auth()->user()->role) !== 'AGENT' || ! $this->canAgentAccessApplication($media->model)) {
             abort(403, 'Unauthorized access to this document.');
         }
 
@@ -636,7 +705,7 @@ class ApplicationController extends Controller
         $application = Application::with('media')->findOrFail($id);
 
         // SECURITY: Ensure the agent owns this application!
-        abort_if($application->agent_id !== auth()->id(), 403);
+        abort_if(! $this->canAgentAccessApplication($application), 403);
 
         $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
 
@@ -728,5 +797,19 @@ class ApplicationController extends Controller
         // ----------------------------------
 
         return $pdf->stream($fileName);
+    }
+
+    private function canAgentAccessApplication(Application $application): bool
+    {
+        $user = auth()->user();
+        if (! $user || ! $user->isAgent()) {
+            return false;
+        }
+
+        if ($user->isSubAgent()) {
+            return $application->sub_agent_id === $user->id;
+        }
+
+        return $application->agent_id === $user->id;
     }
 }

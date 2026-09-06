@@ -19,23 +19,35 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-        $agentId = auth()->id();
+        $user = auth()->user();
+        $isSubAgent = $user->isSubAgent();
+        $agentId = $user->effectiveParentId();
+        $subAgentId = $isSubAgent ? $user->id : null;
 
         $sessions = SessionResolver::all();
         $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
+        $teamStats = ! $isSubAgent ? $this->dashboardService->getTeamStats($agentId, $currentSessionLabel) : null;
+        $giftGroups = ! $isSubAgent ? $this->dashboardService->getMilestoneGroups($agentId, $currentSessionLabel) : [];
+
         return view('agent.dashboard', [
             'sessions' => $sessions,
             'currentSessionLabel' => $currentSessionLabel,
-            'stats' => $this->dashboardService->getStats($agentId, $currentSessionLabel),
-            'monthlyApplications' => $this->dashboardService->getMonthlyApplications($agentId, $currentSessionLabel),
-            'recentApplications' => $this->dashboardService->getRecentApplications($agentId, $currentSessionLabel),
-            'giftGroups' => $this->dashboardService->getMilestoneGroups($agentId, $currentSessionLabel),
+            'stats' => $this->dashboardService->getStats($agentId, $currentSessionLabel, $subAgentId),
+            'monthlyApplications' => $this->dashboardService->getMonthlyApplications($agentId, $currentSessionLabel, $subAgentId),
+            'recentApplications' => $this->dashboardService->getRecentApplications($agentId, $currentSessionLabel, $subAgentId),
+            'giftGroups' => $giftGroups,
+            'teamStats' => $teamStats,
+            'isSubAgent' => $isSubAgent,
         ]);
     }
 
     public function gifts()
     {
+        if (auth()->user()->isSubAgent()) {
+            abort(403, 'Gifts and milestone rewards are accessible to primary agency agents only.');
+        }
+
         $currentSessionLabel = SessionResolver::activeSessionLabel();
 
         return view('agent.gifts.index', [

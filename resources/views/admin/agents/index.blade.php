@@ -206,6 +206,7 @@
                         <th>Agent Code</th>
                         <th>Name</th>
                         <th>Email</th>
+                        <th class="text-center">Team</th>
                         <th class="text-center">Apps</th>
                         <th class="text-right">Commission</th>
                         <th class="text-right">Payouts</th>
@@ -265,6 +266,14 @@
                     },
                     { data: 'name', className: 'font-weight-bold text-dark' },
                     { data: 'email', className: 'text-muted' },
+                    {
+                        data: 'sub_agents_count',
+                        className: 'text-center',
+                        searchable: false,
+                        render: function(data) {
+                            return data > 0 ? `<span class="badge badge-secondary px-2 py-1"><i class="fas fa-users mr-1"></i>${data}</span>` : '<span class="text-muted">0</span>';
+                        }
+                    },
                     { 
                         data: 'applications', 
                         className: 'text-center',

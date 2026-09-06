@@ -12,7 +12,7 @@ return new class extends Migration
     // database/migrations/xxxx_create_gift_condition_groups_table.php
     public function up(): void
     {
-        if (!Schema::hasTable('gift_condition_groups')) {
+        if (! Schema::hasTable('gift_condition_groups')) {
             try {
                 Schema::create('gift_condition_groups', function (Blueprint $table) {
                     $table->id();
@@ -20,8 +20,10 @@ return new class extends Migration
                     $table->integer('sort_order')->default(0);
                     $table->timestamps();
                 });
-            } catch (\Exception $e) {
-                if (strpos($e->getMessage(), 'already exists') === false) throw $e;
+            } catch (Exception $e) {
+                if (strpos($e->getMessage(), 'already exists') === false) {
+                    throw $e;
+                }
             }
         }
     }

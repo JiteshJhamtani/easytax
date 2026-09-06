@@ -4,6 +4,7 @@ use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\AgentMiddleware;
 use App\Http\Middleware\LoadSidebarMenu;
 use App\Http\Middleware\MarketerMiddleware;
+use App\Http\Middleware\ParentAgentOnlyMiddleware;
 use App\Http\Middleware\RestrictToB2BDomains;
 use App\Http\Middleware\SetTenantContext;
 use App\Http\Middleware\TeamMiddleware;
@@ -30,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'team' => TeamMiddleware::class,
             'marketer' => MarketerMiddleware::class,
             'b2b.only' => RestrictToB2BDomains::class,
+            'parent_agent_only' => ParentAgentOnlyMiddleware::class,
         ]);
 
         $middleware->redirectUsersTo(fn (Request $request) => match (strtoupper($request->user()->role ?? 'AGENT')) {

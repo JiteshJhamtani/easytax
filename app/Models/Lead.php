@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\MasksSensitiveData;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Lead extends Model
 {
-    use \App\Traits\MasksSensitiveData, HasFactory;
+    use HasFactory, MasksSensitiveData;
 
     protected $maskable = ['email', 'phone', 'amount'];
 

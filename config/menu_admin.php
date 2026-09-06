@@ -20,11 +20,22 @@ return [
         'icon' => 'fas fa-fw fa-file-alt',
     ],
 
-    // [
-    //     'text'  => 'Payouts',
-    //     'route' => 'admin.payouts.index',
-    //     'icon'  => 'fas fa-fw fa-money-bill-wave',
-    // ],
+    [
+        'text' => 'Payouts',
+        'icon' => 'fas fa-fw fa-money-bill-wave',
+        'submenu' => [
+            [
+                'text' => 'Direct Commission',
+                'route' => 'admin.payouts.index',
+                'icon' => 'fas fa-fw fa-coins',
+            ],
+            [
+                'text' => 'Agency Margin Payouts',
+                'route' => 'admin.margin-payouts.index',
+                'icon' => 'fas fa-fw fa-wallet',
+            ],
+        ],
+    ],
 
     [
         'text' => 'Agents',

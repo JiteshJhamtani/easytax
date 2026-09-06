@@ -208,7 +208,7 @@
         {{-- Row 2: Financials & Earnings --}}
         <div class="row mb-4">
             {{-- Gross Volume --}}
-            <div class="col-md-6 mb-3 mb-md-0">
+            <div class="col-md-4 mb-3 mb-md-0">
                 <div class="metric-card bg-white shadow-sm border-0 h-100 p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="metric-label">Gross Client Volume</span>
@@ -222,17 +222,109 @@
             </div>
 
             {{-- Total Commission Earned --}}
-            <div class="col-md-6 mb-3 mb-md-0">
+            <div class="col-md-4 mb-3 mb-md-0">
                 <div class="metric-card bg-white shadow-sm border-0 h-100 p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="metric-label">Total Commission Earned</span>
+                        <span class="metric-label">Direct Commission</span>
                         <div class="metric-icon bg-purple-soft text-purple">
                             <i class="fas fa-coins"></i>
                         </div>
                     </div>
                     <div class="metric-value text-dark">₹{{ number_format($stats['commission_total'], 2) }}</div>
                     <div class="text-xs text-success mt-1 font-weight-bold">
-                        <i class="fas fa-check-circle mr-1"></i> Credited automatically upon filing each application
+                        <i class="fas fa-check-circle mr-1"></i> Credited automatically on filing
+                    </div>
+                </div>
+            </div>
+
+            {{-- Total Team Margin Earned --}}
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div class="metric-card bg-white shadow-sm border-0 h-100 p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="metric-label">Agency Margins Earned</span>
+                        <div class="metric-icon bg-green-soft text-success">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                    </div>
+                    <div class="metric-value text-dark">₹{{ number_format($totalMarginEarned ?? 0, 2) }}</div>
+                    <div class="text-xs mt-1 d-flex align-items-center justify-content-between flex-wrap gap-1">
+                        <div>
+                            <span class="badge badge-warning text-dark font-weight-bold">Due: ₹{{ number_format($totalMarginAccrued ?? 0, 2) }}</span>
+                            <span class="badge badge-success font-weight-bold">Paid: ₹{{ number_format($totalMarginSettled ?? 0, 2) }}</span>
+                        </div>
+                        @if(($totalMarginAccrued ?? 0) > 0)
+                            <a href="{{ route('admin.margin-payouts.index') }}" class="btn btn-xs btn-warning text-dark font-weight-bold px-2 py-0.5" style="border-radius: 4px;">
+                                Settle &rarr;
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- =================================== --}}
+        {{-- 2.5 AGENCY TEAM / SUB-AGENTS        --}}
+        {{-- =================================== --}}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card modern-card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="m-0 font-weight-bold text-dark" style="font-size: 1.05rem;">
+                            <i class="fas fa-users text-primary mr-2"></i> Agency Team (Sub-Agents)
+                        </h5>
+                        <span class="badge badge-primary px-2.5 py-1 text-xs font-weight-bold">{{ $agent->subAgents->count() }} Members</span>
+                    </div>
+                    <div class="card-body p-0">
+                        @if($agent->subAgents->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                                    <thead class="bg-light text-muted text-xs text-uppercase">
+                                        <tr>
+                                            <th class="border-top-0 pl-3">Sub-Agent Code</th>
+                                            <th class="border-top-0">Name</th>
+                                            <th class="border-top-0">Email / Mobile</th>
+                                            <th class="border-top-0 text-center">Applications Submitted</th>
+                                            <th class="border-top-0 text-center">Status</th>
+                                            <th class="border-top-0 text-right pr-3">Joined Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($agent->subAgents as $sub)
+                                            <tr>
+                                                <td class="pl-3 font-weight-bold text-dark">
+                                                    <span class="agent-code-tag">{{ $sub->agent_code }}</span>
+                                                </td>
+                                                <td class="font-weight-bold text-dark">{{ $sub->name }}</td>
+                                                <td>
+                                                    <div><i class="fas fa-envelope text-muted mr-1"></i> {{ $sub->email }}</div>
+                                                    @if($sub->mobile_number)
+                                                        <small class="text-muted"><i class="fas fa-phone mr-1"></i> {{ $sub->mobile_number }}</small>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center font-weight-bold">
+                                                    <span class="badge badge-info px-2 py-1">{{ $sub->sub_agent_applications_count ?? 0 }}</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    @if($sub->is_active)
+                                                        <span class="custom-badge badge-success-soft">Active</span>
+                                                    @else
+                                                        <span class="custom-badge badge-danger-soft">Suspended</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-right text-muted text-sm pr-3">
+                                                    {{ $sub->created_at?->format('d M Y') ?? 'N/A' }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center py-4 text-muted">
+                                <i class="fas fa-user-friends fa-2x mb-2 text-light"></i>
+                                <p class="mb-0">No sub-agents registered under this agency yet.</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -361,6 +453,7 @@
                             <tr>
                                 <th class="pl-3" style="width: 75px;">App ID</th>
                                 <th>Service Type</th>
+                                <th>Submitted By</th>
                                 <th>Primary Client Data</th>
                                 <th class="text-right">Amount</th>
                                 <th class="text-right">Commission</th>
@@ -386,6 +479,14 @@
                                     </td>
                                     <td>
                                         <div class="font-weight-bold text-dark">{{ $app->service->name ?? 'Service #' . $app->service_id }}</div>
+                                    </td>
+                                    <td>
+                                        @if($app->sub_agent_id && $app->subAgent)
+                                            <span class="badge badge-info text-dark font-weight-bold"><i class="fas fa-users mr-1"></i>{{ $app->subAgent->name }}</span>
+                                            <small class="text-muted d-block font-mono">{{ $app->subAgent->agent_code }}</small>
+                                        @else
+                                            <span class="badge badge-light border">Direct</span>
+                                        @endif
                                     </td>
                                     <td>
                                         @if($primaryVal)
@@ -437,7 +538,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center text-muted py-5">
+                                    <td colspan="10" class="text-center text-muted py-5">
                                         <i class="fas fa-folder-open fa-2x mb-2 d-block text-gray-300"></i>
                                         No applications found under this status filter
                                     </td>

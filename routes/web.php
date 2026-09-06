@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GiftController;
 use App\Http\Controllers\Admin\GiftEligibilityController;
 use App\Http\Controllers\Admin\LeadController;
+use App\Http\Controllers\Admin\MarginPayoutController;
 use App\Http\Controllers\Admin\MarketerController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PayoutController;
@@ -19,6 +20,9 @@ use App\Http\Controllers\Agent\ApplicationController as AgentApplicationControll
 use App\Http\Controllers\Agent\CommissionController;
 use App\Http\Controllers\Agent\CouponController;
 use App\Http\Controllers\Agent\DashboardController as AgentDashboardController;
+use App\Http\Controllers\Agent\MarginLedgerController;
+use App\Http\Controllers\Agent\SubAgentController;
+use App\Http\Controllers\Agent\SubAgentPricingController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -155,9 +159,6 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
     Route::get('/dashboard', [AgentDashboardController::class, 'index'])
         ->name('dashboard');
 
-    Route::get('/gifts', [AgentDashboardController::class, 'gifts'])
-        ->name('gifts'); // view all gifts
-
     Route::get('/applications', [AgentApplicationController::class, 'index'])
         ->name('applications.index');
 
@@ -182,18 +183,6 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
     Route::patch('/applications/{application}/cancel', [AgentApplicationController::class, 'cancel'])
         ->name('applications.cancel');
 
-    Route::get('/commissions', [CommissionController::class, 'commissions'])
-        ->name('commissions');
-
-    Route::get('/commissions/table', [CommissionController::class, 'commissionsTable'])
-        ->name('commissions.table');
-
-    Route::get('/payouts', [CommissionController::class, 'payouts'])
-        ->name('payouts');
-
-    Route::get('/payouts/table', [CommissionController::class, 'payoutsTable'])
-        ->name('payouts.table');
-
     Route::get('/documents/{media}', [AgentApplicationController::class, 'viewDocument'])
         ->name('documents.view');
 
@@ -202,6 +191,52 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
 
     Route::get('/applications/{id}/balance-sheet', [AgentApplicationController::class, 'balanceSheetForm'])->name('applications.balance-sheet');
     Route::post('/applications/{id}/balance-sheet/generate', [AgentApplicationController::class, 'generateBalanceSheetPdf'])->name('applications.balance-sheet.generate');
+
+    // ==========================================
+    // PARENT AGENT ONLY: TEAM, PRICING, COMMISSIONS, PAYOUTS & GIFTS
+    // ==========================================
+    Route::middleware(['parent_agent_only'])->group(function () {
+
+        Route::get('/gifts', [AgentDashboardController::class, 'gifts'])
+            ->name('gifts');
+
+        Route::get('/commissions', [CommissionController::class, 'commissions'])
+            ->name('commissions');
+
+        Route::get('/commissions/table', [CommissionController::class, 'commissionsTable'])
+            ->name('commissions.table');
+
+        Route::get('/payouts', [CommissionController::class, 'payouts'])
+            ->name('payouts');
+
+        Route::get('/payouts/table', [CommissionController::class, 'payoutsTable'])
+            ->name('payouts.table');
+
+        // Team / Sub-Agents Management
+        Route::get('/team', [SubAgentController::class, 'index'])->name('sub-agents.index');
+        Route::get('/team/data', [SubAgentController::class, 'data'])->name('sub-agents.data');
+        Route::get('/team/create', [SubAgentController::class, 'create'])->name('sub-agents.create');
+        Route::post('/team', [SubAgentController::class, 'store'])->name('sub-agents.store');
+        Route::get('/team/bulk-create', [SubAgentController::class, 'bulkCreate'])->name('sub-agents.bulk-create');
+        Route::post('/team/bulk-store', [SubAgentController::class, 'bulkStore'])->name('sub-agents.bulk-store');
+        Route::post('/team/import-csv', [SubAgentController::class, 'importCsv'])->name('sub-agents.import-csv');
+        Route::get('/team/download-template', [SubAgentController::class, 'downloadTemplate'])->name('sub-agents.download-template');
+        Route::get('/team/{subAgent}/edit', [SubAgentController::class, 'edit'])->name('sub-agents.edit');
+        Route::put('/team/{subAgent}', [SubAgentController::class, 'update'])->name('sub-agents.update');
+        Route::patch('/team/{subAgent}/toggle-status', [SubAgentController::class, 'toggleStatus'])->name('sub-agents.toggle-status');
+        Route::post('/team/{subAgent}/reset-password', [SubAgentController::class, 'resetPassword'])->name('sub-agents.reset-password');
+        Route::post('/team/bulk-action', [SubAgentController::class, 'bulkAction'])->name('sub-agents.bulk-action');
+
+        // Custom Team Pricing
+        Route::get('/team-pricing', [SubAgentPricingController::class, 'index'])->name('team-pricing.index');
+        Route::post('/team-pricing', [SubAgentPricingController::class, 'update'])->name('team-pricing.update');
+
+        // Margin Earnings & Refund Ledger
+        Route::get('/margin-ledger', [MarginLedgerController::class, 'index'])->name('margin-ledger.index');
+        Route::get('/margin-ledger/data', [MarginLedgerController::class, 'data'])->name('margin-ledger.data');
+        Route::get('/margin-ledger/payouts', [MarginLedgerController::class, 'payoutsData'])->name('margin-ledger.payouts');
+        Route::post('/margin-ledger/bank-details', [MarginLedgerController::class, 'updateBankDetails'])->name('margin-ledger.update-bank');
+    });
 
 });
 
@@ -336,6 +371,27 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
 
     Route::get('/payouts/{payout}', [PayoutController::class, 'show'])
         ->name('payouts.show');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Agency Margin Payouts (Manual Settlement)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/margin-payouts', [MarginPayoutController::class, 'index'])
+        ->name('margin-payouts.index');
+
+    Route::get('/margin-payouts/table', [MarginPayoutController::class, 'table'])
+        ->name('margin-payouts.table');
+
+    Route::get('/margin-payouts/agent/{agent}/accrued', [MarginPayoutController::class, 'accruedDetails'])
+        ->name('margin-payouts.accrued');
+
+    Route::post('/margin-payouts/agent/{agent}/settle', [MarginPayoutController::class, 'settle'])
+        ->name('margin-payouts.settle');
+
+    Route::get('/margin-payouts/{payout}', [MarginPayoutController::class, 'show'])
+        ->name('margin-payouts.show');
 
     /*
     |--------------------------------------------------------------------------

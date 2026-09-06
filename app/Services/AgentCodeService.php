@@ -27,4 +27,37 @@ class AgentCodeService
 
         return $code;
     }
+
+    public static function generateSubAgentCode(User $parentAgent): string
+    {
+        $parentCode = $parentAgent->agent_code;
+        if (empty($parentCode)) {
+            $parentCode = self::generate();
+            $parentAgent->update(['agent_code' => $parentCode]);
+        }
+
+        // Find existing sub-agents under this parent
+        $existingCodes = User::where('parent_id', $parentAgent->id)
+            ->where('agent_code', 'like', "{$parentCode}-%")
+            ->pluck('agent_code')
+            ->toArray();
+
+        $maxSuffix = 0;
+        foreach ($existingCodes as $existingCode) {
+            $parts = explode('-', $existingCode);
+            $suffix = end($parts);
+            if (is_numeric($suffix)) {
+                $maxSuffix = max($maxSuffix, (int) $suffix);
+            }
+        }
+
+        $nextSuffix = $maxSuffix + 1;
+
+        do {
+            $code = sprintf('%s-%02d', $parentCode, $nextSuffix);
+            $nextSuffix++;
+        } while (User::where('agent_code', $code)->exists());
+
+        return $code;
+    }
 }

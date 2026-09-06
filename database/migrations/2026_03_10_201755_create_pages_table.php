@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('pages')) {
+        if (! Schema::hasTable('pages')) {
             try {
                 Schema::create('pages', function (Blueprint $table) {
                     $table->id();
@@ -21,8 +21,10 @@ return new class extends Migration
                     $table->boolean('is_active')->default(true);
                     $table->timestamps();
                 });
-            } catch (\Exception $e) {
-                if (strpos($e->getMessage(), 'already exists') === false) throw $e;
+            } catch (Exception $e) {
+                if (strpos($e->getMessage(), 'already exists') === false) {
+                    throw $e;
+                }
             }
         }
     }

@@ -421,6 +421,19 @@
                         <input type="date" id="filterDateTo" class="filter-input">
                     </div>
 
+                    @if(!$isSubAgent && isset($subAgents) && $subAgents->count() > 0)
+                    <div class="filter-group">
+                        <label for="filterSubAgent">Team Member</label>
+                        <select id="filterSubAgent" class="filter-input">
+                            <option value="">All (Team + Self)</option>
+                            <option value="self">Direct (Self Only)</option>
+                            @foreach ($subAgents as $sub)
+                                <option value="{{ $sub->id }}">{{ $sub->name }} ({{ $sub->agent_code }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+
                     <div class="filter-actions">
                         <button id="resetFilters" title="Clear Filters">
                             <i class="fas fa-undo-alt"></i>
@@ -437,6 +450,7 @@
                             <tr>
                                 <th>App ID</th>
                                 <th>Service Type</th>
+                                <th>Submitted By</th>
                                 <th>Status</th>
                                 <th>Payment</th>
                                 <th>Amount</th>

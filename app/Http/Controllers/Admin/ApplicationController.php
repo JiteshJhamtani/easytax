@@ -31,7 +31,7 @@ class ApplicationController extends Controller
         };
 
         $services = Service::where('active', true)->get();
-        $agents = User::where('role', 'agent')->get();
+        $agents = User::where('role', 'agent')->whereNull('parent_id')->orderBy('name')->get();
 
         // --- NEW DYNAMIC KPI LOGIC ---
         $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
@@ -91,6 +91,7 @@ class ApplicationController extends Controller
         $query = Application::with([
             'service',
             'agent',
+            'subAgent',
             'media' => function ($q) {
                 $q->whereIn('collection_name', ['itr_acknowledgement', 'computation_sheet', 'balance_sheet']);
             },
@@ -179,8 +180,14 @@ class ApplicationController extends Controller
                 'failed' => (int) ($stats->failed ?? 0),
             ])
             ->filterColumn('agent', function ($query, $keyword) {
-                $query->whereHas('agent', function ($q) use ($keyword) {
-                    $q->where('name', 'like', "%{$keyword}%");
+                $query->where(function ($q) use ($keyword) {
+                    $q->whereHas('agent', function ($q2) use ($keyword) {
+                        $q2->where('name', 'like', "%{$keyword}%")
+                            ->orWhere('agent_code', 'like', "%{$keyword}%");
+                    })->orWhereHas('subAgent', function ($q2) use ($keyword) {
+                        $q2->where('name', 'like', "%{$keyword}%")
+                            ->orWhere('agent_code', 'like', "%{$keyword}%");
+                    });
                 });
             })
             ->filterColumn('service', function ($query, $keyword) {
@@ -269,7 +276,17 @@ class ApplicationController extends Controller
                 return '<a href="'.$url.'" class="btn btn-sm btn-outline-success font-weight-bold" style="white-space: nowrap;"><i class="fas fa-file-excel mr-1"></i> Generate</a>';
             })
             ->addColumn('checkbox', fn ($a) => '<input type="checkbox" class="row-select" value="'.$a->id.'">')
-            ->addColumn('agent', fn ($a) => $a->agent->name ?? 'N/A')
+            ->addColumn('agent', function ($a) {
+                if (! $a->agent) {
+                    return '<span class="text-muted">N/A</span>';
+                }
+                $html = '<div><strong class="text-dark">'.e($a->agent->name).'</strong> <small class="text-muted">('.e($a->agent->agent_code).')</small></div>';
+                if ($a->sub_agent_id && $a->subAgent) {
+                    $html .= '<div class="mt-1"><span class="badge badge-info text-dark" style="font-size: 0.75rem;" title="Submitted by Team Member"><i class="fas fa-users mr-1"></i>Team: '.e($a->subAgent->name).' ('.e($a->subAgent->agent_code).')</span></div>';
+                }
+
+                return $html;
+            })
             ->addColumn('service', fn ($a) => $a->service->name ?? 'N/A')
             ->addColumn('status', fn ($a) => '<span class="badge badge-info">'.($a->status->value ?? $a->status).'</span>')
             ->addColumn('payment', fn ($a) => '<span class="badge badge-success">'.($a->payment_status->value ?? $a->payment_status).'</span>')
@@ -307,7 +324,7 @@ class ApplicationController extends Controller
 
                 return $html;
             })
-            ->rawColumns(['checkbox', 'dynamic_data', 'status', 'payment', 'ack_no', 'computation', 'balance_sheet', 'assign_to', 'actions'])
+            ->rawColumns(['checkbox', 'agent', 'dynamic_data', 'status', 'payment', 'ack_no', 'computation', 'balance_sheet', 'assign_to', 'actions'])
             ->make(true);
     }
 
@@ -557,7 +574,7 @@ class ApplicationController extends Controller
 
     public function show(Application $application)
     {
-        $application->load(['service', 'agent', 'media']);
+        $application->load(['service', 'agent', 'subAgent', 'marginLog', 'media']);
 
         return view('admin.applications.show', compact('application'));
     }
