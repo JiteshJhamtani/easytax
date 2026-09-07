@@ -44,5 +44,9 @@ restore_db.php
 !/public/index.php
 !/public/deploy_sub_agents_migration.php
 CLAUDE.md
-
 switching.md
+
+# Demo data generation & demo tests (do not push to production)
+*SubAgentDemo*
+database/seeders/SubAgentDemoDataSeeder.php
+tests/Feature/SubAgentDemoTest.php
