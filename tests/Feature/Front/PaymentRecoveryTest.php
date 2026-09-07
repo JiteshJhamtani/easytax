@@ -169,3 +169,80 @@ test('checkStatus does not leak payment logs of other agents', function () {
         ->get(route('payment.status', 'TXN_PRIVATE'))
         ->assertJson(['status' => 'SUCCESS']);
 });
+
+test('subagent modal dismiss marks application failed and redirects without error', function () {
+    $parent = User::factory()->create(['role' => 'AGENT', 'parent_id' => null]);
+    $subAgent = User::factory()->create(['role' => 'AGENT', 'parent_id' => $parent->id]);
+
+    $application = pendingApplication([
+        'agent_id' => $parent->id,
+        'sub_agent_id' => $subAgent->id,
+        'amount' => 500,
+        'commission_amount' => 150,
+        'sub_agent_amount' => 400,
+        'sub_agent_commission' => 50,
+        'expected_amount_paise' => 35000,
+    ]);
+
+    $this->mock(RazorpayService::class, function ($mock) {
+        $mock->shouldReceive('fetchOrderStatus')->once()->andReturn('created');
+        $mock->shouldReceive('fetchOrderPayments')->once()->andReturn([]);
+    });
+
+    $this->actingAs($subAgent)
+        ->post(route('payment.failure'), ['razorpay_order_id' => $application->payment_reference])
+        ->assertRedirect(route('payment.result', ['txn' => $application->payment_reference]));
+
+    expect($application->refresh()->payment_status)->toBe(PaymentStatus::FAILED);
+
+    // Subagent can view payment result page
+    $this->actingAs($subAgent)
+        ->get(route('payment.result', ['txn' => $application->payment_reference]))
+        ->assertOk()
+        ->assertSee('#'.$application->id)
+        ->assertSee('350.00');
+
+    // Subagent can check payment status
+    $this->actingAs($subAgent)
+        ->get(route('payment.status', $application->payment_reference))
+        ->assertJson(['status' => 'FAILED']);
+});
+
+test('subagent can retry payment and gets charged their assigned subagent rate', function () {
+    $parent = User::factory()->create(['role' => 'AGENT', 'parent_id' => null]);
+    $subAgent = User::factory()->create(['role' => 'AGENT', 'parent_id' => $parent->id]);
+
+    $application = pendingApplication([
+        'agent_id' => $parent->id,
+        'sub_agent_id' => $subAgent->id,
+        'payment_status' => PaymentStatus::FAILED,
+        'amount' => 500,
+        'commission_amount' => 150,
+        'sub_agent_amount' => 400,
+        'sub_agent_commission' => 50,
+        'expected_amount_paise' => 35000,
+    ]);
+
+    $this->mock(RazorpayService::class, function ($mock) {
+        $mock->shouldReceive('fetchOrderStatus')->once()->andReturn('failed');
+        $mock->shouldReceive('createOrder')->once()->with(
+            Mockery::pattern('/^APP_\d+_RETRY_\d+$/'),
+            35000,
+            Mockery::subset(['retry' => true])
+        )->andReturn([
+            'success' => true,
+            'order_id' => 'order_retry_subagent_999',
+            'amount' => 35000,
+            'currency' => 'INR',
+            'status' => 'created',
+        ]);
+    });
+
+    $this->actingAs($subAgent)
+        ->post(route('applications.retryPayment', $application))
+        ->assertSessionHas('razorpay_order');
+
+    expect($application->refresh()->payment_reference)->toBe('order_retry_subagent_999')
+        ->and($application->payment_status)->toBe(PaymentStatus::PENDING)
+        ->and($application->expected_amount_paise)->toBe(35000);
+});

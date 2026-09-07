@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
 use Razorpay\Api\Api;
+use Razorpay\Api\Collection;
 
 class RazorpayService
 {
@@ -13,11 +14,11 @@ class RazorpayService
 
     protected string $keySecret;
 
-    public function __construct()
+    public function __construct(?Api $api = null)
     {
-        $this->keyId = config('razorpay.key_id');
-        $this->keySecret = config('razorpay.key_secret');
-        $this->api = new Api($this->keyId, $this->keySecret);
+        $this->keyId = (string) config('razorpay.key_id');
+        $this->keySecret = (string) config('razorpay.key_secret');
+        $this->api = $api ?? new Api($this->keyId, $this->keySecret);
     }
 
     /**
@@ -47,7 +48,7 @@ class RazorpayService
                 'currency' => $order->currency,
                 'status' => $order->status,
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Razorpay order creation failed', [
                 'receipt' => $receiptId,
                 'error' => $e->getMessage(),
@@ -75,7 +76,7 @@ class RazorpayService
             $this->api->utility->verifyPaymentSignature($attributes);
 
             return true;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Razorpay signature verification failed', [
                 'order_id' => $orderId,
                 'payment_id' => $paymentId,
@@ -104,7 +105,7 @@ class RazorpayService
                 'contact' => $payment->contact ?? null,
                 'created_at' => $payment->created_at,
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Razorpay payment fetch failed', [
                 'payment_id' => $paymentId,
                 'error' => $e->getMessage(),
@@ -130,7 +131,7 @@ class RazorpayService
             ]);
 
             return true;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Razorpay payment capture failed', [
                 'payment_id' => $paymentId,
                 'error' => $e->getMessage(),
@@ -149,7 +150,7 @@ class RazorpayService
             $order = $this->api->order->fetch($orderId);
 
             return $order->status ?? null;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Razorpay fetch order failed', [
                 'order_id' => $orderId,
                 'error' => $e->getMessage(),
@@ -169,12 +170,39 @@ class RazorpayService
         try {
             $payments = $this->api->order->fetch($orderId)->payments();
 
-            return array_map(fn ($payment) => [
-                'id' => $payment->id,
-                'status' => $payment->status,
-                'amount' => $payment->amount,
-            ], $payments->items ?? []);
-        } catch (\Exception $e) {
+            if (! $payments) {
+                return [];
+            }
+
+            // In Razorpay PHP SDK, if an order has 0 payments, $payments->items is hydrated
+            // as an empty Razorpay\Api\Collection object (due to an SDK isAssocArray([]) bug)
+            // rather than a standard PHP array.
+            $rawItems = $payments->items ?? [];
+            if (! is_array($rawItems)) {
+                $rawItems = ($rawItems instanceof Collection && $rawItems->count() === 0)
+                    ? []
+                    : ($rawItems instanceof \Traversable ? iterator_to_array($rawItems) : []);
+            }
+
+            $result = [];
+            foreach ($rawItems as $payment) {
+                if (is_object($payment)) {
+                    $result[] = [
+                        'id' => (string) ($payment->id ?? ''),
+                        'status' => (string) ($payment->status ?? ''),
+                        'amount' => (int) ($payment->amount ?? 0),
+                    ];
+                } elseif (is_array($payment)) {
+                    $result[] = [
+                        'id' => (string) ($payment['id'] ?? ''),
+                        'status' => (string) ($payment['status'] ?? ''),
+                        'amount' => (int) ($payment['amount'] ?? 0),
+                    ];
+                }
+            }
+
+            return $result;
+        } catch (\Throwable $e) {
             Log::error('Razorpay fetch order payments failed', [
                 'order_id' => $orderId,
                 'error' => $e->getMessage(),
@@ -197,7 +225,7 @@ class RazorpayService
             $expectedSignature = hash_hmac('sha256', $payload, $webhookSecret);
 
             return hash_equals($expectedSignature, $signature);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Razorpay webhook verification failed', [
                 'error' => $e->getMessage(),
             ]);

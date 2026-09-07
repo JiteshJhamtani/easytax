@@ -568,8 +568,12 @@ class ApplicationController extends Controller
             ]);
         }
 
+        $userId = auth()->id();
         $application = Application::where('payment_reference', $transactionId)
-            ->where('agent_id', auth()->id())
+            ->where(function ($q) use ($userId) {
+                $q->where('agent_id', $userId)
+                    ->orWhere('sub_agent_id', $userId);
+            })
             ->first();
 
         if (! $application) {
@@ -590,7 +594,8 @@ class ApplicationController extends Controller
 
     public function retryPayment(Application $application)
     {
-        if ($application->agent_id !== auth()->id()) {
+        $userId = auth()->id();
+        if ($application->agent_id !== $userId && $application->sub_agent_id !== $userId) {
             abort(403);
         }
 
@@ -619,7 +624,8 @@ class ApplicationController extends Controller
             (int) round($amountToPay * 100),
             [
                 'application_id' => $application->id,
-                'agent_id' => auth()->id(),
+                'agent_id' => $application->agent_id,
+                'sub_agent_id' => $application->sub_agent_id,
                 'retry' => true,
             ]
         );
@@ -756,8 +762,12 @@ class ApplicationController extends Controller
     public function checkStatus($transactionId)
     {
         // 1. Try finding application via Razorpay order_id
+        $userId = auth()->id();
         $application = Application::where('payment_reference', $transactionId)
-            ->where('agent_id', auth()->id())
+            ->where(function ($q) use ($userId) {
+                $q->where('agent_id', $userId)
+                    ->orWhere('sub_agent_id', $userId);
+            })
             ->first();
 
         if ($application) {

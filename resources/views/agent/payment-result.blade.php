@@ -225,7 +225,12 @@
                         </div>
                         <div class="meta-row">
                             <span class="label">Total Amount</span>
-                            <span class="value amount">₹{{ number_format($application->amount, 2) }}</span>
+                            @php
+                                $displayAmount = ($application->sub_agent_id && $application->sub_agent_amount !== null)
+                                    ? max(0, (float) $application->sub_agent_amount - (float) ($application->sub_agent_commission ?? 0))
+                                    : max(0, (float) $application->amount - (float) $application->commission_amount);
+                            @endphp
+                            <span class="value amount">₹{{ number_format($displayAmount, 2) }}</span>
                         </div>
                     </div>
                 @endif
