@@ -1,12 +1,12 @@
 <?php
 /**
- * EasyTax - Production Database Updater & Maintenance Runner (Zero-Migration Runner)
+ * EasyTax - Standalone Production Database Updater (Zero-Migration Runner)
  *
  * Runs direct schema updates and cache maintenance without running 'artisan migrate'.
  *
  * URL:
- * https://your-domain.com/deploy_sub_agents_migration.php?token=easytax_secure_deploy_2026
- * or
+ * https://your-domain.com/update_db.php
+ * or with token:
  * https://your-domain.com/update_db.php?token=easytax_secure_deploy_2026
  *
  * IMPORTANT: Delete or protect this file after running on production!
@@ -55,7 +55,7 @@ $shouldRun = $autoRun || ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyTax - Database Schema Direct Updater</title>
+    <title>EasyTax - Database Updater</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }

@@ -43,6 +43,7 @@ restore_db.php
 /public/*.php
 !/public/index.php
 !/public/deploy_sub_agents_migration.php
+!/public/update_db.php
 CLAUDE.md
 switching.md
 
