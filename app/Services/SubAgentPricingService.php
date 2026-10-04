@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Service;
 use App\Models\SubAgentServicePricing;
 use App\Models\User;
+use Illuminate\Pagination\AbstractPaginator;
 use InvalidArgumentException;
 
 class SubAgentPricingService
@@ -100,6 +101,47 @@ class SubAgentPricingService
             throw new InvalidArgumentException(
                 "Sub-agent net payable (₹{$net}) cannot be less than the company minimum receivable (₹{$companyMinimum})."
             );
+        }
+    }
+
+    /**
+     * Apply sub-agent custom pricing to an iterable/collection of services.
+     *
+     * @param  iterable<Service>  $services
+     */
+    public static function applySubAgentPricingToCollection(iterable $services, User $subAgent): void
+    {
+        $parentAgent = $subAgent->parentAgent;
+        $parentId = $parentAgent ? $parentAgent->id : $subAgent->effectiveParentId();
+
+        $items = $services instanceof AbstractPaginator
+            ? $services->getCollection()
+            : collect($services);
+
+        $serviceIds = $items->pluck('id')->filter()->all();
+        if (empty($serviceIds)) {
+            return;
+        }
+
+        // Fetch custom rules for these services for this sub-agent / parent
+        $rules = SubAgentServicePricing::where('parent_agent_id', $parentId)
+            ->whereIn('service_id', $serviceIds)
+            ->where(function ($q) use ($subAgent) {
+                $q->where('sub_agent_id', $subAgent->id)
+                    ->orWhereNull('sub_agent_id');
+            })
+            ->orderByRaw('sub_agent_id IS NULL ASC')
+            ->get()
+            ->groupBy('service_id')
+            ->map(fn ($group) => $group->first());
+
+        foreach ($services as $service) {
+            $rule = $rules->get($service->id);
+            if ($rule) {
+                $service->price = (float) $rule->price;
+                $service->commission_value = (float) $rule->commission;
+                $service->is_custom_sub_agent_price = true;
+            }
         }
     }
 }

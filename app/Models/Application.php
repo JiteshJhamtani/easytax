@@ -240,4 +240,32 @@ class Application extends Model implements HasMedia
 
         return $query->where('session_label', $currentLabel);
     }
+
+    /**
+     * Get the effective amount for a specific viewer (sub-agent sees their sub_agent_amount if set).
+     */
+    public function getEffectiveAmount(?User $viewer = null): float
+    {
+        $viewer = $viewer ?? auth()->user();
+
+        if ($viewer && $viewer->isSubAgent() && $this->sub_agent_amount !== null) {
+            return (float) $this->sub_agent_amount;
+        }
+
+        return (float) ($this->amount ?? 0);
+    }
+
+    /**
+     * Get the effective commission for a specific viewer.
+     */
+    public function getEffectiveCommission(?User $viewer = null): float
+    {
+        $viewer = $viewer ?? auth()->user();
+
+        if ($viewer && $viewer->isSubAgent() && $this->sub_agent_commission !== null) {
+            return (float) $this->sub_agent_commission;
+        }
+
+        return (float) ($this->commission_amount ?? 0);
+    }
 }

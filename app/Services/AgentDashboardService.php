@@ -40,14 +40,16 @@ class AgentDashboardService
                 $query->where('agent_id', $agentId);
             }
 
+            $commissionCol = $subAgentId ? 'COALESCE(sub_agent_commission, 0)' : 'commission_amount';
+
             return $query->selectRaw("
                     COUNT(*) as total_applications,
                     SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed_applications,
                     SUM(CASE WHEN status = 'IN_PROGRESS' THEN 1 ELSE 0 END) as pending_applications,
                     SUM(CASE WHEN payment_status = 'PAID' THEN 1 ELSE 0 END) as successful_payments,
-                    SUM(commission_amount) as total_commission,
-                    SUM(CASE WHEN payout_id IS NULL THEN commission_amount ELSE 0 END) as pending_commission,
-                    SUM(CASE WHEN payout_id IS NOT NULL THEN commission_amount ELSE 0 END) as paid_commission,
+                    SUM({$commissionCol}) as total_commission,
+                    SUM(CASE WHEN payout_id IS NULL THEN {$commissionCol} ELSE 0 END) as pending_commission,
+                    SUM(CASE WHEN payout_id IS NOT NULL THEN {$commissionCol} ELSE 0 END) as paid_commission,
                     SUM(parent_margin) as total_parent_margin
                 ")
                 ->first();

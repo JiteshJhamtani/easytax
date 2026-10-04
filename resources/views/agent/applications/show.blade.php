@@ -58,7 +58,7 @@
                             <div>
                                 <h6 class="text-muted text-uppercase text-xs font-weight-bold mb-1">Total Amount</h6>
                                 <h4 class="mb-0 font-weight-bold text-dark">
-                                    ₹{{ number_format($application->amount ?? 0, 2) }}</h4>
+                                    ₹{{ number_format($application->getEffectiveAmount() ?? 0, 2) }}</h4>
                             </div>
                         </div>
                     </div>
@@ -72,7 +72,7 @@
                             <div>
                                 <h6 class="text-muted text-uppercase text-xs font-weight-bold mb-1">Commission</h6>
                                 <h4 class="mb-0 font-weight-bold text-dark">
-                                    ₹{{ number_format($application->commission_amount ?? 0, 2) }}</h4>
+                                    ₹{{ number_format($application->getEffectiveCommission() ?? 0, 2) }}</h4>
                             </div>
                         </div>
                     </div>

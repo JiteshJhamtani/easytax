@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\Gift;
 use App\Models\Service;
+use App\Models\SubAgentServicePricing;
+use App\Services\SubAgentPricingService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -20,20 +22,13 @@ class ServiceController extends Controller
             ->orderBy('name', 'asc')       // If numbers are the same, sorts alphabetically
             ->paginate(12);
 
+        $currentUser = Auth::user();
+        if ($currentUser && $currentUser->isSubAgent()) {
+            SubAgentPricingService::applySubAgentPricingToCollection($services, $currentUser);
+        }
+
         return view('front.pages.services.index', compact('services'));
     }
-    // public function show($slug)
-    // {
-    //     $service = Service::where('slug', $slug)
-    //         ->where('active', true)
-    //         ->firstOrFail();
-
-    //     $form = Form::fromService($service);
-
-    //     $giftMilestones = $this->getGiftMilestones($service);
-
-    //     return view('front.pages.services.show', compact('service', 'form', 'giftMilestones'));
-    // }
 
     public function show(string $slug)
     {
@@ -43,9 +38,27 @@ class ServiceController extends Controller
 
         $form = Form::fromService($service);
 
-        // Commission vars for the payment confirm popup
-        $commissionAmount = $service->calculateCommission((float) $service->price);
-        $amountToPay = max(0, $service->price - $commissionAmount);
+        $currentUser = Auth::user();
+        $hasCustomSubAgentPricing = false;
+
+        if ($currentUser && $currentUser->isSubAgent()) {
+            $pricing = SubAgentPricingService::resolveForSubAgent($service, $currentUser);
+            $service->price = $pricing['sub_agent_price'];
+            $service->commission_value = $pricing['sub_agent_commission'];
+            $commissionAmount = $pricing['sub_agent_commission'];
+            $amountToPay = $pricing['sub_agent_payable'];
+
+            $hasCustomSubAgentPricing = SubAgentServicePricing::where('parent_agent_id', $currentUser->effectiveParentId())
+                ->where('service_id', $service->id)
+                ->where(function ($q) use ($currentUser) {
+                    $q->where('sub_agent_id', $currentUser->id)
+                        ->orWhereNull('sub_agent_id');
+                })->exists();
+        } else {
+            // Commission vars for the payment confirm popup
+            $commissionAmount = $service->calculateCommission((float) $service->price);
+            $amountToPay = max(0, $service->price - $commissionAmount);
+        }
 
         // Gift milestones (existing logic — keep as-is)
         $giftMilestones = $this->getGiftMilestones($service);
@@ -56,6 +69,7 @@ class ServiceController extends Controller
             'commissionAmount',
             'amountToPay',
             'giftMilestones',
+            'hasCustomSubAgentPricing',
         ));
     }
     // ── Gift milestone data for the progress bar ──────────────────────────

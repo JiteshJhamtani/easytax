@@ -417,6 +417,7 @@
         // ── 1. GLOBAL VARIABLES & PRICING RULES ──
         const rawRules = @json($service->pricingRules ?? []);
         const pricingRules = Array.isArray(rawRules) ? rawRules : Object.values(rawRules);
+        const hasCustomSubAgentPricing = @json($hasCustomSubAgentPricing ?? false);
         let appliedPromoBonus = 0;
         let appliedPromoCode = '';
 
@@ -820,8 +821,8 @@
                        (normalizeValue(rule.itr_salary)        === '' || normalizeValue(rule.itr_salary)        === 'any' || normalizeValue(rule.itr_salary)        === s_sal);
             });
 
-            let finalTotal   = (match ? parseFloat(match.base_price)        : {{ $service->price ?? 0 }}) * yearMultiplier;
-            let baseComm     = (match ? parseFloat(match.commission_amount) : {{ $service->commission_value ?? 0 }}) * yearMultiplier;
+            let finalTotal   = (hasCustomSubAgentPricing ? {{ $service->price ?? 0 }} : (match ? parseFloat(match.base_price) : {{ $service->price ?? 0 }})) * yearMultiplier;
+            let baseComm     = (hasCustomSubAgentPricing ? {{ $commissionAmount ?? 0 }} : (match ? parseFloat(match.commission_amount) : {{ $service->commission_value ?? 0 }})) * yearMultiplier;
             
             let totalComm = baseComm + appliedPromoBonus;
             let walletDeduct = finalTotal - totalComm;

@@ -174,7 +174,7 @@ class ApplicationController extends Controller
             ->addColumn('service', fn ($a) => $a->service->name)
             ->addColumn('status', fn ($a) => '<span class="badge badge-info">'.$a->status->value.'</span>')
             ->addColumn('payment', fn ($a) => '<span class="badge badge-success">'.$a->payment_status->value.'</span>')
-            ->addColumn('amount', fn ($a) => '₹'.number_format($a->amount, 2))
+            ->addColumn('amount', fn ($a) => '₹'.number_format($a->getEffectiveAmount($user), 2))
             ->addColumn('date', fn ($a) => $a->created_at->format('d M Y'))
 
             // 1. ACK NUMBER COLUMN
@@ -407,7 +407,7 @@ class ApplicationController extends Controller
             return $val;
         };
 
-        $generateCsvForGroup = function ($apps) use ($sanitize) {
+        $generateCsvForGroup = function ($apps) use ($sanitize, $user) {
             $dynamicKeys = [];
             foreach ($apps as $app) {
                 $formData = is_string($app->form_data) ? json_decode($app->form_data, true) : $app->form_data;
@@ -444,7 +444,7 @@ class ApplicationController extends Controller
                     $sanitize($app->service->name ?? 'N/A'),
                     $sanitize($statusValue),
                     $sanitize($paymentValue),
-                    $sanitize($app->amount),
+                    $sanitize($app->getEffectiveAmount($user)),
                     $sanitize($app->created_at?->format('d M Y h:i A') ?? 'N/A'),
                 ];
 
@@ -561,7 +561,7 @@ class ApplicationController extends Controller
         fputcsv($file, ['Service', $sanitize($application->service->name ?? 'N/A')]);
         fputcsv($file, ['Status', $sanitize($statusValue)]);
         fputcsv($file, ['Payment', $sanitize($paymentValue)]);
-        fputcsv($file, ['Amount', $sanitize($application->amount)]);
+        fputcsv($file, ['Amount', $sanitize($application->getEffectiveAmount())]);
         fputcsv($file, ['Submitted Date', $sanitize($application->created_at?->format('d M Y h:i A') ?? 'N/A')]);
         fputcsv($file, ['', '']); // empty line
 

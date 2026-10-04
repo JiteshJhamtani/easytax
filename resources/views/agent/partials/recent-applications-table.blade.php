@@ -40,7 +40,7 @@
                             @endphp
                             <span class="premium-badge {{ $statusClass }}">{{ ucfirst($app->status->value ?? 'Pending') }}</span>
                         </td>
-                        <td class="text-right align-middle font-weight-bold text-dark">₹{{ number_format($app->amount, 2) }}</td>
+                        <td class="text-right align-middle font-weight-bold text-dark">₹{{ number_format($app->getEffectiveAmount(), 2) }}</td>
                         <td class="text-right align-middle pr-4">
                             <a href="{{ route('agent.applications.show', $app->id) }}" class="btn-premium-view">
                                 View <i class="fas fa-arrow-right ml-1"></i>
