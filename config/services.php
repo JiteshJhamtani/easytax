@@ -41,7 +41,12 @@ return [
 
     'easytax' => [
         'external_secret' => env('EASYTAX_EXTERNAL_SECRET', 'et_live_sec_89347519283741928347'),
-        'drupal_webhook_url' => env('DRUPAL_WEBHOOK_URL', 'http://easytaxdesign.local/api/v1/filing/status-sync'),
+        'drupal_webhook_url' => env(
+            'DRUPAL_WEBHOOK_URL',
+            str_contains(env('APP_URL', ''), 'easytax.live') || env('APP_ENV') === 'production'
+                ? 'https://easytax.live/api/v1/filing/status-sync'
+                : 'http://easytaxdesign.local/api/v1/filing/status-sync'
+        ),
     ],
 
 ];

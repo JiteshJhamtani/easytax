@@ -124,10 +124,62 @@ $shouldRun = $autoRun || (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && is
             };
 
             try {
-                $log('Starting Multi-Tier Network Deployment...', 'info');
+                $log('Starting EasyTax Production Deployment...', 'info');
 
                 // ========================================================
-                // 1. SCHEMA UPDATES: users table
+                // 0. ARTISAN MIGRATIONS (Standard Runner)
+                // ========================================================
+                $log('Running database migrations via artisan migrate --force...', 'info');
+                try {
+                    Artisan::call('migrate', ['--force' => true]);
+                    $migrateOutput = trim(Artisan::output());
+                    $log('Artisan migrate: '.($migrateOutput ?: 'No pending migrations.'), 'ok');
+                } catch (Throwable $e) {
+                    $log('Artisan migrate warning: '.$e->getMessage(), 'warn');
+                }
+
+                // ========================================================
+                // 1. FAIL-SAFE SCHEMA UPDATES: applications table (Website Direct Intake)
+                // ========================================================
+                $log('Checking applications table schema...', 'info');
+                if (Schema::hasTable('applications')) {
+                    Schema::table('applications', function (Blueprint $table) use ($log) {
+                        if (! Schema::hasColumn('applications', 'source')) {
+                            $table->string('source', 50)->default('AGENT')->after('id')->index();
+                            $log('Created column applications.source (VARCHAR 50, Default AGENT, Indexed)', 'ok');
+                        } else {
+                            $log('Column applications.source already exists.', 'info');
+                        }
+
+                        if (! Schema::hasColumn('applications', 'customer_name')) {
+                            $table->string('customer_name')->nullable()->after('sub_agent_id');
+                            $log('Created column applications.customer_name', 'ok');
+                        }
+
+                        if (! Schema::hasColumn('applications', 'customer_phone')) {
+                            $table->string('customer_phone', 50)->nullable()->after('customer_name')->index();
+                            $log('Created column applications.customer_phone (Indexed)', 'ok');
+                        }
+
+                        if (! Schema::hasColumn('applications', 'customer_email')) {
+                            $table->string('customer_email')->nullable()->after('customer_phone');
+                            $log('Created column applications.customer_email', 'ok');
+                        }
+
+                        if (! Schema::hasColumn('applications', 'service_name_fallback')) {
+                            $table->string('service_name_fallback')->nullable()->after('customer_email');
+                            $log('Created column applications.service_name_fallback', 'ok');
+                        }
+
+                        if (! Schema::hasColumn('applications', 'idempotency_key')) {
+                            $table->string('idempotency_key')->nullable()->unique()->after('service_name_fallback');
+                            $log('Created column applications.idempotency_key (Unique)', 'ok');
+                        }
+                    });
+                }
+
+                // ========================================================
+                // 2. SCHEMA UPDATES: users table
                 // ========================================================
                 $log('Checking users table schema...', 'info');
 
@@ -258,7 +310,16 @@ $shouldRun = $autoRun || (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && is
                 Artisan::call('optimize:clear');
                 $log('Ran artisan optimize:clear successfully.', 'ok');
 
-                $log('Multi-Tier Network Deployment Completed Successfully!', 'ok');
+                try {
+                    Artisan::call('config:cache');
+                    Artisan::call('route:cache');
+                    Artisan::call('view:cache');
+                    $log('Rebuilt config, route, and view caches.', 'ok');
+                } catch (Throwable $e) {
+                    $log('Cache rebuild notice: '.$e->getMessage(), 'info');
+                }
+
+                $log('EasyTax Production Deployment Completed Successfully!', 'ok');
 
             } catch (Throwable $e) {
                 $log('FATAL ERROR: '.$e->getMessage(), 'err');
