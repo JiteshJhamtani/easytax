@@ -88,13 +88,13 @@ php artisan migrate
 In `config/services.php`, add:
 ```php
 'easytax' => [
-    'external_secret' => env('EASYTAX_EXTERNAL_SECRET', 'et_live_sec_89347519283741928347'),
+    'external_secret' => env('EASYTAX_EXTERNAL_SECRET'),
     'drupal_webhook_url' => env('DRUPAL_WEBHOOK_URL', 'https://easytax.live/api/v1/filing/status-sync'),
 ],
 ```
 Add to your `.env`:
 ```env
-EASYTAX_EXTERNAL_SECRET=et_live_sec_89347519283741928347
+EASYTAX_EXTERNAL_SECRET=your_secure_secret_here
 DRUPAL_WEBHOOK_URL=https://easytax.live/api/v1/filing/status-sync
 ```
 
@@ -344,7 +344,7 @@ Test the endpoint locally via curl:
 ```bash
 curl -X POST http://127.0.0.1:8000/api/v1/applications/external-intake \
   -H "Content-Type: application/json" \
-  -H "X-EasyTax-Secret: et_live_sec_89347519283741928347" \
+  -H "X-EasyTax-Secret: your_secure_secret_here" \
   -d '{
     "idempotency_key": "test_pay_12345",
     "service_slug": "ngo-audit",

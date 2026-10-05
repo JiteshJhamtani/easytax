@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     Storage::fake('private');
+    config(['services.easytax.external_secret' => 'test_intake_secret_key_12345']);
 });
 
 it('rejects external intake requests with missing or invalid secret', function () {
@@ -45,7 +46,7 @@ it('rejects external intake requests with missing or invalid secret', function (
 });
 
 it('creates retail application and attaches documents successfully', function () {
-    $secret = config('services.easytax.external_secret', 'et_live_sec_89347519283741928347');
+    $secret = config('services.easytax.external_secret');
     $service = Service::firstOrCreate(
         ['slug' => 'gst-registration'],
         ['name' => 'GST Registration', 'price' => 999, 'active' => true]
@@ -114,7 +115,7 @@ it('creates retail application and attaches documents successfully', function ()
 });
 
 it('guarantees idempotency on duplicate submissions', function () {
-    $secret = config('services.easytax.external_secret', 'et_live_sec_89347519283741928347');
+    $secret = config('services.easytax.external_secret');
     $service = Service::firstOrCreate(
         ['slug' => 'gst-registration'],
         ['name' => 'GST Registration', 'price' => 999, 'active' => true]
@@ -158,7 +159,7 @@ it('guarantees idempotency on duplicate submissions', function () {
 });
 
 it('falls back to default service for unmapped retail services while preserving fallback name', function () {
-    $secret = config('services.easytax.external_secret', 'et_live_sec_89347519283741928347');
+    $secret = config('services.easytax.external_secret');
 
     $payload = [
         'idempotency_key' => 'unmapped_service_order_777',
