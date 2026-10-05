@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AgentMarginLog;
 use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
@@ -864,6 +865,19 @@ class ApplicationController extends Controller
         ]);
 
         $application->update(['payment_status' => $request->payment_status]);
+
+        if ($request->payment_status === 'REFUNDED') {
+            if ($application->parent_margin_status === 'ACCRUED') {
+                $application->update(['parent_margin_status' => 'CANCELLED']);
+            }
+
+            AgentMarginLog::where('application_id', $application->id)
+                ->where('status', 'ACCRUED')
+                ->update([
+                    'status' => 'CANCELLED',
+                    'notes' => DB::raw("CONCAT(COALESCE(notes, ''), ' [Application payment refunded by admin]')"),
+                ]);
+        }
 
         activity('application')
             ->performedOn($application)

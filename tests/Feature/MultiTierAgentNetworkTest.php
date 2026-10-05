@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\ParentMarginCreditedNotification;
 use App\Services\AgentCodeService;
 use App\Services\AgentLineageService;
+use App\Services\AgentMarginPayoutService;
 use App\Services\ParentMarginRefundService;
 use App\Services\SubAgentPricingService;
 use Illuminate\Support\Facades\Notification;
@@ -429,4 +430,266 @@ it('allows child agent B to recruit a new sub-agent and sets lineage automatical
         ->and($newAgent->ancestry_path)->toBe("/{$this->rootAgentA->id}/{$this->childAgentB->id}/{$newAgent->id}/")
         ->and($newAgent->depth)->toBe(3)
         ->and($newAgent->agent_code)->toStartWith($this->childAgentB->agent_code);
+});
+
+it('handles intermediate tier without custom pricing by falling back to parent cost with 0 markup', function () {
+    // Only A sets pricing for B: Price = 1100, Commission = 100 -> B payable = 1000. (A margin = 200)
+    SubAgentServicePricing::create([
+        'parent_agent_id' => $this->rootAgentA->id,
+        'sub_agent_id' => $this->childAgentB->id,
+        'service_id' => $this->service->id,
+        'price' => 1100.00,
+        'commission' => 100.00,
+    ]);
+
+    // B does NOT set pricing for C.
+    // Pricing for C should inherit B's cost (1000) with 0 markup for B.
+    $pricing = SubAgentPricingService::resolveForSubAgent($this->service, $this->childAgentC);
+
+    expect($pricing['company_minimum'])->toBe(800.00)
+        ->and($pricing['sub_agent_payable'])->toBe(1000.00)
+        ->and($pricing['parent_margin'])->toBe(200.00); // Only A's margin
+
+    expect($pricing['margins_breakdown'])->toHaveCount(1);
+    expect($pricing['margins_breakdown'][0]['agent_id'])->toBe($this->rootAgentA->id)
+        ->and($pricing['margins_breakdown'][0]['margin'])->toBe(200.00)
+        ->and($pricing['margins_breakdown'][0]['tier_level'])->toBe(2);
+});
+
+it('does not generate margin logs when root agent files directly', function () {
+    $pricing = SubAgentPricingService::resolveForSubAgent($this->service, $this->rootAgentA);
+
+    expect($pricing['company_minimum'])->toBe(800.00)
+        ->and($pricing['sub_agent_payable'])->toBe(800.00)
+        ->and($pricing['parent_margin'])->toBe(0.0)
+        ->and($pricing['margins_breakdown'])->toBeEmpty();
+
+    $app = Application::create([
+        'agent_id' => $this->rootAgentA->id,
+        'sub_agent_id' => null,
+        'service_id' => $this->service->id,
+        'form_data' => ['applicant_name' => 'Root Client'],
+        'amount' => 1000.00,
+        'commission_amount' => 200.00,
+        'company_minimum_amount' => 800.00,
+        'parent_margin' => 0.0,
+        'parent_margin_status' => 'NONE',
+        'status' => 'SUBMITTED',
+        'payment_status' => 'PAID',
+    ]);
+
+    $result = ParentMarginRefundService::processMarginRefund($app);
+    expect($result)->toBeNull();
+    expect(AgentMarginLog::where('application_id', $app->id)->count())->toBe(0);
+});
+
+it('isolates downline visibility across complex branching tree structures', function () {
+    // Branch 1: A -> B -> C -> D (already set up in beforeEach)
+    // Branch 2: A -> B2 -> C2
+    $agentB2 = User::factory()->create([
+        'name' => 'Branch 2 Agent B2',
+        'role' => 'AGENT',
+        'is_active' => true,
+        'parent_id' => $this->rootAgentA->id,
+        'can_recruit' => true,
+    ]);
+    AgentLineageService::assignParent($agentB2, $this->rootAgentA);
+
+    $agentC2 = User::factory()->create([
+        'name' => 'Branch 2 Agent C2',
+        'role' => 'AGENT',
+        'is_active' => true,
+        'parent_id' => $agentB2->id,
+        'can_recruit' => false,
+    ]);
+    AgentLineageService::assignParent($agentC2, $agentB2);
+
+    // Root A descendants includes all branches: B, C, D, B2, C2
+    $descendantsA = AgentLineageService::getDescendantIds($this->rootAgentA);
+    expect($descendantsA)->toHaveCount(5)
+        ->and($descendantsA)->toContain($this->childAgentB->id, $this->childAgentC->id, $this->leafAgentD->id, $agentB2->id, $agentC2->id);
+
+    // B1 descendants only contains C and D (NOT B2 or C2)
+    $descendantsB1 = AgentLineageService::getDescendantIds($this->childAgentB);
+    expect($descendantsB1)->toHaveCount(2)
+        ->and($descendantsB1)->toBe([$this->childAgentC->id, $this->leafAgentD->id])
+        ->and($descendantsB1)->not->toContain($agentB2->id, $agentC2->id);
+
+    // B2 descendants only contains C2
+    $descendantsB2 = AgentLineageService::getDescendantIds($agentB2);
+    expect($descendantsB2)->toHaveCount(1)
+        ->and($descendantsB2)->toBe([$agentC2->id]);
+});
+
+it('voids all multi-tier accrued margin logs when an application is cancelled', function () {
+    $app = Application::create([
+        'agent_id' => $this->childAgentB->id,
+        'sub_agent_id' => $this->childAgentC->id,
+        'service_id' => $this->service->id,
+        'form_data' => ['applicant_name' => 'Cancel Test Client'],
+        'amount' => 1350.00,
+        'commission_amount' => 50.00,
+        'parent_margin' => 500.00,
+        'parent_margin_status' => 'ACCRUED',
+        'status' => 'SUBMITTED',
+        'payment_status' => 'PAID',
+    ]);
+
+    AgentMarginLog::create([
+        'parent_agent_id' => $this->childAgentB->id,
+        'sub_agent_id' => $this->childAgentC->id,
+        'application_id' => $app->id,
+        'sub_agent_paid' => 1300.00,
+        'company_retained' => 800.00,
+        'margin_amount' => 300.00,
+        'tier_level' => 1,
+        'status' => 'ACCRUED',
+    ]);
+
+    AgentMarginLog::create([
+        'parent_agent_id' => $this->rootAgentA->id,
+        'sub_agent_id' => $this->childAgentC->id,
+        'application_id' => $app->id,
+        'sub_agent_paid' => 1300.00,
+        'company_retained' => 800.00,
+        'margin_amount' => 200.00,
+        'tier_level' => 2,
+        'status' => 'ACCRUED',
+    ]);
+
+    // Agent C cancels application
+    $this->actingAs($this->childAgentC)
+        ->patch(route('agent.applications.cancel', $app->id))
+        ->assertRedirect();
+
+    $app->refresh();
+    expect($app->status->value)->toBe('CANCELLED')
+        ->and($app->parent_margin_status)->toBe('CANCELLED');
+
+    // Both Tier 1 and Tier 2 logs must be CANCELLED
+    $logs = AgentMarginLog::where('application_id', $app->id)->get();
+    expect($logs)->toHaveCount(2);
+    expect($logs->every(fn ($l) => $l->status === 'CANCELLED'))->toBeTrue();
+});
+
+it('voids accrued margins when application payment is marked REFUNDED by admin', function () {
+    $admin = User::factory()->create(['role' => 'ADMIN', 'is_active' => true]);
+
+    $app = Application::create([
+        'agent_id' => $this->childAgentB->id,
+        'sub_agent_id' => $this->childAgentC->id,
+        'service_id' => $this->service->id,
+        'form_data' => ['applicant_name' => 'Refund Test Client'],
+        'amount' => 1350.00,
+        'commission_amount' => 50.00,
+        'parent_margin' => 500.00,
+        'parent_margin_status' => 'ACCRUED',
+        'status' => 'SUBMITTED',
+        'payment_status' => 'PAID',
+    ]);
+
+    AgentMarginLog::create([
+        'parent_agent_id' => $this->childAgentB->id,
+        'sub_agent_id' => $this->childAgentC->id,
+        'application_id' => $app->id,
+        'sub_agent_paid' => 1300.00,
+        'company_retained' => 800.00,
+        'margin_amount' => 300.00,
+        'tier_level' => 1,
+        'status' => 'ACCRUED',
+    ]);
+
+    AgentMarginLog::create([
+        'parent_agent_id' => $this->rootAgentA->id,
+        'sub_agent_id' => $this->childAgentC->id,
+        'application_id' => $app->id,
+        'sub_agent_paid' => 1300.00,
+        'company_retained' => 800.00,
+        'margin_amount' => 200.00,
+        'tier_level' => 2,
+        'status' => 'ACCRUED',
+    ]);
+
+    // Admin marks payment refunded
+    $this->actingAs($admin)
+        ->patch(route('admin.applications.updatePaymentStatus', $app->id), [
+            'payment_status' => 'REFUNDED',
+        ])
+        ->assertRedirect();
+
+    $app->refresh();
+    expect($app->payment_status->value)->toBe('REFUNDED')
+        ->and($app->parent_margin_status)->toBe('CANCELLED');
+
+    $logs = AgentMarginLog::where('application_id', $app->id)->get();
+    expect($logs->every(fn ($l) => $l->status === 'CANCELLED'))->toBeTrue();
+});
+
+it('supports partial settlement across multiple upline tiers without conflict', function () {
+    $admin = User::factory()->create(['role' => 'ADMIN', 'is_active' => true]);
+
+    $app = Application::create([
+        'agent_id' => $this->childAgentB->id,
+        'sub_agent_id' => $this->childAgentC->id,
+        'service_id' => $this->service->id,
+        'form_data' => ['applicant_name' => 'Partial Settlement Client'],
+        'amount' => 1350.00,
+        'commission_amount' => 50.00,
+        'parent_margin' => 500.00,
+        'parent_margin_status' => 'ACCRUED',
+        'status' => 'SUBMITTED',
+        'payment_status' => 'PAID',
+    ]);
+
+    $logB = AgentMarginLog::create([
+        'parent_agent_id' => $this->childAgentB->id,
+        'sub_agent_id' => $this->childAgentC->id,
+        'application_id' => $app->id,
+        'sub_agent_paid' => 1300.00,
+        'company_retained' => 800.00,
+        'margin_amount' => 300.00,
+        'tier_level' => 1,
+        'status' => 'ACCRUED',
+    ]);
+
+    $logA = AgentMarginLog::create([
+        'parent_agent_id' => $this->rootAgentA->id,
+        'sub_agent_id' => $this->childAgentC->id,
+        'application_id' => $app->id,
+        'sub_agent_paid' => 1300.00,
+        'company_retained' => 800.00,
+        'margin_amount' => 200.00,
+        'tier_level' => 2,
+        'status' => 'ACCRUED',
+    ]);
+
+    $payoutService = app(AgentMarginPayoutService::class);
+
+    // Admin settles Parent B's margins first (Tier 1: 300)
+    $payoutService->settle($admin, $this->childAgentB, [
+        'transaction_reference' => 'UTR_B_123456',
+        'payment_method' => 'bank_transfer',
+        'log_ids' => [$logB->id],
+    ]);
+
+    $logB->refresh();
+    $logA->refresh();
+    $app->refresh();
+
+    expect($logB->status)->toBe('PAID')
+        ->and($logA->status)->toBe('ACCRUED') // A is still waiting for payout!
+        ->and($app->parent_margin_status)->toBe('PARTIALLY_SETTLED');
+
+    // Admin now settles Grandparent A's margins (Tier 2: 200)
+    $payoutService->settle($admin, $this->rootAgentA, [
+        'transaction_reference' => 'UTR_A_987654',
+        'payment_method' => 'upi',
+        'log_ids' => [$logA->id],
+    ]);
+
+    $logA->refresh();
+    $app->refresh();
+
+    expect($logA->status)->toBe('PAID')
+        ->and($app->parent_margin_status)->toBe('PAID');
 });

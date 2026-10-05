@@ -125,11 +125,17 @@ class AgentMarginPayoutService
                 'notes' => DB::raw("CONCAT(COALESCE(notes, ''), ' [Settled in {$payoutNumber} on {$paymentDate->format('Y-m-d')}]')"),
             ]);
 
-            // Mark underlying applications as PAID
-            Application::whereIn('id', $appIds)->update([
-                'parent_margin_status' => 'PAID',
-                'parent_margin_refunded_at' => now(),
-            ]);
+            // Mark underlying applications as PAID (or PARTIALLY_SETTLED if other upline tiers are still accrued)
+            foreach (array_unique($appIds) as $appId) {
+                $hasRemainingAccrued = AgentMarginLog::where('application_id', $appId)
+                    ->where('status', 'ACCRUED')
+                    ->exists();
+
+                Application::where('id', $appId)->update([
+                    'parent_margin_status' => $hasRemainingAccrued ? 'PARTIALLY_SETTLED' : 'PAID',
+                    'parent_margin_refunded_at' => now(),
+                ]);
+            }
 
             Log::info("Margin payout #{$payout->payout_number} of ₹{$totalAmount} settled for Parent Agent #{$parentAgent->id} by Admin #{$admin->id}.");
 
