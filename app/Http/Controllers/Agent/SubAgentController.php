@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Models\AgentMarginLog;
 use App\Models\Application;
 use App\Models\User;
 use App\Services\AgentCodeService;
+use App\Services\AgentLineageService;
 use App\Services\SessionResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,12 +28,14 @@ class SubAgentController extends Controller
         $totalMembers = $subAgents->count();
         $activeMembers = $subAgents->where('is_active', true)->count();
 
-        $teamAppsQuery = Application::where('agent_id', $parent->id)
-            ->whereNotNull('sub_agent_id')
+        $descendantIds = AgentLineageService::getDescendantIds($parent);
+        $teamAppsQuery = Application::whereIn('sub_agent_id', empty($descendantIds) ? [0] : $descendantIds)
             ->inSession($currentSessionLabel);
 
         $teamApplicationsCount = (clone $teamAppsQuery)->count();
-        $totalMarginEarned = (clone $teamAppsQuery)->where('payment_status', 'PAID')->sum('parent_margin');
+        $totalMarginEarned = AgentMarginLog::where('parent_agent_id', $parent->id)
+            ->where('status', '!=', 'CANCELLED')
+            ->sum('margin_amount');
 
         $kpis = [
             'total_members' => $totalMembers,
@@ -58,12 +62,10 @@ class SubAgentController extends Controller
                     $q->inSession($currentSessionLabel);
                 }
             }])
-            ->withSum(['subAgentApplications as margin_total' => function ($q) use ($currentSessionLabel) {
-                $q->where('payment_status', 'PAID');
-                if ($currentSessionLabel) {
-                    $q->inSession($currentSessionLabel);
-                }
-            }], 'parent_margin');
+            ->withSum(['marginLogsGenerated as margin_total' => function ($q) use ($parent) {
+                $q->where('parent_agent_id', $parent->id)
+                    ->where('status', '!=', 'CANCELLED');
+            }], 'margin_amount');
 
         return DataTables::of($query)
             ->addColumn('checkbox', fn ($row) => '<input type="checkbox" class="subagent-select" value="'.$row->id.'">')
@@ -121,22 +123,26 @@ class SubAgentController extends Controller
             'mobile_number' => 'nullable|string|max:20',
             'whatsapp_no' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
+            'can_recruit' => 'nullable|boolean',
         ]);
 
         $subAgentCode = AgentCodeService::generateSubAgentCode($parent);
 
-        User::forceCreate([
+        $newSubAgent = User::forceCreate([
             'agent_code' => $subAgentCode,
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'role' => 'AGENT',
             'parent_id' => $parent->id,
+            'can_recruit' => $request->boolean('can_recruit', true),
             'is_active' => true,
             'mobile_number' => $data['mobile_number'] ?? null,
             'whatsapp_no' => $data['whatsapp_no'] ?? null,
             'address' => $data['address'] ?? null,
         ]);
+
+        AgentLineageService::assignParent($newSubAgent, $parent);
 
         return redirect()->route('agent.sub-agents.index')
             ->with('success', "Team member {$data['name']} added successfully with Code: {$subAgentCode}");
@@ -172,17 +178,20 @@ class SubAgentController extends Controller
             foreach ($request->members as $memberData) {
                 $code = AgentCodeService::generateSubAgentCode($parent);
 
-                User::forceCreate([
+                $newSub = User::forceCreate([
                     'agent_code' => $code,
                     'name' => $memberData['name'],
                     'email' => $memberData['email'],
                     'password' => Hash::make($memberData['password']),
                     'role' => 'AGENT',
                     'parent_id' => $parent->id,
+                    'can_recruit' => true,
                     'is_active' => true,
                     'mobile_number' => $memberData['mobile_number'] ?? null,
                     'whatsapp_no' => $memberData['whatsapp_no'] ?? null,
                 ]);
+
+                AgentLineageService::assignParent($newSub, $parent);
 
                 $createdCount++;
             }
@@ -275,17 +284,20 @@ class SubAgentController extends Controller
 
                 $code = AgentCodeService::generateSubAgentCode($parent);
 
-                User::forceCreate([
+                $newSub = User::forceCreate([
                     'agent_code' => $code,
                     'name' => $name,
                     'email' => $email,
                     'password' => Hash::make($password),
                     'role' => 'AGENT',
                     'parent_id' => $parent->id,
+                    'can_recruit' => true,
                     'is_active' => true,
                     'mobile_number' => $mobile ?: null,
                     'whatsapp_no' => $whatsapp ?: null,
                 ]);
+
+                AgentLineageService::assignParent($newSub, $parent);
 
                 $createdCount++;
             }
@@ -345,7 +357,12 @@ class SubAgentController extends Controller
             'mobile_number' => 'nullable|string|max:20',
             'whatsapp_no' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
+            'can_recruit' => 'nullable|boolean',
         ]);
+
+        if ($request->has('can_recruit')) {
+            $data['can_recruit'] = $request->boolean('can_recruit');
+        }
 
         $subAgent->update($data);
 

@@ -44,6 +44,7 @@ restore_db.php
 !/public/index.php
 !/public/deploy_sub_agents_migration.php
 !/public/update_db.php
+!/public/deploy_multi_tier_network.php
 CLAUDE.md
 switching.md
 

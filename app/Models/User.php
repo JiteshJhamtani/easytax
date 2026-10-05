@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Enums\NotificationPreference;
+use App\Services\AgentLineageService;
 use App\Traits\MasksSensitiveData;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -38,6 +40,9 @@ class User extends Authenticatable
         'address',
         'marketer_id',
         'parent_id',
+        'ancestry_path',
+        'depth',
+        'can_recruit',
         'is_active',
         'bank_name',
         'bank_account_number',
@@ -68,6 +73,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'depth' => 'integer',
+            'can_recruit' => 'boolean',
             'notification_preference' => NotificationPreference::class,
         ];
     }
@@ -80,6 +87,12 @@ class User extends Authenticatable
 
     protected static function booted()
     {
+        static::created(function ($user) {
+            if (empty($user->ancestry_path) && strtoupper((string) $user->role) === 'AGENT') {
+                AgentLineageService::ensureAncestryPath($user);
+            }
+        });
+
         static::deleting(function ($user) {
             $user->applications()->delete();
             $user->assignedApplications()->delete();
@@ -126,6 +139,11 @@ class User extends Authenticatable
         return $this->hasMany(AgentMarginLog::class, 'parent_agent_id');
     }
 
+    public function marginLogsGenerated(): HasMany
+    {
+        return $this->hasMany(AgentMarginLog::class, 'sub_agent_id');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Helpers
@@ -150,6 +168,42 @@ class User extends Authenticatable
     public function isParentAgent(): bool
     {
         return $this->isAgent() && is_null($this->parent_id);
+    }
+
+    public function canManageTeam(): bool
+    {
+        if (! $this->isAgent()) {
+            return false;
+        }
+
+        if ($this->isRootAgent()) {
+            return (bool) ($this->can_recruit ?? true);
+        }
+
+        return (bool) ($this->can_recruit ?? false);
+    }
+
+    public function isRootAgent(): bool
+    {
+        return $this->isAgent() && is_null($this->parent_id);
+    }
+
+    public function rootAgent(): ?User
+    {
+        return AgentLineageService::getRootAgent($this);
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function getAncestryArray(): array
+    {
+        return AgentLineageService::getAncestorIds($this);
+    }
+
+    public function getDownlineQuery(?int $maxDepth = null): Builder
+    {
+        return AgentLineageService::getDescendantsQuery($this, $maxDepth);
     }
 
     public function effectiveParentId(): int

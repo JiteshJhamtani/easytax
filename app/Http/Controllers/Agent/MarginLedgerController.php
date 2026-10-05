@@ -52,7 +52,15 @@ class MarginLedgerController extends Controller
             ->where('parent_agent_id', $parent->id);
 
         return DataTables::of($query)
-            ->addColumn('sub_agent', fn ($row) => $row->subAgent ? e($row->subAgent->name).' ('.e($row->subAgent->agent_code).')' : 'N/A')
+            ->addColumn('sub_agent', function ($row) {
+                $name = $row->subAgent ? e($row->subAgent->name).' ('.e($row->subAgent->agent_code).')' : 'N/A';
+                $tier = (int) ($row->tier_level ?? 1);
+                $tierBadge = $tier > 1
+                    ? ' <span class="badge badge-info" style="font-size: 0.72rem;">Tier '.$tier.'</span>'
+                    : ' <span class="badge badge-light border" style="font-size: 0.72rem;">Tier 1</span>';
+
+                return $name.$tierBadge;
+            })
             ->addColumn('service', fn ($row) => $row->application?->service?->name ?? 'Service')
             ->addColumn('app_ref', fn ($row) => '<a href="'.route('agent.applications.show', $row->application_id).'" class="font-weight-bold">#'.$row->application_id.'</a>')
             ->addColumn('sub_paid', fn ($row) => '₹'.number_format((float) $row->sub_agent_paid, 2))
@@ -75,7 +83,7 @@ class MarginLedgerController extends Controller
                 return '<span class="text-muted text-xs"><i class="fas fa-hourglass-start mr-1"></i>Awaiting Next Payout</span>';
             })
             ->addColumn('date', fn ($row) => $row->created_at ? $row->created_at->format('d M Y, h:i A') : '-')
-            ->rawColumns(['app_ref', 'margin_amount', 'status', 'payout_info'])
+            ->rawColumns(['sub_agent', 'app_ref', 'margin_amount', 'status', 'payout_info'])
             ->make(true);
     }
 

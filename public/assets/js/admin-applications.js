@@ -8,11 +8,17 @@ $(document).ready(function () {
 
     // 1. Check the URL to see what page we are on BEFORE initializing the table
     const urlParams = new URLSearchParams(window.location.search);
-    let pageType = urlParams.get('type') || 'other';
+    let pageType = urlParams.get('tab') || urlParams.get('type') || 'other';
 
     // 2. Define the base columns everyone gets
     let tableColumns = [
-        { data: "id", name: "id" },
+        { 
+            data: "id", 
+            name: "id",
+            render: function (data) {
+                return '<strong class="text-dark">#ET-' + data + '</strong>';
+            }
+        },
         { data: "agent", name: "agent.name" }, 
         { data: "service", name: "service.name" },
         { data: 'dynamic_data', name: 'dynamic_data', orderable: false, searchable: true },
@@ -143,7 +149,7 @@ $(document).ready(function () {
         // Sync sidebar active state
         $('.sb-item[data-label]').each(function () {
             let href = $(this).attr('href');
-            if (href && href.indexOf('type=' + newType) !== -1) {
+            if (href && (href.indexOf('type=' + newType) !== -1 || href.indexOf('tab=' + newType) !== -1)) {
                 $('.sb-item').removeClass('active');
                 $(this).addClass('active');
             }
@@ -163,6 +169,7 @@ $(document).ready(function () {
         // Update browser URL without full-page navigation
         if (pushHistory) {
             const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('tab', newType);
             currentUrl.searchParams.set('type', newType);
             window.history.pushState({ type: newType, title: newTitle }, '', currentUrl.toString());
         }
@@ -184,7 +191,7 @@ $(document).ready(function () {
     $(document).on('click', '.sb-item', function (e) {
         const href = $(this).attr('href');
         if (href && href.indexOf('/admin/applications') !== -1 && window.location.pathname.indexOf('/admin/applications') !== -1) {
-            const match = href.match(/type=([^&]+)/);
+            const match = href.match(/(?:type|tab)=([^&]+)/);
             const clickedType = match ? match[1] : 'other';
             const tabBtn = $('.app-tab-btn[data-type="' + clickedType + '"]');
             const title = tabBtn.data('title') || $(this).data('label');
@@ -196,7 +203,7 @@ $(document).ready(function () {
     // Browser back/forward navigation support
     window.addEventListener('popstate', function () {
         const params = new URLSearchParams(window.location.search);
-        const type = params.get('type') || 'other';
+        const type = params.get('tab') || params.get('type') || 'other';
         const tabBtn = $('.app-tab-btn[data-type="' + type + '"]');
         const title = tabBtn.data('title') || 'Applications';
         switchApplicationType(type, title, false);

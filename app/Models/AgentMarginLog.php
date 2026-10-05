@@ -13,6 +13,7 @@ class AgentMarginLog extends Model
     protected $fillable = [
         'parent_agent_id',
         'sub_agent_id',
+        'tier_level',
         'application_id',
         'sub_agent_paid',
         'company_retained',
@@ -28,6 +29,7 @@ class AgentMarginLog extends Model
         'sub_agent_paid' => 'decimal:2',
         'company_retained' => 'decimal:2',
         'margin_amount' => 'decimal:2',
+        'tier_level' => 'integer',
     ];
 
     public function parentAgent(): BelongsTo

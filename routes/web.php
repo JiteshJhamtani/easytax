@@ -191,6 +191,7 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
 
     Route::get('/applications/{id}/balance-sheet', [AgentApplicationController::class, 'balanceSheetForm'])->name('applications.balance-sheet');
     Route::post('/applications/{id}/balance-sheet/generate', [AgentApplicationController::class, 'generateBalanceSheetPdf'])->name('applications.balance-sheet.generate');
+    Route::get('/applications/{application}/renew-gst-annual', [AgentApplicationController::class, 'renewGstAnnual'])->name('applications.renew-gst-annual');
 
     // ==========================================
     // PARENT AGENT ONLY: TEAM, PRICING, COMMISSIONS, PAYOUTS & GIFTS
@@ -347,6 +348,7 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
     Route::get('/applications/{id}/balance-sheet', [AdminApplicationController::class, 'balanceSheetForm'])->name('applications.balance-sheet');
 
     Route::post('/applications/{id}/balance-sheet/generate', [AdminApplicationController::class, 'generateBalanceSheetPdf'])->name('applications.balance-sheet.generate');
+    Route::post('/applications/{application}/gst-monthly-filing', [AdminApplicationController::class, 'updateGstMonthlyFiling'])->name('applications.gst-monthly-filing.update');
 
     /*
     |--------------------------------------------------------------------------

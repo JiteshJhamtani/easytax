@@ -322,6 +322,12 @@
         @endif
 
         <div class="sb-section">Application Types</div>
+        <a href="{{ route('admin.applications.index', ['tab' => 'website']) }}" class="sb-item {{ (request()->query('tab') === 'website' || request()->query('type') === 'website') ? 'active' : '' }}" data-label="Website Orders">
+            <span class="sb-item__icon"><i class="fas fa-globe text-primary"></i></span>
+            <span class="sb-item__label">Website Orders</span>
+            @include('layouts.partials.sidebar-tab-badges', ['tabKey' => 'website'])
+            @if(request()->routeIs('admin.applications.index') && (request()->query('tab') === 'website' || request()->query('type') === 'website'))<span class="sb-item__dot"></span>@endif
+        </a>
         <a href="{{ route('admin.applications.index', ['type' => 'itr-filing']) }}" class="sb-item {{ request()->query('type') === 'itr-filing' ? 'active' : '' }}" data-label="ITR Filing">
             <span class="sb-item__icon"><i class="fas fa-file-invoice-dollar"></i></span>
             <span class="sb-item__label">ITR Filing</span>

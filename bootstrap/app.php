@@ -8,6 +8,7 @@ use App\Http\Middleware\ParentAgentOnlyMiddleware;
 use App\Http\Middleware\RestrictToB2BDomains;
 use App\Http\Middleware\SetTenantContext;
 use App\Http\Middleware\TeamMiddleware;
+use App\Http\Middleware\VerifyExternalIntakeSecret;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,6 +17,7 @@ use Illuminate\Http\Request;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -32,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'marketer' => MarketerMiddleware::class,
             'b2b.only' => RestrictToB2BDomains::class,
             'parent_agent_only' => ParentAgentOnlyMiddleware::class,
+            'external.intake' => VerifyExternalIntakeSecret::class,
         ]);
 
         $middleware->redirectUsersTo(fn (Request $request) => match (strtoupper($request->user()->role ?? 'AGENT')) {
@@ -44,6 +47,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'payment/webhook',
+            'api/v1/applications/external-intake',
+            'api/applications/external-intake',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

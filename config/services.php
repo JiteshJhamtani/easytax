@@ -39,4 +39,9 @@ return [
         'secret' => env('CROSS_SERVER_SECRET'),
     ],
 
+    'easytax' => [
+        'external_secret' => env('EASYTAX_EXTERNAL_SECRET', 'et_live_sec_89347519283741928347'),
+        'drupal_webhook_url' => env('DRUPAL_WEBHOOK_URL', 'http://easytaxdesign.local/api/v1/filing/status-sync'),
+    ],
+
 ];

@@ -11,6 +11,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
@@ -21,8 +23,9 @@ class ApplicationController extends Controller
 {
     public function index(Request $request)
     {
-        $type = $request->query('type', 'other');
+        $type = $request->query('tab') ?? $request->query('type', 'other');
         $pageTitle = match ($type) {
+            'website' => 'Website Direct Orders',
             'gst-return-filing' => 'GST Return Filing Applications',
             'itr-filing' => 'ITR Filing Applications',
             'gst-registration' => 'GST Registration Applications',
@@ -39,19 +42,23 @@ class ApplicationController extends Controller
         $query = Application::with(['service', 'agent'])
             ->inSession($currentSessionLabel);
 
-        if ($type === 'incomplete') {
+        if ($type === 'website') {
+            $query->where('source', 'WEBSITE_DIRECT');
+        } elseif ($type === 'incomplete') {
             $query->where(function ($q) {
                 $q->whereIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
                     ->orWhereIn('payment_status', ['FAILED', 'PENDING']);
             })->whereNotIn('status', ['SUBMITTED', 'IN_PROGRESS', 'E_FILING', 'OTP_VERIFICATION', 'COMPLETED']);
         } else {
-            $query->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+            $query->where(function ($q) {
+                $q->whereNull('source')->orWhere('source', '!=', 'WEBSITE_DIRECT');
+            })->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
                 ->where('payment_status', '!=', 'FAILED');
         }
 
         $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
 
-        if ($type !== 'incomplete') {
+        if ($type !== 'incomplete' && $type !== 'website') {
             if ($type === 'other') {
                 $query->whereHas('service', function ($q) use ($specialSlugs) {
                     $q->whereNotIn('slug', $specialSlugs);
@@ -97,13 +104,11 @@ class ApplicationController extends Controller
             },
         ])->inSession($sessionLabel);
 
-        $type = $request->type ?? 'other';
+        $type = $request->tab ?? $request->type ?? 'other';
 
-        // ==========================================
-        //  BUG FIX: THE BLACK HOLE FILTER
-        //
-        // ==========================================
-        if ($type === 'incomplete') {
+        if ($type === 'website') {
+            $query->where('source', 'WEBSITE_DIRECT');
+        } elseif ($type === 'incomplete') {
             // "Incomplete" means it is either explicitly marked as Draft/Cancelled/Failed
             // OR (it is NOT completed AND its payment is Pending/Failed)
             $query->where(function ($q) {
@@ -116,16 +121,16 @@ class ApplicationController extends Controller
         } else {
             // For all standard service tabs (ITR, GST, etc) AND the Completed tab:
             // Just show it as long as it isn't explicitly a Draft/Cancelled/Failed.
-            // We NO LONGER hide Pending payments here if the Admin forced it to Completed!
-            $query->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED']);
+            $query->where(function ($q) {
+                $q->whereNull('source')->orWhere('source', '!=', 'WEBSITE_DIRECT');
+            })->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED']);
         }
 
         $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
 
-        if ($type !== 'incomplete') {
+        if ($type !== 'incomplete' && $type !== 'website') {
             if ($type === 'other') {
                 $query->whereHas('service', function ($q) use ($specialSlugs) {
-
                     $q->whereNotIn('slug', $specialSlugs);
                 });
             } elseif (in_array($type, $specialSlugs)) {
@@ -181,24 +186,35 @@ class ApplicationController extends Controller
             ])
             ->filterColumn('agent', function ($query, $keyword) {
                 $query->where(function ($q) use ($keyword) {
-                    $q->whereHas('agent', function ($q2) use ($keyword) {
-                        $q2->where('name', 'like', "%{$keyword}%")
-                            ->orWhere('agent_code', 'like', "%{$keyword}%");
-                    })->orWhereHas('subAgent', function ($q2) use ($keyword) {
-                        $q2->where('name', 'like', "%{$keyword}%")
-                            ->orWhere('agent_code', 'like', "%{$keyword}%");
-                    });
+                    $q->where('customer_name', 'like', "%{$keyword}%")
+                        ->orWhere('customer_phone', 'like', "%{$keyword}%")
+                        ->orWhere('customer_email', 'like', "%{$keyword}%")
+                        ->orWhereHas('agent', function ($q2) use ($keyword) {
+                            $q2->where('name', 'like', "%{$keyword}%")
+                                ->orWhere('agent_code', 'like', "%{$keyword}%");
+                        })->orWhereHas('subAgent', function ($q2) use ($keyword) {
+                            $q2->where('name', 'like', "%{$keyword}%")
+                                ->orWhere('agent_code', 'like', "%{$keyword}%");
+                        });
                 });
             })
             ->filterColumn('service', function ($query, $keyword) {
-                $query->whereHas('service', function ($q) use ($keyword) {
-                    $q->where('name', 'like', "%{$keyword}%");
+                $query->where(function ($q) use ($keyword) {
+                    $q->where('service_name_fallback', 'like', "%{$keyword}%")
+                        ->orWhereHas('service', function ($q2) use ($keyword) {
+                            $q2->where('name', 'like', "%{$keyword}%");
+                        });
                 });
             })
             ->filterColumn('dynamic_data', function ($query, $keyword) {
                 $query->where('form_data', 'like', "%{$keyword}%");
             })
             ->addColumn('dynamic_data', function ($a) {
+                if ($a->source === 'WEBSITE_DIRECT') {
+                    $docsCount = $a->getMedia('client_documents')->count();
+
+                    return '<span class="badge badge-light border font-weight-bold text-dark" style="font-size: 0.8rem; padding: 4px 8px;"><i class="fas fa-folder text-primary mr-1"></i> '.$docsCount.' Files</span>';
+                }
                 $targetField = $a->service->primary_data_field ?? null;
                 if (! $targetField || empty($a->form_data)) {
                     return '<span class="text-muted text-xs font-italic">N/A</span>';
@@ -277,6 +293,21 @@ class ApplicationController extends Controller
             })
             ->addColumn('checkbox', fn ($a) => '<input type="checkbox" class="row-select" value="'.$a->id.'">')
             ->addColumn('agent', function ($a) {
+                if ($a->source === 'WEBSITE_DIRECT') {
+                    $cleanPhone = preg_replace('/\D/', '', $a->customer_phone ?? '');
+                    if (strlen($cleanPhone) === 10) {
+                        $cleanPhone = '91'.$cleanPhone;
+                    }
+                    $waLink = $cleanPhone ? 'https://wa.me/'.$cleanPhone : '#';
+                    $name = e($a->customer_name ?? 'Website Customer');
+                    $phone = e($a->customer_phone ?? 'N/A');
+                    $html = '<div><strong class="text-dark">'.$name.'</strong><br><a href="'.$waLink.'" target="_blank" class="text-success font-weight-bold" style="text-decoration:none;"><i class="fab fa-whatsapp mr-1"></i>'.$phone.'</a></div>';
+                    if ($a->customer_email) {
+                        $html .= '<small class="text-muted d-block">'.e($a->customer_email).'</small>';
+                    }
+
+                    return $html;
+                }
                 if (! $a->agent) {
                     return '<span class="text-muted">N/A</span>';
                 }
@@ -287,9 +318,48 @@ class ApplicationController extends Controller
 
                 return $html;
             })
-            ->addColumn('service', fn ($a) => $a->service->name ?? 'N/A')
-            ->addColumn('status', fn ($a) => '<span class="badge badge-info">'.($a->status->value ?? $a->status).'</span>')
-            ->addColumn('payment', fn ($a) => '<span class="badge badge-success">'.($a->payment_status->value ?? $a->payment_status).'</span>')
+            ->addColumn('service', function ($a) {
+                $serviceName = $a->service_name_fallback ?: ($a->service->name ?? 'N/A');
+                $name = e($serviceName);
+                if ($a->source === 'WEBSITE_DIRECT') {
+                    $name .= ' <span class="badge badge-light border text-primary ml-1" style="font-size: 0.7rem;"><i class="fas fa-globe mr-1"></i>Direct</span>';
+                }
+                if ($a->isGstAnnualPackage()) {
+                    if ($a->isGstAnnualExpired()) {
+                        $name .= ' <span class="badge badge-danger ml-1" title="Your annual-gst has ended please renew it"><i class="fas fa-bell mr-1"></i> Renewal Due</span>';
+                    } elseif ($a->isGstAnnualExpiringSoon()) {
+                        $name .= ' <span class="badge badge-warning text-dark ml-1" title="Expires within 30 days"><i class="fas fa-clock mr-1"></i> Expiring Soon</span>';
+                    }
+                    $name .= ' <span class="badge badge-light border text-xs ml-1 font-weight-bold" title="Completed Months">'.$a->gst_annual_completed_months_count.'/12 Done</span>';
+                }
+
+                return $name;
+            })
+            ->addColumn('status', function ($a) {
+                $status = $a->status->value ?? (string) $a->status;
+                $badgeClass = match (strtoupper($status)) {
+                    'COMPLETED' => 'badge-success',
+                    'IN_PROGRESS', 'E_FILING', 'OTP_VERIFICATION' => 'badge-primary',
+                    'SUBMITTED', 'UNDER_REVIEW' => 'badge-info',
+                    'DOCUMENTS_REQUIRED' => 'badge-warning text-dark',
+                    'REJECTED', 'CANCELLED' => 'badge-danger',
+                    default => 'badge-secondary',
+                };
+
+                return '<span class="badge '.$badgeClass.'">'.e($status).'</span>';
+            })
+            ->addColumn('payment', function ($a) {
+                $status = $a->payment_status->value ?? (string) $a->payment_status;
+                $badgeClass = match (strtoupper($status)) {
+                    'PAID', 'SUCCESS' => 'badge-success',
+                    'FAILED' => 'badge-danger',
+                    'PENDING' => 'badge-warning text-dark',
+                    'REFUNDED' => 'badge-secondary',
+                    default => 'badge-info',
+                };
+
+                return '<span class="badge '.$badgeClass.'">'.e($status).'</span>';
+            })
             ->addColumn('amount', fn ($a) => '₹'.number_format($a->amount, 2))
             ->addColumn('date', fn ($a) => $a->created_at->format('d M Y'))
             ->addColumn('assign_to', function ($a) use ($teamMembers) {
@@ -324,7 +394,7 @@ class ApplicationController extends Controller
 
                 return $html;
             })
-            ->rawColumns(['checkbox', 'agent', 'dynamic_data', 'status', 'payment', 'ack_no', 'computation', 'balance_sheet', 'assign_to', 'actions'])
+            ->rawColumns(['checkbox', 'service', 'agent', 'dynamic_data', 'status', 'payment', 'ack_no', 'computation', 'balance_sheet', 'assign_to', 'actions'])
             ->make(true);
     }
 
@@ -599,35 +669,53 @@ class ApplicationController extends Controller
         });
 
         if ($request->status === 'COMPLETED') {
-            // --- DYNAMIC EMAIL AUTOMATION ---
-            $emailKey = $application->service->applicant_email_field;
+            if ($application->source === 'WEBSITE_DIRECT') {
+                try {
+                    $drupalUrl = config('services.easytax.drupal_webhook_url');
+                    if ($drupalUrl) {
+                        $deliverableUrl = $application->getFirstMediaUrl('deliverables') ?: ($application->getFirstMediaUrl('final_deliverables') ?: null);
 
-            if (! empty($application->form_data)) {
-                $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
-
-                // SMART FALLBACK: If emailKey is missing in DB, try common email fields
-                $clientEmail = (! empty($emailKey) && isset($formData[$emailKey]))
-                    ? $formData[$emailKey]
-                    : ($formData['email'] ?? $formData['email_id'] ?? $formData['applicant_email'] ?? null);
-
-                $clientName = $formData['applicant_name'] ?? $formData['name'] ?? $formData['full_name'] ?? $formData['company_name'] ?? $formData['firm_name'] ?? 'Valued Client';
-                $trackingUrl = URL::signedRoute('tracking.show', ['application' => $application->id]);
-
-                if ($clientEmail && filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
-                    try {
-                        Mail::send('emails.application_completed', [
-                            'application' => $application,
-                            'clientName' => $clientName,
-                            'trackingUrl' => $trackingUrl,
-                        ], function ($message) use ($clientEmail, $application) {
-                            $serviceName = $application->service->name ?? 'Service';
-                            $message->to($clientEmail)
-                                ->subject("Completed: Your {$serviceName} Application");
-                        });
-                        \Log::info("Completion email sent to {$clientEmail} for App #{$application->id}");
-                    } catch (\Exception $e) {
-                        \Log::error("Email failed for App #{$application->id}: ".$e->getMessage());
+                        Http::withHeaders([
+                            'X-EasyTax-Secret' => config('services.easytax.external_secret'),
+                        ])->timeout(10)->post($drupalUrl, [
+                            'idempotency_key' => $application->idempotency_key,
+                            'b2b_app_id' => $application->id,
+                            'status' => 'COMPLETED',
+                            'arn_number' => $application->arn_number ?? null,
+                            'deliverable_url' => $deliverableUrl,
+                            'completed_at' => now()->toIso8601String(),
+                        ]);
                     }
+                } catch (\Exception $e) {
+                    Log::error('Failed to sync completion webhook to Drupal: '.$e->getMessage());
+                }
+            }
+
+            // --- DYNAMIC EMAIL AUTOMATION ---
+            $emailKey = $application->service->applicant_email_field ?? null;
+            $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : ($application->form_data ?? []);
+
+            $clientEmail = (! empty($emailKey) && isset($formData[$emailKey]))
+                ? $formData[$emailKey]
+                : ($formData['email'] ?? $formData['email_id'] ?? $formData['applicant_email'] ?? $application->customer_email ?? null);
+
+            $clientName = $formData['applicant_name'] ?? $formData['name'] ?? $formData['full_name'] ?? $formData['company_name'] ?? $formData['firm_name'] ?? $application->customer_name ?? 'Valued Client';
+            $trackingUrl = URL::signedRoute('tracking.show', ['application' => $application->id]);
+
+            if ($clientEmail && filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
+                try {
+                    Mail::send('emails.application_completed', [
+                        'application' => $application,
+                        'clientName' => $clientName,
+                        'trackingUrl' => $trackingUrl,
+                    ], function ($message) use ($clientEmail, $application) {
+                        $serviceName = $application->service_name_fallback ?: ($application->service->name ?? 'Service');
+                        $message->to($clientEmail)
+                            ->subject("Completed: Your {$serviceName} Application");
+                    });
+                    Log::info("Completion email sent to {$clientEmail} for App #{$application->id}");
+                } catch (\Exception $e) {
+                    Log::error("Email failed for App #{$application->id}: ".$e->getMessage());
                 }
             }
         }
@@ -1030,5 +1118,45 @@ class ApplicationController extends Controller
         $application->restore();
 
         return redirect()->back()->with('success', 'Application restored successfully.');
+    }
+
+    public function updateGstMonthlyFiling(Request $request, Application $application)
+    {
+        $validated = $request->validate([
+            'month_key' => 'required|string',
+            'status' => 'required|in:PENDING,IN_PROGRESS,FILED,NOT_APPLICABLE',
+            'filed_at' => 'nullable|date',
+            'arn' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:500',
+            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ]);
+
+        $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : ($application->form_data ?? []);
+        $filings = $application->gst_monthly_filings;
+
+        $updatedFilings = [];
+        foreach ($filings as $filing) {
+            if ($filing['month_key'] === $validated['month_key']) {
+                $filing['status'] = $validated['status'];
+                $filing['filed_at'] = $validated['filed_at'] ?? $filing['filed_at'];
+                $filing['arn'] = $validated['arn'] ?? $filing['arn'];
+                $filing['notes'] = $validated['notes'] ?? $filing['notes'];
+
+                if ($request->hasFile('receipt')) {
+                    $media = $application->addMediaFromRequest('receipt')
+                        ->usingFileName('gst_'.$validated['month_key'].'_receipt_'.$application->id.'.'.$request->file('receipt')->getClientOriginalExtension())
+                        ->toMediaCollection('gst_monthly_receipts');
+                    $filing['media_id'] = $media->id;
+                    $filing['media_url'] = $media->getUrl();
+                }
+            }
+            $updatedFilings[] = $filing;
+        }
+
+        $formData['gst_monthly_filings'] = $updatedFilings;
+        $application->form_data = $formData;
+        $application->save();
+
+        return redirect()->back()->with('success', 'Monthly filing status for '.$validated['month_key'].' updated successfully.');
     }
 }

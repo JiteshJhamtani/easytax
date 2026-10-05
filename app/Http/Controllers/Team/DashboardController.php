@@ -8,6 +8,8 @@ use App\Services\SessionResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
@@ -99,34 +101,52 @@ class DashboardController extends Controller
         });
 
         if ($status === 'COMPLETED') {
-            $emailKey = $application->service->applicant_email_field ?? null;
+            if ($application->source === 'WEBSITE_DIRECT') {
+                try {
+                    $drupalUrl = config('services.easytax.drupal_webhook_url');
+                    if ($drupalUrl) {
+                        $deliverableUrl = $application->getFirstMediaUrl('deliverables') ?: ($application->getFirstMediaUrl('final_deliverables') ?: null);
 
-            if (! empty($application->form_data)) {
-                $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
-
-                // SMART FALLBACK: If emailKey is missing in DB, try common email fields
-                $clientEmail = (! empty($emailKey) && isset($formData[$emailKey]))
-                    ? $formData[$emailKey]
-                    : ($formData['email'] ?? $formData['email_id'] ?? $formData['applicant_email'] ?? null);
-
-                $clientName = $formData['applicant_name'] ?? $formData['name'] ?? $formData['full_name'] ?? $formData['company_name'] ?? $formData['firm_name'] ?? 'Valued Client';
-                $trackingUrl = URL::signedRoute('tracking.show', ['application' => $application->id]);
-
-                if ($clientEmail && filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
-                    try {
-                        Mail::send('emails.application_completed', [
-                            'application' => $application,
-                            'clientName' => $clientName,
-                            'trackingUrl' => $trackingUrl,
-                        ], function ($message) use ($clientEmail, $application) {
-                            $serviceName = $application->service->name ?? 'Service';
-                            $message->to($clientEmail)
-                                ->subject("Completed: Your {$serviceName} Application");
-                        });
-                        \Log::info("Completion email sent to {$clientEmail} for App #{$application->id}");
-                    } catch (\Exception $e) {
-                        \Log::error("Email failed for App #{$application->id}: ".$e->getMessage());
+                        Http::withHeaders([
+                            'X-EasyTax-Secret' => config('services.easytax.external_secret'),
+                        ])->timeout(10)->post($drupalUrl, [
+                            'idempotency_key' => $application->idempotency_key,
+                            'b2b_app_id' => $application->id,
+                            'status' => 'COMPLETED',
+                            'arn_number' => $application->arn_number ?? null,
+                            'deliverable_url' => $deliverableUrl,
+                            'completed_at' => now()->toIso8601String(),
+                        ]);
                     }
+                } catch (\Exception $e) {
+                    Log::error('Failed to sync completion webhook to Drupal: '.$e->getMessage());
+                }
+            }
+
+            $emailKey = $application->service->applicant_email_field ?? null;
+            $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : ($application->form_data ?? []);
+
+            $clientEmail = (! empty($emailKey) && isset($formData[$emailKey]))
+                ? $formData[$emailKey]
+                : ($formData['email'] ?? $formData['email_id'] ?? $formData['applicant_email'] ?? $application->customer_email ?? null);
+
+            $clientName = $formData['applicant_name'] ?? $formData['name'] ?? $formData['full_name'] ?? $formData['company_name'] ?? $formData['firm_name'] ?? $application->customer_name ?? 'Valued Client';
+            $trackingUrl = URL::signedRoute('tracking.show', ['application' => $application->id]);
+
+            if ($clientEmail && filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
+                try {
+                    Mail::send('emails.application_completed', [
+                        'application' => $application,
+                        'clientName' => $clientName,
+                        'trackingUrl' => $trackingUrl,
+                    ], function ($message) use ($clientEmail, $application) {
+                        $serviceName = $application->service_name_fallback ?: ($application->service->name ?? 'Service');
+                        $message->to($clientEmail)
+                            ->subject("Completed: Your {$serviceName} Application");
+                    });
+                    Log::info("Completion email sent to {$clientEmail} for App #{$application->id}");
+                } catch (\Exception $e) {
+                    Log::error("Email failed for App #{$application->id}: ".$e->getMessage());
                 }
             }
         }

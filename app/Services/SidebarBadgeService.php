@@ -199,6 +199,7 @@ class SidebarBadgeService
                 })
                 ->selectRaw("
                     CASE 
+                        WHEN a.source = 'WEBSITE_DIRECT' THEN 'website'
                         WHEN a.status IN ('DRAFT', 'CANCELLED', 'FAILED') OR (a.payment_status IN ('FAILED', 'PENDING') AND a.status != 'COMPLETED') THEN 'incomplete'
                         WHEN a.service_id = {$itrId} THEN 'itr-filing'
                         WHEN a.service_id = {$gstRegId} THEN 'gst-registration'
@@ -233,7 +234,7 @@ class SidebarBadgeService
                 'failed_payment' => 0,
             ];
 
-            $allTabs = ['itr-filing', 'gst-registration', 'gst-return-filing', 'other', 'incomplete'];
+            $allTabs = ['website', 'itr-filing', 'gst-registration', 'gst-return-filing', 'other', 'incomplete'];
             foreach ($allTabs as $tab) {
                 $counts[$tab] = $defaultMetrics;
             }

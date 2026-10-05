@@ -304,7 +304,7 @@
                 @include('layouts.partials.sidebar-tab-badges', ['tabKey' => 'other'])
             </a>
 
-            @if(auth()->check() && !auth()->user()->isSubAgent())
+            @if(auth()->check() && auth()->user()->canManageTeam())
             <div class="sb-section">Team & Margins</div>
 
             <a href="{{ route('agent.sub-agents.index') }}" class="sb-item {{ request()->routeIs('agent.sub-agents.*') ? 'active' : '' }}" data-label="My Team">
@@ -321,7 +321,9 @@
                 <span class="sb-item__icon"><i class="fas fa-coins"></i></span>
                 <span class="sb-item__label">Margin Earnings</span>
             </a>
+            @endif
 
+            @if(auth()->check() && !auth()->user()->isSubAgent())
             <div class="sb-section">Rewards</div>
 
             <a href="{{ route('agent.gifts') }}" class="sb-item {{ request()->routeIs('agent.gifts') ? 'active' : '' }}" data-label="Gifts & Rewards">

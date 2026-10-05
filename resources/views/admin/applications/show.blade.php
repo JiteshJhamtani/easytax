@@ -90,15 +90,27 @@
                     <div class="card border-0 shadow-sm h-100 summary-card rounded-lg elegant-border">
                         <div class="card-body d-flex align-items-center p-3">
                             <div class="icon-box bg-primary-soft text-primary mr-3">
-                                <i class="fas fa-user-tie fa-lg"></i>
+                                <i class="fas {{ $application->isWebsiteDirect() ? 'fa-globe' : 'fa-user-tie' }} fa-lg"></i>
                             </div>
                             <div class="overflow-hidden">
-                                <h6 class="text-muted text-uppercase text-xs font-weight-bold mb-1">Assigned Agent</h6>
-                                <h5 class="mb-0 font-weight-bold text-dark text-truncate">{{ $application->agent->name ?? 'Unassigned' }}</h5>
-                                @if($application->sub_agent_id && $application->subAgent)
-                                    <div class="mt-1">
-                                        <span class="badge badge-info text-dark" style="font-size: 0.75rem;"><i class="fas fa-users mr-1"></i>Team: {{ $application->subAgent->name }} ({{ $application->subAgent->agent_code }})</span>
-                                    </div>
+                                @if($application->isWebsiteDirect())
+                                    <h6 class="text-muted text-uppercase text-xs font-weight-bold mb-1">Website Customer</h6>
+                                    <h5 class="mb-0 font-weight-bold text-dark text-truncate">{{ $application->customer_name ?? 'Retail Customer' }}</h5>
+                                    @if($application->customer_phone)
+                                        <div class="mt-1">
+                                            <a href="{{ $application->customer_whatsapp_url }}" target="_blank" class="text-success font-weight-bold text-xs" style="text-decoration: none;">
+                                                <i class="fab fa-whatsapp mr-1"></i>{{ $application->customer_phone }}
+                                            </a>
+                                        </div>
+                                    @endif
+                                @else
+                                    <h6 class="text-muted text-uppercase text-xs font-weight-bold mb-1">Assigned Agent</h6>
+                                    <h5 class="mb-0 font-weight-bold text-dark text-truncate">{{ $application->agent->name ?? 'Unassigned' }}</h5>
+                                    @if($application->sub_agent_id && $application->subAgent)
+                                        <div class="mt-1">
+                                            <span class="badge badge-info text-dark" style="font-size: 0.75rem;"><i class="fas fa-users mr-1"></i>Team: {{ $application->subAgent->name }} ({{ $application->subAgent->agent_code }})</span>
+                                        </div>
+                                    @endif
                                 @endif
                             </div>
                         </div>
@@ -139,7 +151,12 @@
                         <tbody>
                             <tr>
                                 <td class="text-muted text-uppercase text-xs font-weight-bold w-30 align-middle pl-4 border-top-0">Service Requested</td>
-                                <td class="font-weight-bold text-dark border-top-0">{{ $application->service->name ?? 'N/A' }}</td>
+                                <td class="font-weight-bold text-dark border-top-0">
+                                    {{ $application->service_name_fallback ?: ($application->service->name ?? 'N/A') }}
+                                    @if($application->isWebsiteDirect())
+                                        <span class="badge badge-light border text-primary ml-1" style="font-size: 0.75rem;"><i class="fas fa-globe mr-1"></i>Website Direct Order</span>
+                                    @endif
+                                </td>
                             </tr>
                             <tr>
                                 <td class="text-muted text-uppercase text-xs font-weight-bold w-30 align-middle pl-4">Application ID</td>
@@ -350,6 +367,200 @@
                     </form>
                 </div>
             </div>
+            @endif
+
+            {{-- 12-MONTH GST COMPLIANCE TRACKER (GST ANNUAL PACKAGE ONLY) --}}
+            @if($application->isGstAnnualPackage())
+            <div class="card border-0 shadow-sm mb-4 mt-4 rounded-lg elegant-border">
+                <div class="card-header bg-white py-3 border-bottom d-flex flex-wrap justify-content-between align-items-center">
+                    <div>
+                        <h3 class="card-title font-weight-bold text-dark mb-0">
+                            <i class="fas fa-calendar-check text-success mr-2"></i> 12-Month GST Filing Compliance Tracker
+                        </h3>
+                        <p class="text-muted small mb-0 mt-1">
+                            Track and update monthly return filings (GSTR-1 & GSTR-3B) for this annual package.
+                        </p>
+                    </div>
+                    <div class="mt-2 mt-md-0 d-flex align-items-center gap-2">
+                        <span class="badge badge-success px-3 py-2 font-weight-bold" style="font-size: 0.85rem;">
+                            {{ $application->gst_annual_completed_months_count }} / 12 Months Done
+                        </span>
+                        @if($application->isGstAnnualExpired())
+                            <span class="badge badge-danger px-3 py-2 font-weight-bold" style="font-size: 0.85rem;" title="Your annual-gst has ended please renew it">
+                                <i class="fas fa-bell mr-1"></i> Annual Package Ended (Renewal Due)
+                            </span>
+                        @elseif($application->isGstAnnualExpiringSoon())
+                            <span class="badge badge-warning text-dark px-3 py-2 font-weight-bold" style="font-size: 0.85rem;">
+                                <i class="fas fa-clock mr-1"></i> Expiring Soon ({{ $application->gst_annual_expiry_date?->format('d M Y') }})
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    {{-- Expiry Alert Callout --}}
+                    @if($application->isGstAnnualExpired())
+                        <div class="alert alert-danger rounded-lg border-0 shadow-sm d-flex align-items-center mb-4">
+                            <i class="fas fa-exclamation-triangle fa-2x mr-3 text-danger"></i>
+                            <div>
+                                <h6 class="font-weight-bold mb-1">Annual Subscription Expired!</h6>
+                                <p class="mb-0 text-sm">
+                                    The 1-year service duration for this GST Annual Package expired on <strong>{{ $application->gst_annual_expiry_date?->format('d M Y') }}</strong>. Please notify the agent to renew the package.
+                                </p>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Progress Bar --}}
+                    @php
+                        $progressPercent = min(100, round(($application->gst_annual_completed_months_count / 12) * 100));
+                    @endphp
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between text-xs font-weight-bold text-muted text-uppercase mb-1">
+                            <span>Annual Filing Progress</span>
+                            <span>{{ $progressPercent }}% Completed</span>
+                        </div>
+                        <div class="progress" style="height: 10px; border-radius: 6px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ $progressPercent }}%;" aria-valuenow="{{ $progressPercent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+
+                    {{-- Months Table --}}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered mb-0">
+                            <thead class="bg-light text-muted text-uppercase text-xs">
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th>Filing Month</th>
+                                    <th>Status</th>
+                                    <th>Filing Date</th>
+                                    <th>ARN / Ack No.</th>
+                                    <th>Receipt</th>
+                                    <th class="text-center" style="width: 100px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($application->gst_monthly_filings as $index => $filing)
+                                    <tr>
+                                        <td class="font-weight-bold text-muted">{{ $index + 1 }}</td>
+                                        <td class="font-weight-bold text-dark">{{ $filing['month_label'] }}</td>
+                                        <td>
+                                            @if($filing['status'] === 'FILED')
+                                                <span class="badge badge-success px-2 py-1"><i class="fas fa-check mr-1"></i> Done</span>
+                                            @elseif($filing['status'] === 'IN_PROGRESS')
+                                                <span class="badge badge-info px-2 py-1"><i class="fas fa-spinner fa-spin mr-1"></i> In Progress</span>
+                                            @elseif($filing['status'] === 'NOT_APPLICABLE')
+                                                <span class="badge badge-secondary px-2 py-1">N/A</span>
+                                            @else
+                                                <span class="badge badge-warning text-dark px-2 py-1"><i class="far fa-clock mr-1"></i> Pending</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            {{ !empty($filing['filed_at']) ? \Carbon\Carbon::parse($filing['filed_at'])->format('d M Y') : '-' }}
+                                        </td>
+                                        <td>
+                                            <span class="font-weight-bold font-monospace text-dark">{{ $filing['arn'] ?? '-' }}</span>
+                                        </td>
+                                        <td>
+                                            @if(!empty($filing['media_id']))
+                                                <a href="{{ route('admin.documents.download', $filing['media_id']) }}" class="btn btn-xs btn-outline-success font-weight-bold" target="_blank">
+                                                    <i class="fas fa-download mr-1"></i> Receipt
+                                                </a>
+                                            @else
+                                                <span class="text-muted text-xs">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-outline-primary px-2 py-1 font-weight-bold"
+                                                onclick="openGstMonthModal('{{ $filing['month_key'] }}', '{{ $filing['month_label'] }}', '{{ $filing['status'] }}', '{{ $filing['filed_at'] ?? '' }}', '{{ $filing['arn'] ?? '' }}', '{{ e($filing['notes'] ?? '') }}')">
+                                                <i class="fas fa-edit mr-1"></i> Update
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Update Month Modal --}}
+            <div class="modal fade" id="updateGstMonthModal" tabindex="-1" role="dialog" aria-labelledby="updateGstMonthModalTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content border-0 shadow-lg rounded-lg">
+                        <form action="{{ route('admin.applications.gst-monthly-filing.update', $application->id) }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <input type="hidden" name="month_key" id="modalGstMonthKey">
+                            <div class="modal-header bg-light py-3 border-bottom">
+                                <h5 class="modal-title font-weight-bold text-dark" id="updateGstMonthModalTitle">
+                                    <i class="fas fa-calendar-alt text-primary mr-2"></i> Update Monthly GST Filing (<span id="modalGstMonthLabel"></span>)
+                                </h5>
+                                <button type="button" class="close text-muted" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="form-group mb-3">
+                                    <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">Filing Status <span class="text-danger">*</span></label>
+                                    <select name="status" id="modalGstStatus" class="form-control" required>
+                                        <option value="PENDING">Pending</option>
+                                        <option value="IN_PROGRESS">In Progress</option>
+                                        <option value="FILED">Filed (Done)</option>
+                                        <option value="NOT_APPLICABLE">Not Applicable (N/A)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">Filing Date</label>
+                                    <input type="date" name="filed_at" id="modalGstFiledAt" class="form-control" value="{{ date('Y-m-d') }}">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">ARN / Acknowledgment Number</label>
+                                    <input type="text" name="arn" id="modalGstArn" class="form-control" placeholder="e.g. AA070326012345A">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">Upload Filing Receipt / Challan (PDF / Image)</label>
+                                    <input type="file" name="receipt" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png">
+                                    <small class="text-muted d-block mt-1">Allowed formats: PDF, JPG, PNG (Max: 5MB)</small>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="text-xs font-weight-bold text-muted text-uppercase mb-1">Notes / Remarks</label>
+                                    <textarea name="notes" id="modalGstNotes" rows="2" class="form-control" placeholder="Optional notes..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-light px-4 py-3 border-top d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary font-weight-bold rounded-lg px-3" data-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success font-weight-bold rounded-lg px-4 shadow-sm">
+                                    <i class="fas fa-save mr-1"></i> Save Month Status
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function openGstMonthModal(monthKey, monthLabel, status, filedAt, arn, notes) {
+                    document.getElementById('modalGstMonthKey').value = monthKey;
+                    document.getElementById('modalGstMonthLabel').textContent = monthLabel;
+                    document.getElementById('modalGstStatus').value = status;
+                    if (filedAt) {
+                        document.getElementById('modalGstFiledAt').value = filedAt.split('T')[0];
+                    }
+                    document.getElementById('modalGstArn').value = arn;
+                    document.getElementById('modalGstNotes').value = notes;
+
+                    if (window.jQuery && typeof $('#updateGstMonthModal').modal === 'function') {
+                        $('#updateGstMonthModal').modal('show');
+                    } else {
+                        var modal = document.getElementById('updateGstMonthModal');
+                        if (modal) {
+                            modal.classList.add('show');
+                            modal.style.display = 'block';
+                            document.body.classList.add('modal-open');
+                        }
+                    }
+                }
+            </script>
             @endif
         </div>
 

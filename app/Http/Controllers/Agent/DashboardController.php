@@ -27,7 +27,7 @@ class DashboardController extends Controller
         $sessions = SessionResolver::all();
         $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
-        $teamStats = ! $isSubAgent ? $this->dashboardService->getTeamStats($agentId, $currentSessionLabel) : null;
+        $teamStats = $user->canManageTeam() ? $this->dashboardService->getTeamStats($user->id, $currentSessionLabel) : null;
         $giftGroups = ! $isSubAgent ? $this->dashboardService->getMilestoneGroups($agentId, $currentSessionLabel) : [];
 
         return view('agent.dashboard', [

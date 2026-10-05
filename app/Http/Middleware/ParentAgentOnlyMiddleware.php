@@ -16,8 +16,9 @@ class ParentAgentOnlyMiddleware
 
         $user = auth()->user();
 
-        if ($user->isSubAgent()) {
-            abort(403, 'Access denied. Team management and agency financials are restricted to the primary agent.');
+        // Agents can access team management and agency financials if recruitment/team privileges are enabled
+        if (! $user->canManageTeam()) {
+            abort(403, 'Access denied. Team management and agency financials are restricted to authorized agents.');
         }
 
         return $next($request);

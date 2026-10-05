@@ -247,6 +247,9 @@
 
     {{-- APPLICATION TYPE TABS --}}
     <div class="applications-type-tabs">
+        <button type="button" class="app-tab-btn {{ ($type === 'website' || request('tab') === 'website') ? 'active' : '' }}" data-type="website" data-title="Website Direct Orders">
+            🌐 Website Direct Orders
+        </button>
         <button type="button" class="app-tab-btn {{ $type === 'other' ? 'active' : '' }}" data-type="other" data-title="Other Applications">
             <i class="fas fa-folder"></i> Other Apps
         </button>

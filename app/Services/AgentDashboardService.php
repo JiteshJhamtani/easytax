@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ApplicationStatus;
+use App\Models\AgentMarginLog;
 use App\Models\Application;
 use App\Models\Gift;
 use App\Models\User;
@@ -97,16 +98,19 @@ class AgentDashboardService
     {
         $sessionLabel = $sessionLabel ?? SessionResolver::current()['label'];
 
+        $parent = User::find($parentAgentId);
         $subAgents = User::where('parent_id', $parentAgentId)->get();
         $totalMembers = $subAgents->count();
         $activeMembers = $subAgents->where('is_active', true)->count();
 
-        $appsQuery = Application::where('agent_id', $parentAgentId)
-            ->whereNotNull('sub_agent_id')
+        $descendantIds = $parent ? AgentLineageService::getDescendantIds($parent) : [];
+        $appsQuery = Application::whereIn('sub_agent_id', empty($descendantIds) ? [0] : $descendantIds)
             ->inSession($sessionLabel);
 
         $teamAppsCount = (clone $appsQuery)->count();
-        $teamMarginEarned = (clone $appsQuery)->where('payment_status', 'PAID')->sum('parent_margin');
+        $teamMarginEarned = AgentMarginLog::where('parent_agent_id', $parentAgentId)
+            ->where('status', '!=', 'CANCELLED')
+            ->sum('margin_amount');
 
         return [
             'total_members' => $totalMembers,

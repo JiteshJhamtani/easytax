@@ -32,16 +32,22 @@ class SubAgentPricingController extends Controller
         }
         $existingRules = $rulesQuery->get()->keyBy('service_id');
 
-        $pricingRows = $services->map(function ($service) use ($existingRules) {
+        $pricingRows = $services->map(function ($service) use ($existingRules, $parent) {
             $basePrice = (float) $service->price;
             $baseCommission = (float) $service->calculateCommission($basePrice);
-            $companyMinimum = max(0.0, round($basePrice - $baseCommission, 2));
+
+            if ($parent->parent_id) {
+                $parentResolution = SubAgentPricingService::resolveForSubAgent($service, $parent);
+                $myCost = $parentResolution['sub_agent_payable'];
+            } else {
+                $myCost = max(0.0, round($basePrice - $baseCommission, 2));
+            }
 
             $rule = $existingRules->get($service->id);
             $subPrice = $rule ? (float) $rule->price : $basePrice;
             $subCommission = $rule ? (float) $rule->commission : $baseCommission;
             $subPayable = max(0.0, round($subPrice - $subCommission, 2));
-            $margin = max(0.0, round($subPayable - $companyMinimum, 2));
+            $margin = max(0.0, round($subPayable - $myCost, 2));
 
             return [
                 'service_id' => $service->id,
@@ -49,7 +55,7 @@ class SubAgentPricingController extends Controller
                 'service_slug' => $service->slug,
                 'base_price' => $basePrice,
                 'base_commission' => $baseCommission,
-                'company_minimum' => $companyMinimum,
+                'company_minimum' => $myCost,
                 'sub_price' => $subPrice,
                 'sub_commission' => $subCommission,
                 'sub_payable' => $subPayable,
@@ -85,22 +91,18 @@ class SubAgentPricingController extends Controller
         $services = Service::whereIn('id', collect($data['pricing'])->pluck('service_id'))->get()->keyBy('id');
         $errors = [];
 
-        // Pre-validate all rules against the zero-loss company invariant
+        // Pre-validate all rules against the zero-loss company invariant & parent cost
         foreach ($data['pricing'] as $row) {
             $service = $services->get($row['service_id']);
             if (! $service) {
                 continue;
             }
 
-            $basePrice = (float) $service->price;
-            $baseCommission = (float) $service->calculateCommission($basePrice);
-            $companyMinimum = max(0.0, round($basePrice - $baseCommission, 2));
-
             $price = (float) $row['price'];
             $commission = (float) $row['commission'];
 
             try {
-                $pricingService->assertValidPricing($price, $commission, $companyMinimum);
+                $pricingService->assertValidPricing($service, $price, $commission, $parent);
             } catch (\InvalidArgumentException $e) {
                 $errors[] = "For {$service->name}: ".$e->getMessage();
             }

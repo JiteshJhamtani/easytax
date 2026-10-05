@@ -7,6 +7,7 @@ use App\Enums\PaymentStatus;
 use App\Services\SessionResolver;
 use App\Services\SidebarBadgeService;
 use App\Traits\MasksSensitiveData;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,12 @@ class Application extends Model implements HasMedia
     protected $fillable = [
         'agent_id',
         'service_id',
+        'source',
+        'customer_name',
+        'customer_phone',
+        'customer_email',
+        'service_name_fallback',
+        'idempotency_key',
         'form_data',
         'amount',
         'commission_amount',
@@ -132,6 +139,11 @@ class Application extends Model implements HasMedia
         return $this->hasOne(AgentMarginLog::class, 'application_id');
     }
 
+    public function marginLogs(): HasMany
+    {
+        return $this->hasMany(AgentMarginLog::class, 'application_id');
+    }
+
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class, 'service_id');
@@ -147,12 +159,14 @@ class Application extends Model implements HasMedia
     {
         $collections = [
             'documents',
+            'client_documents',
             'admin_uploads',
             'itr_acknowledgement',
             'computation_sheet',
             'moa_document',
             'aoa_document',
             'final_deliverables',
+            'deliverables',
             'balance_sheet',
         ];
 
@@ -166,6 +180,25 @@ class Application extends Model implements HasMedia
     | Helpers
     |--------------------------------------------------------------------------
     */
+
+    public function isWebsiteDirect(): bool
+    {
+        return $this->source === 'WEBSITE_DIRECT';
+    }
+
+    public function getCustomerWhatsappUrlAttribute(): ?string
+    {
+        if (empty($this->customer_phone)) {
+            return null;
+        }
+
+        $clean = preg_replace('/\D/', '', $this->customer_phone);
+        if (strlen($clean) === 10) {
+            $clean = '91'.$clean;
+        }
+
+        return 'https://wa.me/'.$clean;
+    }
 
     public function markAsSubmitted(): void
     {
@@ -239,6 +272,119 @@ class Application extends Model implements HasMedia
         $currentLabel = SessionResolver::current()['label'];
 
         return $query->where('session_label', $currentLabel);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GST Annual Package Helpers
+    |--------------------------------------------------------------------------
+    */
+
+    public function isGstAnnualPackage(): bool
+    {
+        return ($this->service->slug ?? null) === 'gst-annual-package';
+    }
+
+    /**
+     * Get or generate the 12-month compliance schedule for GST Annual Package.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getGstMonthlyFilingsAttribute(): array
+    {
+        $formData = is_string($this->form_data) ? json_decode($this->form_data, true) : ($this->form_data ?? []);
+        $savedFilings = $formData['gst_monthly_filings'] ?? null;
+
+        $startDate = $this->submitted_at ?? $this->started_at ?? $this->created_at ?? now();
+        $startCarbon = Carbon::parse($startDate)->startOfMonth();
+
+        $filings = [];
+        for ($i = 0; $i < 12; $i++) {
+            $monthDate = $startCarbon->copy()->addMonths($i);
+            $monthKey = $monthDate->format('Y-m');
+            $monthLabel = $monthDate->format('F Y');
+
+            $existing = null;
+            if (is_array($savedFilings)) {
+                foreach ($savedFilings as $saved) {
+                    if (($saved['month_key'] ?? '') === $monthKey) {
+                        $existing = $saved;
+                        break;
+                    }
+                }
+            }
+
+            $filings[] = [
+                'month_key' => $monthKey,
+                'month_label' => $monthLabel,
+                'status' => $existing['status'] ?? 'PENDING',
+                'filed_at' => $existing['filed_at'] ?? null,
+                'arn' => $existing['arn'] ?? null,
+                'notes' => $existing['notes'] ?? null,
+                'media_id' => $existing['media_id'] ?? null,
+                'media_url' => $existing['media_url'] ?? null,
+            ];
+        }
+
+        return $filings;
+    }
+
+    /**
+     * Get the 1-year expiry date for the GST Annual Package.
+     */
+    public function getGstAnnualExpiryDateAttribute(): ?Carbon
+    {
+        if (! $this->isGstAnnualPackage()) {
+            return null;
+        }
+
+        $startDate = $this->submitted_at ?? $this->started_at ?? $this->created_at ?? now();
+
+        return Carbon::parse($startDate)->addYear();
+    }
+
+    /**
+     * Determine if the GST Annual Package has exceeded 1 year (365 days).
+     */
+    public function isGstAnnualExpired(): bool
+    {
+        if (! $this->isGstAnnualPackage()) {
+            return false;
+        }
+
+        $expiry = $this->gst_annual_expiry_date;
+
+        return $expiry ? now()->greaterThanOrEqualTo($expiry) : false;
+    }
+
+    /**
+     * Determine if the GST Annual Package is within 30 days of expiring.
+     */
+    public function isGstAnnualExpiringSoon(): bool
+    {
+        if (! $this->isGstAnnualPackage() || $this->isGstAnnualExpired()) {
+            return false;
+        }
+
+        $expiry = $this->gst_annual_expiry_date;
+
+        return $expiry ? now()->greaterThanOrEqualTo($expiry->copy()->subDays(30)) : false;
+    }
+
+    /**
+     * Get count of completed / filed months out of 12.
+     */
+    public function getGstAnnualCompletedMonthsCountAttribute(): int
+    {
+        $filings = $this->gst_monthly_filings;
+        $count = 0;
+        foreach ($filings as $filing) {
+            if (($filing['status'] ?? '') === 'FILED') {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
     /**

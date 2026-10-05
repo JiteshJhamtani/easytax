@@ -9,6 +9,7 @@ use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
 use App\Notifications\ApplicationCancelledNotification;
+use App\Services\AgentLineageService;
 use App\Services\SessionResolver;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -36,19 +37,7 @@ class ApplicationController extends Controller
 
         // --- DYNAMIC KPI LOGIC ---
         $query = Application::query()->inSession($currentSessionLabel);
-
-        if ($isSubAgent) {
-            $query->where('sub_agent_id', $user->id);
-        } else {
-            $query->where('agent_id', $user->id);
-            if ($request->filled('sub_agent_id')) {
-                if ($request->sub_agent_id === 'self') {
-                    $query->whereNull('sub_agent_id');
-                } else {
-                    $query->where('sub_agent_id', $request->sub_agent_id);
-                }
-            }
-        }
+        $query = $this->scopeApplicationsForUser($query, $user, $request);
 
         $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
 
@@ -71,7 +60,7 @@ class ApplicationController extends Controller
         // -----------------------------
 
         $services = Service::where('active', true)->get();
-        $subAgents = ! $isSubAgent ? User::where('parent_id', $user->id)->orderBy('name')->get() : collect();
+        $subAgents = $user->canManageTeam() ? User::where('parent_id', $user->id)->orderBy('name')->get() : collect();
 
         return view('agent.applications.index', compact('stats', 'services', 'type', 'pageTitle', 'currentSessionLabel', 'subAgents', 'isSubAgent'));
     }
@@ -89,18 +78,7 @@ class ApplicationController extends Controller
             },
         ]);
 
-        if ($isSubAgent) {
-            $query->where('sub_agent_id', $user->id);
-        } else {
-            $query->where('agent_id', $user->id);
-            if ($request->filled('sub_agent_id')) {
-                if ($request->sub_agent_id === 'self') {
-                    $query->whereNull('sub_agent_id');
-                } else {
-                    $query->where('sub_agent_id', $request->sub_agent_id);
-                }
-            }
-        }
+        $query = $this->scopeApplicationsForUser($query, $user, $request);
 
         $sessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
         $query->inSession($sessionLabel);
@@ -171,7 +149,19 @@ class ApplicationController extends Controller
                     })->orWhere('form_data', 'like', "%{$keyword}%");
                 });
             })
-            ->addColumn('service', fn ($a) => $a->service->name)
+            ->addColumn('service', function ($a) {
+                $name = e($a->service->name);
+                if ($a->isGstAnnualPackage()) {
+                    if ($a->isGstAnnualExpired()) {
+                        $name .= ' <span class="badge badge-danger ml-1" title="Your annual-gst has ended please renew it"><i class="fas fa-bell mr-1"></i> Renewal Due</span>';
+                    } elseif ($a->isGstAnnualExpiringSoon()) {
+                        $name .= ' <span class="badge badge-warning text-dark ml-1" title="Expires within 30 days"><i class="fas fa-clock mr-1"></i> Expiring Soon</span>';
+                    }
+                    $name .= ' <span class="badge badge-light border text-xs ml-1 font-weight-bold" title="Completed Months">'.$a->gst_annual_completed_months_count.'/12 Done</span>';
+                }
+
+                return $name;
+            })
             ->addColumn('status', fn ($a) => '<span class="badge badge-info">'.$a->status->value.'</span>')
             ->addColumn('payment', fn ($a) => '<span class="badge badge-success">'.$a->payment_status->value.'</span>')
             ->addColumn('amount', fn ($a) => '₹'.number_format($a->getEffectiveAmount($user), 2))
@@ -272,9 +262,13 @@ class ApplicationController extends Controller
                     </form>
                 ';
 
+                if ($a->isGstAnnualPackage() && $a->isGstAnnualExpired()) {
+                    $html .= '<a href="'.route('agent.applications.renew-gst-annual', $a).'" class="btn btn-sm btn-outline-warning font-weight-bold ml-1" title="Renew Annual GST Package"><i class="fas fa-redo-alt mr-1"></i> Renew</a>';
+                }
+
                 return $html;
             })
-            ->rawColumns(['status', 'payment', 'ack_no', 'computation', 'balance_sheet', 'submitted_by', 'actions'])
+            ->rawColumns(['service', 'status', 'payment', 'ack_no', 'computation', 'balance_sheet', 'submitted_by', 'actions'])
             ->make(true);
     }
 
@@ -289,18 +283,7 @@ class ApplicationController extends Controller
         $isSubAgent = $user->isSubAgent();
 
         $query = Application::with(['service']);
-        if ($isSubAgent) {
-            $query->where('sub_agent_id', $user->id);
-        } else {
-            $query->where('agent_id', $user->id);
-            if ($request->filled('sub_agent_id')) {
-                if ($request->sub_agent_id === 'self') {
-                    $query->whereNull('sub_agent_id');
-                } else {
-                    $query->where('sub_agent_id', $request->sub_agent_id);
-                }
-            }
-        }
+        $query = $this->scopeApplicationsForUser($query, $user, $request);
 
         if ($exportType !== 'master') {
             $sessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
@@ -515,7 +498,7 @@ class ApplicationController extends Controller
 
     public function exportSingle(Application $application)
     {
-        abort_if($application->agent_id !== auth()->id(), 403);
+        abort_if(! $this->canAgentAccessApplication($application), 403);
 
         $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
         if (! is_array($formData)) {
@@ -756,8 +739,8 @@ class ApplicationController extends Controller
     {
         $application = Application::findOrFail($id);
 
-        // SECURITY: Ensure the agent owns this application
-        abort_if($application->agent_id !== auth()->id(), 403);
+        // SECURITY: Ensure the agent owns or manages this application
+        abort_if(! $this->canAgentAccessApplication($application), 403);
 
         $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
         $applicantName = strtoupper($formData['applicant_name'] ?? 'APPLICANT NAME');
@@ -799,6 +782,42 @@ class ApplicationController extends Controller
         return $pdf->stream($fileName);
     }
 
+    private function scopeApplicationsForUser($query, User $user, Request $request)
+    {
+        $isSubAgent = $user->isSubAgent();
+
+        if ($isSubAgent && ! $user->canManageTeam()) {
+            return $query->where('sub_agent_id', $user->id);
+        }
+
+        $descendantIds = AgentLineageService::getDescendantIds($user);
+
+        if ($request->filled('sub_agent_id')) {
+            if ($request->sub_agent_id === 'self') {
+                if ($isSubAgent) {
+                    $query->where('sub_agent_id', $user->id);
+                } else {
+                    $query->where('agent_id', $user->id)->whereNull('sub_agent_id');
+                }
+            } else {
+                $query->where('sub_agent_id', $request->sub_agent_id);
+            }
+        } else {
+            $query->where(function ($q) use ($user, $isSubAgent, $descendantIds) {
+                if ($isSubAgent) {
+                    $q->where('sub_agent_id', $user->id);
+                } else {
+                    $q->where('agent_id', $user->id);
+                }
+                if (! empty($descendantIds)) {
+                    $q->orWhereIn('sub_agent_id', $descendantIds);
+                }
+            });
+        }
+
+        return $query;
+    }
+
     private function canAgentAccessApplication(Application $application): bool
     {
         $user = auth()->user();
@@ -806,10 +825,52 @@ class ApplicationController extends Controller
             return false;
         }
 
-        if ($user->isSubAgent()) {
-            return $application->sub_agent_id === $user->id;
+        // 1. Direct owner (sub-agent or root agent)
+        if ($application->sub_agent_id === $user->id || ($application->agent_id === $user->id && is_null($application->sub_agent_id))) {
+            return true;
         }
 
-        return $application->agent_id === $user->id;
+        // 2. Direct parent
+        if ($application->agent_id === $user->id) {
+            return true;
+        }
+
+        // 3. Upline ancestor in the multi-tier tree
+        if ($application->sub_agent_id) {
+            $subAgent = $application->subAgent ?? User::find($application->sub_agent_id);
+            if ($subAgent && ! empty($subAgent->ancestry_path)) {
+                return str_contains($subAgent->ancestry_path, "/{$user->id}/");
+            }
+        }
+
+        return false;
+    }
+
+    public function renewGstAnnual(Application $application)
+    {
+        if (! $this->canAgentAccessApplication($application)) {
+            abort(403);
+        }
+
+        if (! $application->isGstAnnualPackage()) {
+            return redirect()->back()->with('error', 'This service is not an annual GST package.');
+        }
+
+        $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : ($application->form_data ?? []);
+
+        $params = [
+            'renewed_from' => $application->id,
+            'pan_number' => $formData['pan_number'] ?? '',
+            'gst_number' => $formData['gst_number'] ?? '',
+            'firm_name' => $formData['firm_name'] ?? '',
+            'contact_person' => $formData['contact_person'] ?? '',
+            'mobile' => $formData['mobile'] ?? '',
+            'email' => $formData['email'] ?? '',
+        ];
+
+        return redirect()->route('front.services.show', [
+            'service' => 'gst-annual-package',
+            ...array_filter($params),
+        ])->with('info', 'Renewing GST Annual Package for '.($formData['firm_name'] ?? 'Client').'. Client details have been pre-filled.');
     }
 }
