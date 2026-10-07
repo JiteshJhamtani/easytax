@@ -30,7 +30,7 @@ class GiftController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'period_type' => 'required|in:monthly,quarterly,yearly,session',
-            'banner' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
+            'banner' => 'nullable|image|mimes:jpeg,png,webp,jpg|max:10240',
             'groups' => 'required|array|min:1',
             'groups.*.conditions' => 'required|array|min:1',
             'groups.*.conditions.*.service_id' => 'required|exists:services,id',
@@ -60,8 +60,9 @@ class GiftController extends Controller
 
         // Media upload is file I/O — must be outside the DB transaction
         if ($request->hasFile('banner')) {
-            $gift->addMediaFromRequest('banner')
+            $media = $gift->addMediaFromRequest('banner')
                 ->toMediaCollection('gift_banner');
+            $this->ensurePublicStorageCopy($media);
         }
 
         return redirect()->route('admin.gifts.index')->with('success', 'Gift created.');
@@ -81,7 +82,7 @@ class GiftController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'period_type' => 'required|in:monthly,quarterly,yearly,session',
-            'banner' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
+            'banner' => 'nullable|image|mimes:jpeg,png,webp,jpg|max:10240',
             'groups' => 'required|array|min:1',
             'groups.*.conditions' => 'required|array|min:1',
             'groups.*.conditions.*.service_id' => 'required|exists:services,id',
@@ -112,8 +113,9 @@ class GiftController extends Controller
 
         // Media upload outside transaction — singleFile() auto-removes the old one
         if ($request->hasFile('banner')) {
-            $gift->addMediaFromRequest('banner')
+            $media = $gift->addMediaFromRequest('banner')
                 ->toMediaCollection('gift_banner');
+            $this->ensurePublicStorageCopy($media);
         }
 
         return redirect()->route('admin.gifts.index')->with('success', 'Gift updated.');
@@ -124,5 +126,25 @@ class GiftController extends Controller
         $gift->delete(); // cascades to groups + conditions via DB foreign keys
 
         return redirect()->route('admin.gifts.index')->with('success', 'Gift deleted.');
+    }
+
+    /**
+     * If public/storage is a physical directory on production (not a symlink),
+     * auto-copy the file into public/storage as well so web servers can serve it directly.
+     */
+    protected function ensurePublicStorageCopy($media): void
+    {
+        if (! $media) {
+            return;
+        }
+
+        $publicStorage = public_path('storage');
+        if (is_dir($publicStorage) && ! is_link($publicStorage)) {
+            $targetDir = $publicStorage.'/'.$media->id;
+            if (! is_dir($targetDir)) {
+                @mkdir($targetDir, 0755, true);
+            }
+            @copy($media->getPath(), $targetDir.'/'.$media->file_name);
+        }
     }
 }

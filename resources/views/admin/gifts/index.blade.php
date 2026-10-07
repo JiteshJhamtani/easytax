@@ -225,7 +225,10 @@
 
                 {{-- Gift image --}}
                 @if ($gift->hasMedia('gift_banner'))
-                    <img src="{{ $gift->getFirstMediaUrl('gift_banner') }}" alt="{{ $gift->name }}" class="gift-card__img">
+                    <img src="{{ $gift->getFirstMediaUrl('gift_banner') }}" alt="{{ $gift->name }}" class="gift-card__img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="gift-card__img-placeholder" style="display: none;">
+                        <i class="fas fa-gift"></i>
+                    </div>
                 @else
                     <div class="gift-card__img-placeholder">
                         <i class="fas fa-gift"></i>

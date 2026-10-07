@@ -32,6 +32,7 @@ use App\Http\Controllers\Front\ApplicationController;
 use App\Http\Controllers\Front\PageController;
 use App\Http\Controllers\Front\ServiceController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\StorageMediaController;
 use App\Http\Controllers\Team\DashboardController;
 use App\Models\Application;
 use App\Models\Service;
@@ -615,6 +616,15 @@ Route::get('/run-session-migration', function () {
         return 'Error: '.$e->getMessage();
     }
 });
+
+/*
+|--------------------------------------------------------------------------
+| Public Storage Media Direct Route (Fallback for non-symlinked environments)
+|--------------------------------------------------------------------------
+*/
+Route::get('storage/{path}', [StorageMediaController::class, 'show'])
+    ->where('path', '.*')
+    ->name('storage.media.serve');
 
 /*
 |--------------------------------------------------------------------------

@@ -267,22 +267,19 @@
                 <div class="section-label mt-5">Visual Assets</div>
 
                 <div class="form-group">
-                    @isset($gift)
-                        @if($gift->hasMedia('gift_banner'))
-                            <div class="image-preview">
-                                <img src="{{ $gift->getFirstMediaUrl('gift_banner') }}" alt="Current image">
-                            </div>
-                        @endif
-                    @endisset
+                    <div id="image-preview-container" class="image-preview" style="{{ isset($gift) && $gift->hasMedia('gift_banner') ? '' : 'display: none;' }}">
+                        <img id="preview-img" src="{{ isset($gift) && $gift->hasMedia('gift_banner') ? $gift->getFirstMediaUrl('gift_banner') : '' }}" alt="Gift Image Preview" style="max-height: 180px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 0.75rem;">
+                    </div>
 
                     <div class="image-upload-zone" id="upload-zone">
-                        <input type="file" name="banner" id="banner" accept="image/jpeg,image/png,image/webp">
+                        <input type="file" name="banner" id="banner" accept="image/jpeg,image/png,image/webp,image/jpg">
                         <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                         <div class="upload-text" id="upload-label">
                             <strong>Click to upload</strong> or drag & drop<br>
-                            <span style="font-size:0.8rem">JPG, PNG, WEBP (Max 2MB)</span>
+                            <span style="font-size:0.8rem">JPG, PNG, WEBP (Max 10MB)</span>
                         </div>
                     </div>
+                    @error('banner')<span class="invalid-feedback d-block">{{ $message }}</span>@enderror
                 </div>
 
                 <div class="section-label mt-5">Award Logic & Eligibility</div>
@@ -443,19 +440,64 @@
 
     addGroupBtn.addEventListener('click', () => addGroup());
 
-    // Image Upload UX
+    // Image Upload UX & Live Preview
+    const previewContainer = document.getElementById('image-preview-container');
+    const previewImg = document.getElementById('preview-img');
+    const uploadZone = document.getElementById('upload-zone');
+
     if (bannerInput && uploadLabel) {
+        function handleFile(file) {
+            if (!file) return;
+            const size = (file.size / 1024 / 1024).toFixed(2);
+            if (file.size > 10 * 1024 * 1024) {
+                uploadLabel.innerHTML = `<strong style="color:#EF4444">${file.name}</strong><br><span style="font-size:.8rem;color:#EF4444">File too large (${size} MB). Maximum size is 10MB.</span>`;
+                bannerInput.value = '';
+                return;
+            }
+
+            uploadLabel.innerHTML = `<strong>${file.name}</strong><br><span style="font-size:.8rem;color:var(--green)">Ready to upload (${size} MB)</span>`;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (previewImg && previewContainer) {
+                    previewImg.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
         bannerInput.addEventListener('change', function() {
             if (this.files && this.files[0]) {
-                const file = this.files[0];
-                const size = (file.size / 1024 / 1024).toFixed(2);
-                if (file.size > 2 * 1024 * 1024) {
-                    uploadLabel.innerHTML = `<strong style="color:#EF4444">${file.name}</strong><br><span style="font-size:.8rem;color:#EF4444">Too large (${size} MB). Max 2MB.</span>`;
-                    this.value = ''; return;
-                }
-                uploadLabel.innerHTML = `<strong>${file.name}</strong><br><span style="font-size:.8rem;color:var(--green)">Ready (${size} MB)</span>`;
+                handleFile(this.files[0]);
             }
         });
+
+        if (uploadZone) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadZone.addEventListener(eventName, e => {
+                    e.preventDefault();
+                    uploadZone.style.borderColor = 'var(--green)';
+                    uploadZone.style.background = 'var(--green-light)';
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadZone.addEventListener(eventName, e => {
+                    e.preventDefault();
+                    uploadZone.style.borderColor = '#d1d5db';
+                    uploadZone.style.background = '#fafbfc';
+                });
+            });
+
+            uploadZone.addEventListener('drop', e => {
+                const dt = e.dataTransfer;
+                if (dt && dt.files && dt.files[0]) {
+                    bannerInput.files = dt.files;
+                    handleFile(dt.files[0]);
+                }
+            });
+        }
     }
 
     // Init
