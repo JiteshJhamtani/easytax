@@ -78,3 +78,53 @@ it('scopes admin application datatable data to the active session', function () 
         ->assertSuccessful()
         ->assertJsonPath('recordsTotal', $olderDatatableCount + 1);
 });
+
+it('handles datatable sorting by joined service and agent columns with active session without ambiguous column error', function () {
+    $subAdmin = User::factory()->create(['role' => 'SUB-ADMIN']);
+
+    Application::factory()->create([
+        'service_id' => $this->service->id,
+        'status' => ApplicationStatus::SUBMITTED,
+        'payment_status' => PaymentStatus::PAID,
+        'session_label' => '2026-27 S1',
+        'created_at' => '2026-09-15 10:00:00',
+    ]);
+
+    // DataTables request with order on column index 2 (service.name)
+    $response = actingAs($subAdmin)
+        ->withSession(['easytax_active_session' => '2026-27 S1'])
+        ->getJson(route('admin.applications.data', [
+            'type' => 'itr-filing',
+            'columns' => [
+                ['data' => 'id', 'name' => 'id', 'orderable' => 'true'],
+                ['data' => 'agent', 'name' => 'agent.name', 'orderable' => 'true'],
+                ['data' => 'service', 'name' => 'service.name', 'orderable' => 'true'],
+                ['data' => 'status', 'name' => 'status', 'orderable' => 'true'],
+            ],
+            'order' => [
+                ['column' => 2, 'dir' => 'asc'],
+            ],
+        ]));
+
+    $response->assertSuccessful();
+    expect($response->json('recordsTotal'))->toBeGreaterThanOrEqual(1);
+
+    // Also test sorting by column index 1 (agent.name)
+    $agentResponse = actingAs($subAdmin)
+        ->withSession(['easytax_active_session' => '2026-27 S1'])
+        ->getJson(route('admin.applications.data', [
+            'type' => 'itr-filing',
+            'columns' => [
+                ['data' => 'id', 'name' => 'id', 'orderable' => 'true'],
+                ['data' => 'agent', 'name' => 'agent.name', 'orderable' => 'true'],
+                ['data' => 'service', 'name' => 'service.name', 'orderable' => 'true'],
+                ['data' => 'status', 'name' => 'status', 'orderable' => 'true'],
+            ],
+            'order' => [
+                ['column' => 1, 'dir' => 'asc'],
+            ],
+        ]));
+
+    $agentResponse->assertSuccessful();
+    expect($agentResponse->json('recordsTotal'))->toBeGreaterThanOrEqual(1);
+});

@@ -99,28 +99,28 @@ class ApplicationController extends Controller
         // ---------------------------
 
         if ($request->service) {
-            $query->where('service_id', $request->service);
+            $query->where('applications.service_id', $request->service);
         }
         if ($request->status) {
-            $query->where('status', $request->status);
+            $query->where('applications.status', $request->status);
         }
         if ($request->payment) {
-            $query->where('payment_status', $request->payment);
+            $query->where('applications.payment_status', $request->payment);
         }
         if ($request->date_from) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+            $query->whereDate('applications.created_at', '>=', $request->date_from);
         }
         if ($request->date_to) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+            $query->whereDate('applications.created_at', '<=', $request->date_to);
         }
         if ($request->filter === 'pending') {
-            $query->where('status', '!=', 'COMPLETED');
+            $query->where('applications.status', '!=', 'COMPLETED');
         }
         if ($request->filter === 'completed') {
-            $query->where('status', 'COMPLETED');
+            $query->where('applications.status', 'COMPLETED');
         }
         if ($request->filter === 'failed') {
-            $query->where('payment_status', 'FAILED');
+            $query->where('applications.payment_status', 'FAILED');
         }
 
         if ($request->is_trashed == 'true') {
@@ -129,10 +129,10 @@ class ApplicationController extends Controller
 
         $statsQuery = clone $query;
         $stats = $statsQuery->selectRaw("
-            COUNT(*) as total,
-            SUM(CASE WHEN status != 'COMPLETED' THEN 1 ELSE 0 END) as pending,
-            SUM(CASE WHEN payment_status = 'FAILED' THEN 1 ELSE 0 END) as failed,
-            SUM(CASE WHEN MONTH(created_at) = MONTH(CURRENT_DATE()) THEN 1 ELSE 0 END) as monthly
+            COUNT(applications.id) as total,
+            SUM(CASE WHEN applications.status != 'COMPLETED' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN applications.payment_status = 'FAILED' THEN 1 ELSE 0 END) as failed,
+            SUM(CASE WHEN MONTH(applications.created_at) = MONTH(CURRENT_DATE()) THEN 1 ELSE 0 END) as monthly
         ")->first();
 
         return datatables()->of($query)
@@ -293,14 +293,14 @@ class ApplicationController extends Controller
 
             if ($type === 'incomplete') {
                 $query->where(function ($q) {
-                    $q->whereIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+                    $q->whereIn('applications.status', ['DRAFT', 'CANCELLED', 'FAILED'])
                         ->orWhere(function ($subQ) {
-                            $subQ->whereIn('payment_status', ['FAILED', 'PENDING'])
-                                ->where('status', '!=', 'COMPLETED');
+                            $subQ->whereIn('applications.payment_status', ['FAILED', 'PENDING'])
+                                ->where('applications.status', '!=', 'COMPLETED');
                         });
                 });
             } else {
-                $query->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED']);
+                $query->whereNotIn('applications.status', ['DRAFT', 'CANCELLED', 'FAILED']);
             }
 
             $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
@@ -317,29 +317,29 @@ class ApplicationController extends Controller
             }
 
             if ($request->service) {
-                $query->where('service_id', $request->service);
+                $query->where('applications.service_id', $request->service);
             }
             if ($request->status) {
-                $query->where('status', $request->status);
+                $query->where('applications.status', $request->status);
             }
             if ($request->payment) {
-                $query->where('payment_status', $request->payment);
+                $query->where('applications.payment_status', $request->payment);
             }
             if ($request->date_from) {
-                $query->whereDate('created_at', '>=', $request->date_from);
+                $query->whereDate('applications.created_at', '>=', $request->date_from);
             }
             if ($request->date_to) {
-                $query->whereDate('created_at', '<=', $request->date_to);
+                $query->whereDate('applications.created_at', '<=', $request->date_to);
             }
 
             if ($request->has('search') && ! empty($request->search['value'])) {
                 $keyword = $request->search['value'];
                 $query->where(function ($q) use ($keyword) {
-                    $q->where('id', 'like', "%$keyword%")
+                    $q->where('applications.id', 'like', "%$keyword%")
                         ->orWhereHas('service', function ($q) use ($keyword) {
                             $q->where('name', 'like', "%$keyword%");
                         })
-                        ->orWhere('form_data', 'like', "%$keyword%");
+                        ->orWhere('applications.form_data', 'like', "%$keyword%");
                 });
             }
 
@@ -787,7 +787,7 @@ class ApplicationController extends Controller
         $isSubAgent = $user->isSubAgent();
 
         if ($isSubAgent && ! $user->canManageTeam()) {
-            return $query->where('sub_agent_id', $user->id);
+            return $query->where('applications.sub_agent_id', $user->id);
         }
 
         $descendantIds = AgentLineageService::getDescendantIds($user);
@@ -795,22 +795,22 @@ class ApplicationController extends Controller
         if ($request->filled('sub_agent_id')) {
             if ($request->sub_agent_id === 'self') {
                 if ($isSubAgent) {
-                    $query->where('sub_agent_id', $user->id);
+                    $query->where('applications.sub_agent_id', $user->id);
                 } else {
-                    $query->where('agent_id', $user->id)->whereNull('sub_agent_id');
+                    $query->where('applications.agent_id', $user->id)->whereNull('applications.sub_agent_id');
                 }
             } else {
-                $query->where('sub_agent_id', $request->sub_agent_id);
+                $query->where('applications.sub_agent_id', $request->sub_agent_id);
             }
         } else {
             $query->where(function ($q) use ($user, $isSubAgent, $descendantIds) {
                 if ($isSubAgent) {
-                    $q->where('sub_agent_id', $user->id);
+                    $q->where('applications.sub_agent_id', $user->id);
                 } else {
-                    $q->where('agent_id', $user->id);
+                    $q->where('applications.agent_id', $user->id);
                 }
                 if (! empty($descendantIds)) {
-                    $q->orWhereIn('sub_agent_id', $descendantIds);
+                    $q->orWhereIn('applications.sub_agent_id', $descendantIds);
                 }
             });
         }

@@ -108,23 +108,23 @@ class ApplicationController extends Controller
         $type = $request->tab ?? $request->type ?? 'other';
 
         if ($type === 'website') {
-            $query->where('source', 'WEBSITE_DIRECT');
+            $query->where('applications.source', 'WEBSITE_DIRECT');
         } elseif ($type === 'incomplete') {
             // "Incomplete" means it is either explicitly marked as Draft/Cancelled/Failed
             // OR (it is NOT completed AND its payment is Pending/Failed)
             $query->where(function ($q) {
-                $q->whereIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+                $q->whereIn('applications.status', ['DRAFT', 'CANCELLED', 'FAILED'])
                     ->orWhere(function ($subQ) {
-                        $subQ->whereIn('payment_status', ['FAILED', 'PENDING'])
-                            ->where('status', '!=', 'COMPLETED'); // If it is COMPLETED, do NOT put it in Incomplete!
+                        $subQ->whereIn('applications.payment_status', ['FAILED', 'PENDING'])
+                            ->where('applications.status', '!=', 'COMPLETED'); // If it is COMPLETED, do NOT put it in Incomplete!
                     });
             });
         } else {
             // For all standard service tabs (ITR, GST, etc) AND the Completed tab:
             // Just show it as long as it isn't explicitly a Draft/Cancelled/Failed.
             $query->where(function ($q) {
-                $q->whereNull('source')->orWhere('source', '!=', 'WEBSITE_DIRECT');
-            })->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED']);
+                $q->whereNull('applications.source')->orWhere('applications.source', '!=', 'WEBSITE_DIRECT');
+            })->whereNotIn('applications.status', ['DRAFT', 'CANCELLED', 'FAILED']);
         }
 
         $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
@@ -142,22 +142,22 @@ class ApplicationController extends Controller
         }
 
         if ($request->agent) {
-            $query->where('agent_id', $request->agent);
+            $query->where('applications.agent_id', $request->agent);
         }
         if ($request->service) {
-            $query->where('service_id', $request->service);
+            $query->where('applications.service_id', $request->service);
         }
         if ($request->status) {
-            $query->where('status', $request->status);
+            $query->where('applications.status', $request->status);
         }
         if ($request->payment) {
-            $query->where('payment_status', $request->payment);
+            $query->where('applications.payment_status', $request->payment);
         }
         if ($request->date_from) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+            $query->whereDate('applications.created_at', '>=', $request->date_from);
         }
         if ($request->date_to) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+            $query->whereDate('applications.created_at', '<=', $request->date_to);
         }
 
         if ($request->is_trashed == 'true') {
@@ -172,10 +172,10 @@ class ApplicationController extends Controller
 
         $statsQuery = clone $query;
         $stats = $statsQuery->selectRaw("
-            COUNT(*) as total,
-            SUM(CASE WHEN status != 'COMPLETED' THEN 1 ELSE 0 END) as pending,
-            SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
-            SUM(CASE WHEN payment_status = 'FAILED' THEN 1 ELSE 0 END) as failed
+            COUNT(applications.id) as total,
+            SUM(CASE WHEN applications.status != 'COMPLETED' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN applications.status = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN applications.payment_status = 'FAILED' THEN 1 ELSE 0 END) as failed
         ")->first();
 
         return datatables()->of($query)
@@ -417,14 +417,14 @@ class ApplicationController extends Controller
 
             if ($type === 'incomplete') {
                 $query->where(function ($q) {
-                    $q->whereIn('status', ['DRAFT', 'CANCELLED', 'FAILED'])
+                    $q->whereIn('applications.status', ['DRAFT', 'CANCELLED', 'FAILED'])
                         ->orWhere(function ($subQ) {
-                            $subQ->whereIn('payment_status', ['FAILED', 'PENDING'])
-                                ->where('status', '!=', 'COMPLETED');
+                            $subQ->whereIn('applications.payment_status', ['FAILED', 'PENDING'])
+                                ->where('applications.status', '!=', 'COMPLETED');
                         });
                 });
             } else {
-                $query->whereNotIn('status', ['DRAFT', 'CANCELLED', 'FAILED']);
+                $query->whereNotIn('applications.status', ['DRAFT', 'CANCELLED', 'FAILED']);
             }
 
             $specialSlugs = ['itr-filing', 'gst-registration', 'gst-return-filing'];
@@ -441,22 +441,22 @@ class ApplicationController extends Controller
             }
 
             if ($request->agent) {
-                $query->where('agent_id', $request->agent);
+                $query->where('applications.agent_id', $request->agent);
             }
             if ($request->service) {
-                $query->where('service_id', $request->service);
+                $query->where('applications.service_id', $request->service);
             }
             if ($request->status) {
-                $query->where('status', $request->status);
+                $query->where('applications.status', $request->status);
             }
             if ($request->payment) {
-                $query->where('payment_status', $request->payment);
+                $query->where('applications.payment_status', $request->payment);
             }
             if ($request->date_from) {
-                $query->whereDate('created_at', '>=', $request->date_from);
+                $query->whereDate('applications.created_at', '>=', $request->date_from);
             }
             if ($request->date_to) {
-                $query->whereDate('created_at', '<=', $request->date_to);
+                $query->whereDate('applications.created_at', '<=', $request->date_to);
             }
             if ($request->is_trashed == 'true') {
                 $query->onlyTrashed();

@@ -256,12 +256,12 @@ class Application extends Model implements HasMedia
         $bounds = SessionResolver::fromLabel($label);
 
         return $query->where(function ($q) use ($label, $bounds) {
-            $q->where('session_label', $label);
+            $q->where($this->qualifyColumn('session_label'), $label);
 
             if ($bounds) {
                 $q->orWhere(function ($sub) use ($bounds) {
-                    $sub->whereNull('session_label')
-                        ->whereBetween('created_at', [$bounds['from'], $bounds['to']]);
+                    $sub->whereNull($this->qualifyColumn('session_label'))
+                        ->whereBetween($this->qualifyColumn('created_at'), [$bounds['from'], $bounds['to']]);
                 });
             }
         });
@@ -271,7 +271,7 @@ class Application extends Model implements HasMedia
     {
         $currentLabel = SessionResolver::current()['label'];
 
-        return $query->where('session_label', $currentLabel);
+        return $query->where($this->qualifyColumn('session_label'), $currentLabel);
     }
 
     /*
