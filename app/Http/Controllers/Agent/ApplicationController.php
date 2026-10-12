@@ -10,6 +10,7 @@ use App\Models\Service;
 use App\Models\User;
 use App\Notifications\ApplicationCancelledNotification;
 use App\Services\AgentLineageService;
+use App\Services\EasyTaxToolBridge;
 use App\Services\SessionResolver;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -206,32 +207,24 @@ class ApplicationController extends Controller
                 return '<span class="text-muted text-xs font-italic">Pending</span>';
             })
 
-            // 3. SMART BALANCE SHEET BUTTON
+            // 3. SMART BALANCE SHEET & DPR BUTTONS (Live AI Tools)
             ->addColumn('balance_sheet', function ($a) {
                 if ($a->service->slug !== 'itr-filing') {
                     return '-';
                 }
 
-                $bsMedia = $a->getFirstMedia('balance_sheet');
+                $bsLiveUrl = EasyTaxToolBridge::buildSignedUrl('balance-sheet', $a);
+                $prLiveUrl = EasyTaxToolBridge::buildSignedUrl('project-report', $a);
 
-                // If it has been generated, let Agent view, download, or regenerate
-                if ($bsMedia) {
-                    $viewUrl = route('agent.documents.view', $bsMedia->id);
-                    $downloadUrl = route('agent.documents.download', $bsMedia->id);
-                    $regenUrl = route('agent.applications.balance-sheet', $a->id);
-
-                    return '
-                    <div class="d-flex align-items-center gap-1">
-                        <a href="'.$viewUrl.'" target="_blank" class="btn btn-sm btn-light border text-primary px-2 py-1" title="View"><i class="fas fa-eye"></i></a>
-                        <a href="'.$downloadUrl.'" class="btn btn-sm btn-outline-success px-2 py-1" title="Download"><i class="fas fa-download"></i></a>
-                        <a href="'.$regenUrl.'" class="btn btn-sm btn-outline-secondary px-2 py-1" title="Regenerate"><i class="fas fa-sync-alt"></i></a>
-                    </div>';
-                }
-
-                // If not generated yet, show the Generate button
-                $url = route('agent.applications.balance-sheet', $a->id);
-
-                return '<a href="'.$url.'" class="btn btn-sm btn-outline-success font-weight-bold" style="white-space: nowrap;"><i class="fas fa-file-excel mr-1"></i> Generate</a>';
+                return '
+                <div class="d-flex align-items-center gap-1">
+                    <a href="'.$bsLiveUrl.'" target="_blank" class="btn btn-sm btn-outline-success font-weight-bold px-2 py-1" style="white-space: nowrap;" title="Generate Balance Sheet on EasyTax.live">
+                        <i class="fas fa-file-invoice mr-1"></i> Balance Sheet
+                    </a>
+                    <a href="'.$prLiveUrl.'" target="_blank" class="btn btn-sm btn-outline-primary font-weight-bold px-2 py-1" style="white-space: nowrap;" title="Generate Project Report on EasyTax.live">
+                        <i class="fas fa-chart-line mr-1"></i> DPR
+                    </a>
+                </div>';
             })
             ->addColumn('submitted_by', function ($a) use ($isSubAgent) {
                 if ($isSubAgent) {
@@ -580,6 +573,32 @@ class ApplicationController extends Controller
         return view('agent.applications.show', compact('application'));
     }
 
+    public function updateNotes(Request $request, Application $application)
+    {
+        abort_if(! $this->canAgentAccessApplication($application), 403);
+
+        $request->validate([
+            'agent_notes' => 'nullable|string|max:2000',
+        ]);
+
+        $notes = $request->input('agent_notes') ? strip_tags(trim($request->input('agent_notes'))) : null;
+
+        $formData = is_array($application->form_data) ? $application->form_data : (json_decode($application->form_data, true) ?? []);
+        $formData['agent_notes'] = $notes;
+
+        $application->update([
+            'agent_notes' => $notes,
+            'form_data' => $formData,
+        ]);
+
+        activity('application')
+            ->performedOn($application)
+            ->causedBy(auth()->user())
+            ->log('Agent updated message / special instructions');
+
+        return back()->with('success', 'Message / instructions updated successfully.');
+    }
+
     public function cancel(Application $application)
     {
         abort_if(! $this->canAgentAccessApplication($application), 403);
@@ -690,49 +709,8 @@ class ApplicationController extends Controller
         // SECURITY: Ensure the agent owns this application!
         abort_if(! $this->canAgentAccessApplication($application), 403);
 
-        $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : $application->form_data;
-
-        $sales = (float) preg_replace('/[^0-9.]/', '', $formData['business_turnover'] ?? 0);
-        $netProfit = (float) preg_replace('/[^0-9.]/', '', $formData['business_income'] ?? $formData['business_profession_income'] ?? 0);
-        $otherIncome = (float) preg_replace('/[^0-9.]/', '', $formData['other_income'] ?? 0);
-
-        $extractedData = [];
-        $parser = new Parser;
-
-        $compMedia = $application->getFirstMedia('computation_sheet');
-
-        if ($compMedia) {
-            try {
-                $pdf = $parser->parseFile($compMedia->getPath());
-                $text = $pdf->getText();
-
-                if (preg_match('/Inventories\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches)) {
-                    $extractedData['closing_stock'] = (float) str_replace(',', '', $matches[1]);
-                }
-                if (preg_match('/Sundry debtors\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches)) {
-                    $extractedData['sundry_debtors'] = (float) str_replace(',', '', $matches[1]);
-                }
-                if (preg_match('/Cash in hand\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches)) {
-                    $extractedData['cash_in_hand'] = (float) str_replace(',', '', $matches[1]);
-                }
-                if (preg_match('/Sundry Creditors\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches)) {
-                    $extractedData['sundry_creditors'] = (float) str_replace(',', '', $matches[1]);
-                }
-                if (preg_match('/Gross Receipts\/Turnover\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches)) {
-                    $sales = (float) str_replace(',', '', $matches[1]);
-                }
-                if (preg_match('/Net Profit Declared\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches) || preg_match('/Total Income\s*\n*\s*([\d,]+\.?\d*)/i', $text, $matches)) {
-                    $foundProfit = (float) str_replace(',', '', $matches[1]);
-                    if ($foundProfit > 0) {
-                        $netProfit = $foundProfit;
-                    }
-                }
-
-            } catch (\Exception $e) {
-            }
-        }
-
-        return view('agent.applications.balance_sheet', compact('application', 'sales', 'netProfit', 'otherIncome', 'extractedData'));
+        $liveUrl = EasyTaxToolBridge::buildSignedUrl('balance-sheet', $application);
+        return redirect()->away($liveUrl);
     }
 
     public function generateBalanceSheetPdf(Request $request, $id)

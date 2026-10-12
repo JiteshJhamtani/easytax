@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Team;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
+use App\Services\EasyTaxToolBridge;
 use App\Services\SessionResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -241,21 +242,8 @@ class DashboardController extends Controller
     {
         // Security Check
         $application = Application::with('service')->where('id', $id)->where('assigned_to', Auth::id())->firstOrFail();
-
-        $formData = is_string($application->form_data) ? json_decode($application->form_data, true) : ($application->form_data ?? []);
-
-        // Extract basic data for the interactive form
-        $sales = floatval($formData['sales'] ?? $formData['turnover'] ?? 0);
-        $otherIncome = floatval($formData['other_income'] ?? 0);
-        $netProfit = floatval($formData['target_net_profit'] ?? $formData['net_profit'] ?? 0);
-
-        return view('team.applications.balance_sheet', [
-            'application' => $application,
-            'sales' => $sales,
-            'otherIncome' => $otherIncome,
-            'netProfit' => $netProfit,
-            'extractedData' => $formData,
-        ]);
+        $liveUrl = EasyTaxToolBridge::buildSignedUrl('balance-sheet', $application);
+        return redirect()->away($liveUrl);
     }
 
     public function generateBalanceSheet(Request $request, $id)
