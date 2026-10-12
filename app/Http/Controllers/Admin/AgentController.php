@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\AgentMasterExport;
 use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\User;
@@ -26,6 +27,14 @@ class AgentController extends Controller
         $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
 
         return view('admin.agents.index', compact('sessions', 'currentSessionLabel'));
+    }
+
+    public function export(Request $request)
+    {
+        $sessionLabel = $request->filled('session') ? SessionResolver::activeSessionLabel($request->get('session')) : null;
+        $exporter = new AgentMasterExport($sessionLabel);
+
+        return $exporter->download();
     }
 
     public function datatable(Request $request)

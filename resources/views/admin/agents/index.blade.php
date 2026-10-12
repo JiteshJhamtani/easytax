@@ -187,6 +187,9 @@
         <h1 class="page-title">Agents Management</h1>
         <div class="d-flex align-items-center" style="gap: 1rem;">
             <x-session-switcher :sessions="$sessions" :current-session-label="$currentSessionLabel" />
+            <a href="{{ route('admin.agents.export', ['session' => $currentSessionLabel]) }}" class="btn btn-outline-success font-weight-bold m-0" style="padding: 0.6rem 1.25rem; border-radius: 8px;" title="Export Comprehensive Report (Apps, Financials & Gifts)">
+                <i class="fas fa-file-excel mr-1"></i> Export Data
+            </a>
             <button id="toggleTrashBtn" class="btn btn-outline-danger m-0" type="button" style="color: #dc2626; border-color: #fca5a5; font-weight: 700; padding: 0.6rem 1.25rem; border-radius: 8px;">
                 <i class="fas fa-trash"></i> View Trash
             </button>

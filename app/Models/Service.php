@@ -54,9 +54,9 @@ class Service extends Model
         return $this->hasMany(Application::class)->setEagerLoads([]);
     }
 
-    public function gifts(): HasMany
+    public function giftConditions(): HasMany
     {
-        return $this->hasMany(Gift::class);
+        return $this->hasMany(GiftCondition::class);
     }
 
     public function pricingRules(): HasMany

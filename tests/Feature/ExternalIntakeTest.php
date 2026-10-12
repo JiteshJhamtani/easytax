@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Storage;
 beforeEach(function () {
     Storage::fake('private');
     config(['services.easytax.external_secret' => 'test_intake_secret_key_12345']);
+    $this->service = Service::firstOrCreate(
+        ['slug' => 'gst-registration'],
+        ['name' => 'GST Registration', 'price' => 999, 'active' => true]
+    );
 });
 
 it('rejects external intake requests with missing or invalid secret', function () {
@@ -194,7 +198,7 @@ it('triggers outbound webhook to Drupal on completion of website direct order', 
     $app = Application::create([
         'source' => 'WEBSITE_DIRECT',
         'idempotency_key' => 'webhook_test_key_888',
-        'service_id' => Service::first()->id,
+        'service_id' => $this->service->id,
         'service_name_fallback' => 'Custom Service',
         'customer_name' => 'Test Customer',
         'customer_phone' => '9876500000',
@@ -229,7 +233,7 @@ it('lists website direct orders when filtering by tab=website', function () {
     $retailApp = Application::create([
         'source' => 'WEBSITE_DIRECT',
         'idempotency_key' => 'retail_filter_tab_111',
-        'service_id' => Service::first()->id,
+        'service_id' => $this->service->id,
         'service_name_fallback' => 'Custom Retail Service',
         'customer_name' => 'Retail Filter User',
         'customer_phone' => '9876543210',
@@ -258,7 +262,7 @@ it('triggers outbound webhook to Drupal on completion via team dashboard', funct
     $app = Application::create([
         'source' => 'WEBSITE_DIRECT',
         'idempotency_key' => 'operator_webhook_test_222',
-        'service_id' => Service::first()->id,
+        'service_id' => $this->service->id,
         'service_name_fallback' => 'Filing Service',
         'customer_name' => 'Operator Retail Customer',
         'customer_phone' => '9876512345',

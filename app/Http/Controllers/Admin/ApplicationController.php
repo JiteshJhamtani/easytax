@@ -993,6 +993,7 @@ class ApplicationController extends Controller
     {
         $application = Application::with('media')->findOrFail($id);
         $liveUrl = EasyTaxToolBridge::buildSignedUrl('balance-sheet', $application);
+
         return redirect()->away($liveUrl);
     }
 

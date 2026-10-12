@@ -9,6 +9,8 @@ use App\Models\Application;
 use App\Models\Gift;
 use App\Models\Service;
 use App\Models\SubAgentServicePricing;
+use App\Services\GiftPeriodResolver;
+use App\Services\SessionResolver;
 use App\Services\SubAgentPricingService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -173,7 +175,7 @@ class ServiceController extends Controller
             ];
         }
 
-        $order = ['monthly' => 0, 'quarterly' => 1, 'yearly' => 2];
+        $order = ['monthly' => 0, 'quarterly' => 1, 'yearly' => 2, 'session' => 3];
         usort(
             $grouped,
             fn ($a, $b) => ($order[$a['period_type']] ?? 9) <=> ($order[$b['period_type']] ?? 9)
@@ -184,21 +186,7 @@ class ServiceController extends Controller
 
     private function periodRange(string $periodType): array
     {
-        return match ($periodType) {
-            'monthly' => [
-                now()->startOfMonth(),
-                now()->endOfMonth(),
-            ],
-            'quarterly' => [
-                now()->startOfQuarter(),
-                now()->endOfQuarter(),
-            ],
-            'yearly' => [
-                now()->startOfYear(),
-                now()->endOfYear(),
-            ],
-            default => [now()->startOfMonth(), now()->endOfMonth()],
-        };
+        return (new GiftPeriodResolver)->resolve($periodType);
     }
 
     private function periodLabel(string $periodType): string
@@ -207,6 +195,7 @@ class ServiceController extends Controller
             'monthly' => 'This month',
             'quarterly' => 'This quarter',
             'yearly' => 'This year',
+            'session' => 'Current Session',
             default => ucfirst($periodType),
         };
     }
@@ -215,7 +204,9 @@ class ServiceController extends Controller
     {
         return match ($periodType) {
             'monthly' => now()->format('F Y'),
-            'quarterly' => now()->startOfQuarter()->format('j F').' - '.now()->endOfQuarter()->format('j F'), 'yearly' => (string) now()->year,
+            'quarterly' => now()->startOfQuarter()->format('j F').' - '.now()->endOfQuarter()->format('j F'),
+            'yearly' => (string) now()->year,
+            'session' => SessionResolver::current()['label'],
             default => '',
         };
     }

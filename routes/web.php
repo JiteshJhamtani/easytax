@@ -184,6 +184,9 @@ Route::middleware(['auth', 'agent', 'sidebar'])->prefix('agent')->name('agent.')
     Route::patch('/applications/{application}/cancel', [AgentApplicationController::class, 'cancel'])
         ->name('applications.cancel');
 
+    Route::patch('/applications/{application}/notes', [AgentApplicationController::class, 'updateNotes'])
+        ->name('applications.update-notes');
+
     Route::get('/documents/{media}', [AgentApplicationController::class, 'viewDocument'])
         ->name('documents.view');
 
@@ -407,6 +410,9 @@ Route::middleware(['auth', 'admin', 'sidebar'])->prefix('admin')->name('admin.')
 
     Route::get('/agents/datatable', [AgentController::class, 'datatable'])
         ->name('agents.datatable');
+
+    Route::get('/agents/export', [AgentController::class, 'export'])
+        ->name('agents.export');
 
     Route::get('/agents/create', [AgentController::class, 'create'])
         ->name('agents.create');

@@ -9,6 +9,7 @@ use App\Models\Gift;
 use App\Models\User;
 use App\Services\GiftEligibilityService;
 use App\Services\GiftPeriodResolver;
+use App\Services\SessionResolver;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -23,8 +24,8 @@ class GiftEligibilityController extends Controller
     {
         $gifts = Gift::where('is_active', true)->orderBy('name')->get();
 
-        // AJAX request from DataTables
-        if ($request->ajax() && $request->filled('gift_id')) {
+        // AJAX request from DataTables or JSON request
+        if (($request->ajax() || $request->expectsJson() || $request->wantsJson()) && $request->filled('gift_id')) {
             return $this->buildDatatable($request);
         }
 
@@ -44,6 +45,9 @@ class GiftEligibilityController extends Controller
             ])->values()->all(),
         ])->keyBy('id')->toArray();
 
+        $sessions = SessionResolver::all();
+        $currentSessionLabel = SessionResolver::activeSessionLabel($request->get('session'));
+
         return view('admin.gifts.eligibility', [
             'gifts' => $gifts,
             'gift' => $request->filled('gift_id')
@@ -52,6 +56,8 @@ class GiftEligibilityController extends Controller
             'year' => $request->integer('year', now()->year),
             'quarter' => $request->integer('quarter', now()->quarter),
             'month' => $request->integer('month', now()->month),
+            'session' => $currentSessionLabel,
+            'sessions' => $sessions,
             'filter' => $request->get('filter', 'all'),
             'giftsJson' => $giftsJson,
         ]);
@@ -68,6 +74,7 @@ class GiftEligibilityController extends Controller
             $request->integer('year', now()->year),
             $request->integer('quarter', now()->quarter),
             $request->integer('month', now()->month),
+            sessionLabel: $request->get('session')
         );
 
         // All service IDs this gift cares about
@@ -75,8 +82,14 @@ class GiftEligibilityController extends Controller
             ->flatMap(fn ($g) => $g->conditions->pluck('service_id'))
             ->unique();
 
+        $primaryAgentIds = User::where('role', 'AGENT')
+            ->where('is_active', true)
+            ->whereNull('parent_id')
+            ->pluck('id');
+
         // Submission counts per agent per service in the period
         $submissions = Application::query()
+            ->whereIn('agent_id', $primaryAgentIds)
             ->whereIn('service_id', $serviceIds)
             ->where('status', ApplicationStatus::COMPLETED)
             ->whereBetween('completed_at', [$from, $to])
@@ -84,6 +97,15 @@ class GiftEligibilityController extends Controller
             ->groupBy('agent_id', 'service_id')
             ->get()
             ->groupBy('agent_id');
+
+        // Precompute eligible agent IDs for stats and fast filtering
+        $eligibleAgentIds = [];
+        foreach ($submissions as $agentId => $serviceRows) {
+            $counts = $serviceRows->keyBy('service_id');
+            if ($this->isEligible($gift, $counts)) {
+                $eligibleAgentIds[] = (int) $agentId;
+            }
+        }
 
         // Unique services for column data
         $uniqueConditions = $gift->conditionGroups
@@ -93,15 +115,20 @@ class GiftEligibilityController extends Controller
 
         $query = User::where('role', 'AGENT')
             ->where('is_active', true)
+            ->whereNull('parent_id') // Root / Primary agents eligible for agency rewards
             ->select(['id', 'name', 'email', 'agent_code']);
+
+        $filter = $request->get('filter');
+        if ($filter === 'eligible') {
+            $query->whereIn('id', empty($eligibleAgentIds) ? [0] : $eligibleAgentIds);
+        } elseif ($filter === 'ineligible') {
+            $query->whereNotIn('id', $eligibleAgentIds);
+        }
 
         return DataTables::of($query)
             ->addColumn('agent_code', fn ($u) => $u->agent_code ?? '—')
-            ->addColumn('eligible', function ($user) use ($gift, $submissions) {
-                $counts = $submissions->get($user->id, collect())->keyBy('service_id');
-                $eligible = $this->isEligible($gift, $counts);
-
-                return $eligible ? 'yes' : 'no';
+            ->addColumn('eligible', function ($user) use ($eligibleAgentIds) {
+                return in_array($user->id, $eligibleAgentIds, true) ? 'yes' : 'no';
             })
             // One column per service
             ->addColumn('counts', function ($user) use ($uniqueConditions, $submissions) {
@@ -116,9 +143,14 @@ class GiftEligibilityController extends Controller
 
                 return $data;
             })
-            ->filterColumn('eligible', function ($query, $keyword) {
-                // handled client-side via the eligible column
+            ->filterColumn('eligible', function ($query, $keyword) use ($eligibleAgentIds) {
+                if ($keyword === 'yes') {
+                    $query->whereIn('id', empty($eligibleAgentIds) ? [0] : $eligibleAgentIds);
+                } elseif ($keyword === 'no') {
+                    $query->whereNotIn('id', $eligibleAgentIds);
+                }
             })
+            ->with('eligible_total', count($eligibleAgentIds))
             ->rawColumns([])
             ->toJson();
     }

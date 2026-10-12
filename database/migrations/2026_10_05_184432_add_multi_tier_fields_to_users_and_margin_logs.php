@@ -34,6 +34,9 @@ return new class extends Migration
 
         Schema::table('agent_margin_logs', function (Blueprint $table) use ($indexes) {
             if (in_array('agent_margin_logs_application_id_unique', $indexes)) {
+                if (! in_array('agent_margin_logs_application_id_index', $indexes)) {
+                    $table->index('application_id', 'agent_margin_logs_application_id_index');
+                }
                 $table->dropUnique('agent_margin_logs_application_id_unique');
             }
             if (! in_array('agent_margin_logs_app_parent_unique', $indexes)) {

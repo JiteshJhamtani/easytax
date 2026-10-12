@@ -418,13 +418,6 @@
         </a>
     @endif
 </nav>
-
-         <div class="sb-bottom">
-            <div class="sb-illustration">
-                @includeIf('svg.' . strtolower(date('l')))
-            </div>
-        </div>
-   
     </aside>
 
     <div class="sb-overlay" id="sb-overlay"></div>

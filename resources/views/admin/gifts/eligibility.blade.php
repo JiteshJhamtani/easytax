@@ -176,6 +176,15 @@
             </select>
         </div>
 
+        <div class="filter-group" id="wrap-session" style="display:none">
+            <span class="filter-label">Financial Session</span>
+            <select id="filter-session" class="filter-control" style="width:180px">
+                @foreach($sessions ?? [] as $s)
+                    <option value="{{ $s['label'] }}" {{ ($session ?? '') === $s['label'] ? 'selected' : '' }}>{{ $s['label'] }}</option>
+                @endforeach
+            </select>
+        </div>
+
         <button class="btn-apply" id="btn-apply" style="display:none">Calculate</button>
     </div>
 
@@ -231,6 +240,7 @@
                 year:    $('#filter-year').val(),
                 quarter: $('#filter-quarter').val(),
                 month:   $('#filter-month').val(),
+                session: $('#filter-session').val(),
             };
         }
 
@@ -345,15 +355,17 @@
         }
 
         function showPeriodFields(periodType) {
-            $('#wrap-year, #btn-apply').show();
+            $('#btn-apply').show();
+            $('#wrap-year').toggle(periodType !== 'session');
             $('#wrap-quarter').toggle(periodType === 'quarterly');
             $('#wrap-month').toggle(periodType === 'monthly');
+            $('#wrap-session').toggle(periodType === 'session');
         }
 
         $('#gift-select').on('change', function() {
             const giftId = $(this).val();
             if (!giftId) {
-                $('#gift-hero, #conditions-summary, #table-section, #wrap-year, #wrap-quarter, #wrap-month, #btn-apply').hide();
+                $('#gift-hero, #conditions-summary, #table-section, #wrap-year, #wrap-quarter, #wrap-month, #wrap-session, #btn-apply').hide();
                 $('#empty-state').show(); return;
             }
             const gift = giftsData[giftId];

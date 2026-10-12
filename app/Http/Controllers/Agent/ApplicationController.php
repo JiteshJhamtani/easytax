@@ -17,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
-use Smalot\PdfParser\Parser;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ApplicationController extends Controller
@@ -710,6 +709,7 @@ class ApplicationController extends Controller
         abort_if(! $this->canAgentAccessApplication($application), 403);
 
         $liveUrl = EasyTaxToolBridge::buildSignedUrl('balance-sheet', $application);
+
         return redirect()->away($liveUrl);
     }
 

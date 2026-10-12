@@ -20,12 +20,12 @@ class EasyTaxToolBridgeTest extends TestCase
 
     public function test_builds_valid_signed_url_for_paid_itr_balance_sheet(): void
     {
-        $agent = new User();
+        $agent = new User;
         $agent->id = 77;
         $agent->email = 'agent_77@easytax.live';
         Auth::setUser($agent);
 
-        $app = new Application();
+        $app = new Application;
         $app->id = 501;
         $app->payment_status = PaymentStatus::PAID;
         $app->status = ApplicationStatus::COMPLETED;
@@ -70,12 +70,12 @@ class EasyTaxToolBridgeTest extends TestCase
 
     public function test_builds_valid_signed_url_for_project_report(): void
     {
-        $agent = new User();
+        $agent = new User;
         $agent->id = 77;
         $agent->email = 'agent_77@easytax.live';
         Auth::setUser($agent);
 
-        $app = new Application();
+        $app = new Application;
         $app->id = 501;
         $app->payment_status = PaymentStatus::PAID;
         $app->status = ApplicationStatus::COMPLETED;
@@ -109,7 +109,7 @@ class EasyTaxToolBridgeTest extends TestCase
 
     public function test_sets_itr_paid_to_zero_for_unpaid_application(): void
     {
-        $app = new Application();
+        $app = new Application;
         $app->id = 502;
         $app->payment_status = PaymentStatus::PENDING;
         $app->status = ApplicationStatus::SUBMITTED;

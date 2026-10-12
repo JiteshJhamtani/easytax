@@ -243,6 +243,7 @@ class DashboardController extends Controller
         // Security Check
         $application = Application::with('service')->where('id', $id)->where('assigned_to', Auth::id())->firstOrFail();
         $liveUrl = EasyTaxToolBridge::buildSignedUrl('balance-sheet', $application);
+
         return redirect()->away($liveUrl);
     }
 

@@ -139,6 +139,29 @@
                 </div>
             </div>
 
+            {{-- AGENT SPECIAL INSTRUCTIONS / MESSAGE --}}
+            @php
+                $agentNote = $application->agent_notes ?: (is_array($application->form_data) ? ($application->form_data['agent_notes'] ?? null) : null);
+            @endphp
+            @if($agentNote)
+                <div class="card border-0 shadow-sm mb-4 rounded-lg" style="background: #fffbeb; border-left: 5px solid #f59e0b !important;">
+                    <div class="card-body p-3 d-flex align-items-start" style="gap: 1rem;">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-warning bg-white shadow-sm" style="width: 42px; height: 42px; flex-shrink: 0; font-size: 1.25rem;">
+                            <i class="fas fa-comment-dots text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <h6 class="font-weight-bold text-dark m-0" style="font-size: 0.95rem;">
+                                    <i class="fas fa-user-tag mr-1 text-warning"></i> Message from Agent / Special Instructions
+                                </h6>
+                                <span class="badge badge-warning text-dark font-weight-bold" style="font-size: 0.7rem; text-transform: uppercase;">Agent Note</span>
+                            </div>
+                            <p class="m-0 text-dark font-weight-500" style="font-size: 0.9rem; white-space: pre-line; line-height: 1.5;">{{ $agentNote }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             {{-- OVERVIEW --}}
             <div class="card border-0 shadow-sm mb-4 rounded-lg elegant-border">
                 <div class="card-header bg-white py-3 border-bottom-0">

@@ -45,6 +45,7 @@ class Application extends Model implements HasMedia
         'expected_amount_paise',
         'status',
         'pending_reason',
+        'agent_notes',
         'started_at',
         'submitted_at',
         'completed_at',

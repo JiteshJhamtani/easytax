@@ -6,6 +6,16 @@
         @foreach ($form->sections() as $section)
             {!! $section->render() !!}
         @endforeach
+
+        <div class="form-section mt-4 mb-4">
+            <h3 class="font-weight-bold" style="font-size: 1.15rem; color: #111827; margin-bottom: 0.75rem;">
+                <i class="fas fa-comment-dots text-primary mr-2"></i> Special Instructions / Message for Operator <span class="badge badge-light text-muted border ml-2" style="font-size: 0.75rem;">Optional</span>
+            </h3>
+            <p class="text-muted small mb-3">Attach any special remarks, client requests, or instructions for the processing team.</p>
+            <div class="form-group" style="grid-column: span 6;">
+                <textarea name="agent_notes" class="form-control" rows="3" placeholder="e.g. Please process on priority, client requested old tax regime, alternate contact number is 9876543210..." style="min-height: 80px; resize: vertical; border-radius: 8px; font-size: 0.9rem;">{{ old('agent_notes') }}</textarea>
+            </div>
+        </div>
     </div>
 
     <div class="form-actions-sticky">

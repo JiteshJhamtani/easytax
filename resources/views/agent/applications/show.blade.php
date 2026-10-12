@@ -95,6 +95,46 @@
                 </div>
             </div>
 
+            {{-- SPECIAL INSTRUCTIONS / MESSAGE CARD --}}
+            @php
+                $agentNote = $application->agent_notes ?: (is_array($application->form_data) ? ($application->form_data['agent_notes'] ?? null) : null);
+            @endphp
+            <div class="card border-0 shadow-sm mb-4 rounded-lg" style="background: #fffbeb; border-left: 5px solid #f59e0b !important;">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="d-flex align-items-center" style="gap: 0.5rem;">
+                            <i class="fas fa-comment-dots text-warning fa-lg"></i>
+                            <h6 class="font-weight-bold text-dark m-0" style="font-size: 0.95rem;">
+                                Special Instructions / Message for Operator
+                            </h6>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-warning font-weight-bold" style="border-radius: 6px; font-size: 0.75rem;" data-toggle="collapse" data-target="#editNoteForm">
+                            <i class="fas fa-edit mr-1"></i> {{ $agentNote ? 'Edit Message' : 'Add Message' }}
+                        </button>
+                    </div>
+                    @if($agentNote)
+                        <p class="m-0 text-dark font-weight-500" style="font-size: 0.9rem; white-space: pre-line; line-height: 1.5;">{{ $agentNote }}</p>
+                    @else
+                        <p class="m-0 text-muted italic" style="font-size: 0.85rem;">No special message or instructions attached to this application yet.</p>
+                    @endif
+
+                    <div class="collapse mt-3 pt-3 border-top" id="editNoteForm">
+                        <form method="POST" action="{{ route('agent.applications.update-notes', $application) }}">
+                            @csrf
+                            @method('PATCH')
+                            <div class="form-group mb-2">
+                                <label class="text-xs font-weight-bold text-uppercase text-muted">Message to Operator / Admin</label>
+                                <textarea name="agent_notes" class="form-control" rows="3" placeholder="Enter instructions or remarks..." style="border-radius: 8px; font-size: 0.9rem;">{{ $agentNote }}</textarea>
+                            </div>
+                            <div class="d-flex justify-content-end" style="gap: 0.5rem;">
+                                <button type="button" class="btn btn-sm btn-secondary" data-toggle="collapse" data-target="#editNoteForm" style="border-radius: 6px;">Cancel</button>
+                                <button type="submit" class="btn btn-sm btn-warning font-weight-bold" style="border-radius: 6px;"><i class="fas fa-save mr-1"></i> Save Message</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             {{-- MAIN DETAILS CARD --}}
             <div class="card border-0 shadow-sm mb-4 rounded-lg">
                 <div class="card-header bg-white py-3 border-bottom-0 d-flex justify-content-between align-items-center">

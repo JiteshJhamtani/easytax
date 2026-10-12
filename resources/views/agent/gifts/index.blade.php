@@ -27,87 +27,99 @@
                     <li class="nav-item">
                         <a class="nav-link" data-filter="yearly" href="#">Yearly</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-filter="session" href="#">Per Session</a>
+                    </li>
                 </ul>
             </div>
         </div>
 
         {{-- GIFTS GRID --}}
         <div class="row" id="gifts-grid">
-            @forelse ($giftGroups as $group)
+            @php $hasGifts = false; @endphp
+            @foreach ($giftGroups as $group)
                 @php
                     $isSingle = $group['type'] === 'single';
-                    $milestone = $group['milestones'][0];
-                    
-                    $giftName = $milestone['name'];
-                    $imageUrl = $milestone['image_url'] ?? null;
-                    
-                    $targetCount = $isSingle && $group['next_milestone'] ? $group['next_milestone']['min_count'] : ($isSingle ? 'Done' : 'Multi');
-                    $currentCount = $isSingle ? $group['agent_count'] : '—';
-                    $remaining = ($isSingle && $group['next_milestone']) ? $group['next_milestone']['needed'] : '—';
-                    $isUnlocked = $isSingle ? ($group['unlocked_count'] > 0) : $milestone['unlocked'];
                     $periodClass = strtolower($group['period_type']);
                 @endphp
 
-                <div class="col-xl-6 col-lg-12 mb-4 gift-card-wrapper" data-period="{{ $periodClass }}">
-                    <div class="luxury-gift-card h-100">
+                @foreach ($group['milestones'] as $milestone)
+                    @php
+                        $hasGifts = true;
+                        $giftName = $milestone['name'];
+                        $imageUrl = $milestone['image_url'] ?? null;
                         
-                        {{-- Image --}}
-                        <div class="luxury-gift-image">
-                            @if($imageUrl)
-                                <img src="{{ $imageUrl }}" alt="{{ $giftName }}">
-                            @else
-                                <div class="placeholder-image"><i class="fas fa-gift text-muted"></i></div>
-                            @endif
-                        </div>
+                        $targetCount = $isSingle ? $milestone['min_count'] : 'Multi';
+                        $currentCount = $isSingle ? $group['agent_count'] : '—';
+                        $remaining = $isSingle ? $milestone['needed'] : ($milestone['unlocked'] ? 0 : 'See Rules');
+                        $isUnlocked = (bool) $milestone['unlocked'];
+                    @endphp
 
-                        {{-- Title & Period --}}
-                        <div class="luxury-gift-main">
-                            <h4 class="luxury-gift-title" title="{{ $giftName }}">{{ Str::limit($giftName, 40) }}</h4>
-                            <div class="luxury-gift-period mt-2">
-                                <span class="period-badge"><i class="fas fa-calendar-alt mr-1"></i> {{ ucfirst($group['period_type']) }}</span>
-                                @if(!$isSingle)
-                                    <span class="period-badge bg-light text-secondary border ml-1"><i class="fas fa-layer-group mr-1"></i> Multi-Service</span>
-                                @endif
-                            </div>
-                        </div>
-
-                        {{-- Columns --}}
-                        <div class="luxury-gift-stats">
-                            <div class="stat-col">
-                                <span class="stat-label">Target</span>
-                                <span class="stat-value text-dark">{{ $targetCount }}</span>
-                            </div>
-                            <div class="stat-col">
-                                <span class="stat-label">Submitted</span>
-                                <span class="stat-value text-dark">{{ $currentCount }}</span>
-                            </div>
-                            <div class="stat-col">
-                                <span class="stat-label">Remaining</span>
-                                <span class="stat-value text-dark">{{ $remaining }}</span>
-                            </div>
-                            <div class="stat-col" style="min-width: 90px;">
-                                <span class="stat-label">Status</span>
-                                @if($isUnlocked)
-                                    <span class="stat-value text-success font-weight-bold"><i class="fas fa-check-circle mr-1"></i> Eligible</span>
+                    <div class="col-xl-6 col-lg-12 mb-4 gift-card-wrapper" data-period="{{ $periodClass }}">
+                        <div class="luxury-gift-card h-100">
+                            
+                            {{-- Image --}}
+                            <div class="luxury-gift-image">
+                                @if($imageUrl)
+                                    <img src="{{ $imageUrl }}" alt="{{ $giftName }}">
                                 @else
-                                    <span class="stat-value text-warning font-weight-bold"><i class="fas fa-clock mr-1"></i> Pending</span>
+                                    <div class="placeholder-image"><i class="fas fa-gift text-muted"></i></div>
                                 @endif
                             </div>
-                        </div>
 
-                        {{-- Action --}}
-                        <div class="luxury-gift-action">
-                            <button class="btn-luxury-action btn-view-gift" 
-                                    title="View Requirements"
-                                    data-milestone="{{ json_encode($milestone) }}"
-                                    data-period="{{ ucfirst($group['period_type']) }}">
-                                <i class="fas fa-ellipsis-h"></i>
-                            </button>
-                        </div>
+                            {{-- Title & Period --}}
+                            <div class="luxury-gift-main">
+                                <h4 class="luxury-gift-title" title="{{ $giftName }}">{{ Str::limit($giftName, 40) }}</h4>
+                                <div class="luxury-gift-period mt-2">
+                                    <span class="period-badge"><i class="fas fa-calendar-alt mr-1"></i> {{ ucfirst($group['period_type']) }}</span>
+                                    @if($isSingle)
+                                        <span class="period-badge bg-light text-dark border ml-1"><i class="fas fa-tag mr-1"></i> {{ $group['service_name'] }}</span>
+                                    @else
+                                        <span class="period-badge bg-light text-secondary border ml-1"><i class="fas fa-layer-group mr-1"></i> Multi-Service</span>
+                                    @endif
+                                </div>
+                            </div>
 
+                            {{-- Columns --}}
+                            <div class="luxury-gift-stats">
+                                <div class="stat-col">
+                                    <span class="stat-label">Target</span>
+                                    <span class="stat-value text-dark">{{ $targetCount }}</span>
+                                </div>
+                                <div class="stat-col">
+                                    <span class="stat-label">Submitted</span>
+                                    <span class="stat-value text-dark">{{ $currentCount }}</span>
+                                </div>
+                                <div class="stat-col">
+                                    <span class="stat-label">Remaining</span>
+                                    <span class="stat-value text-dark">{{ $remaining }}</span>
+                                </div>
+                                <div class="stat-col" style="min-width: 90px;">
+                                    <span class="stat-label">Status</span>
+                                    @if($isUnlocked)
+                                        <span class="stat-value text-success font-weight-bold"><i class="fas fa-check-circle mr-1"></i> Eligible</span>
+                                    @else
+                                        <span class="stat-value text-warning font-weight-bold"><i class="fas fa-clock mr-1"></i> Pending</span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Action --}}
+                            <div class="luxury-gift-action">
+                                <button class="btn-luxury-action btn-view-gift" 
+                                        title="View Requirements"
+                                        data-milestone="{{ json_encode(array_merge($milestone, ['service_name' => $group['service_name'] ?? null, 'agent_count' => $group['agent_count'] ?? null])) }}"
+                                        data-period="{{ ucfirst($group['period_type']) }}">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+
+                        </div>
                     </div>
-                </div>
-            @empty
+                @endforeach
+            @endforeach
+
+            @if (!$hasGifts)
                 <div class="col-12">
                     <div class="text-center py-5 bg-white rounded-lg border shadow-sm">
                         <i class="fas fa-box-open text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
@@ -115,7 +127,7 @@
                         <p class="text-muted">There are currently no active gift milestones to track.</p>
                     </div>
                 </div>
-            @endforelse
+            @endif
         </div>
     </div>
 
@@ -455,16 +467,17 @@
                         `;
                     });
                 } else {
-                    // Fallback for Single-Service Gifts
+                    // Single-Service Gifts
                     const needed = milestone.min_count;
-                    const have = milestone.unlocked ? needed : (needed - (milestone.needed || 0));
+                    const have = typeof milestone.agent_count === 'number' ? milestone.agent_count : (milestone.unlocked ? needed : Math.max(0, needed - (milestone.needed || 0)));
                     const isDone = have >= needed;
                     const progressClass = isDone ? 'progress-success' : 'progress-pending';
                     const checkIcon = isDone ? '<i class="fas fa-check-circle text-success ml-2"></i>' : '';
+                    const label = milestone.service_name ? `${milestone.service_name} Required` : 'Total Applications Required';
 
                     conditionsList.innerHTML = `
                         <div class="modal-condition-item">
-                            <span class="modal-condition-name">Total Applications Required</span>
+                            <span class="modal-condition-name">${label}</span>
                             <span class="modal-condition-progress ${progressClass}">
                                 ${have} / ${needed} ${checkIcon}
                             </span>

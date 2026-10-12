@@ -282,11 +282,20 @@ class ApplicationController extends Controller
             $companyMinimumAmount = $amountToPay;
         }
 
+        $agentNotes = $request->input('agent_notes') ?? $request->input('notes') ?? $request->input('message');
+        if (! empty($agentNotes) && is_string($agentNotes)) {
+            $agentNotes = strip_tags(trim($agentNotes));
+            $validated['agent_notes'] = $agentNotes;
+        } else {
+            $agentNotes = null;
+        }
+
         $application = Application::create([
             'agent_id' => $agentId,
             'sub_agent_id' => $subAgentId,
             'service_id' => $service->id,
             'form_data' => $validated,
+            'agent_notes' => $agentNotes,
             'amount' => $finalPrice,
             'commission_amount' => $commission,
             'sub_agent_amount' => $subAgentAmount,

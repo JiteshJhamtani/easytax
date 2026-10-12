@@ -321,9 +321,16 @@
     // ── CONFIGURATION ──
     const services = @json($services->map(fn($s) => ['id' => $s->id, 'name' => $s->name]));
     const existingGroups = @json(
-        isset($gift) ? $gift->conditionGroups->map(fn($g) => [
-            'conditions' => $g->conditions->map(fn($c) => ['service_id' => $c->service_id, 'min_count' => $c->min_count])
-        ]) : []
+        old('groups') !== null
+            ? collect(old('groups'))->map(fn($g) => [
+                'conditions' => collect($g['conditions'] ?? [])->map(fn($c) => [
+                    'service_id' => $c['service_id'] ?? null,
+                    'min_count' => $c['min_count'] ?? 1
+                ])->values()->all()
+            ])->values()->all()
+            : (isset($gift) ? $gift->conditionGroups->map(fn($g) => [
+                'conditions' => $g->conditions->map(fn($c) => ['service_id' => $c->service_id, 'min_count' => $c->min_count])
+            ]) : [])
     );
 
     let groupIndex = 0;
