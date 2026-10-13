@@ -335,3 +335,19 @@ it('correctly creates application with custom subagent pricing and charges subag
     expect($application->getEffectiveAmount($this->parentAgent))->toEqual(4321.00);
     expect($application->getEffectiveCommission($this->parentAgent))->toEqual(500.00);
 });
+
+it('redirects balance-sheet and project-report services to live generator tools with labeled price and itr_paid=0', function () {
+    Service::firstOrCreate(
+        ['slug' => 'balance-sheet'],
+        ['name' => 'Balance Sheet', 'price' => 1500.00, 'active' => true]
+    );
+
+    $response = $this->actingAs($this->parentAgent)->get(route('services.show', 'balance-sheet'));
+    $response->assertRedirect();
+    $targetUrl = $response->getTargetUrl();
+    expect($targetUrl)->toContain('https://easytax.live/balance-sheet-generator')
+        ->and($targetUrl)->toContain('tool=balance-sheet')
+        ->and($targetUrl)->toContain('itr_paid=0')
+        ->and($targetUrl)->toContain('price=1500')
+        ->and($targetUrl)->toContain('sig=');
+});

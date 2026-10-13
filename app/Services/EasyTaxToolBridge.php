@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\ApplicationStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Application;
+use App\Models\Service;
 use Illuminate\Support\Facades\Auth;
 
 class EasyTaxToolBridge
@@ -121,6 +122,19 @@ class EasyTaxToolBridge
             }
         } else {
             $params['itr_paid'] = '0';
+            $service = Service::where('slug', $toolSlug)
+                ->orWhere('slug', str_replace('-', '_', $toolSlug))
+                ->first();
+            if ($service) {
+                $price = (float) $service->price;
+                if ($agent && method_exists($agent, 'isSubAgent') && $agent->isSubAgent()) {
+                    $pricing = SubAgentPricingService::resolveForSubAgent($service, $agent);
+                    $price = (float) $pricing['sub_agent_price'];
+                }
+                if ($price > 0) {
+                    $params['price'] = (string) $price;
+                }
+            }
         }
 
         ksort($params);

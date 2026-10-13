@@ -280,7 +280,15 @@
                                 @endif
                             </div>
 
-                            <a href="{{ route('services.show', $service->slug) }}" class="btn-buy">
+                            @php
+                                $isLiveTool = in_array($service->slug, ['balance-sheet', 'project-report', 'balance_sheet', 'project_report']);
+                                $toolSlug = str_replace('_', '-', $service->slug);
+                                $buyUrl = $isLiveTool
+                                    ? \App\Services\EasyTaxToolBridge::buildSignedUrl($toolSlug)
+                                    : route('services.show', $service->slug);
+                            @endphp
+
+                            <a href="{{ $buyUrl }}" class="btn-buy" {{ $isLiveTool ? 'target="_blank"' : '' }}>
                                 Buy Now
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M5 12h14M12 5l7 7-7 7"/>

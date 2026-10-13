@@ -131,7 +131,14 @@
                                         <span class="amount">Consultation</span>
                                     </div>
                                 @endif
-                                <a href="{{ route('services.show', $service->slug) }}" class="btn-link">
+                                @php
+                                    $isLiveTool = in_array($service->slug, ['balance-sheet', 'project-report', 'balance_sheet', 'project_report']);
+                                    $toolSlug = str_replace('_', '-', $service->slug);
+                                    $applyUrl = $isLiveTool
+                                        ? \App\Services\EasyTaxToolBridge::buildSignedUrl($toolSlug)
+                                        : route('services.show', $service->slug);
+                                @endphp
+                                <a href="{{ $applyUrl }}" class="btn-link" {{ $isLiveTool ? 'target="_blank"' : '' }}>
                                     Apply Now <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                                         stroke="currentColor" stroke-width="2">
                                         <path d="M5 12h14M12 5l7 7-7 7" />

@@ -34,6 +34,14 @@ class ServiceController extends Controller
 
     public function show(string $slug)
     {
+        $normalizedSlug = strtolower(trim($slug));
+        if (in_array($normalizedSlug, ['balance-sheet', 'balance_sheet'], true)) {
+            return redirect()->away(\App\Services\EasyTaxToolBridge::buildSignedUrl('balance-sheet'));
+        }
+        if (in_array($normalizedSlug, ['project-report', 'project_report'], true)) {
+            return redirect()->away(\App\Services\EasyTaxToolBridge::buildSignedUrl('project-report'));
+        }
+
         $service = Service::where('slug', $slug)
             ->where('active', true)
             ->firstOrFail();
