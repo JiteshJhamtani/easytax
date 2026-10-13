@@ -8,12 +8,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Application;
 use App\Models\ApplicationLog;
 use App\Models\Service;
+use App\Services\EasyTaxToolBridge;
 use App\Services\SessionResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ExternalIntakeController extends Controller
 {
@@ -164,7 +166,7 @@ class ExternalIntakeController extends Controller
      */
     public function downloadBridgeDocument(Request $request, int $mediaId)
     {
-        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);
+        $media = Media::findOrFail($mediaId);
         $appId = (int) $request->query('app_id', 0);
         $expires = (int) $request->query('expires', 0);
         $sig = (string) $request->query('sig', '');
@@ -173,10 +175,10 @@ class ExternalIntakeController extends Controller
             return response()->json(['error' => 'Link expired'], 403);
         }
 
-        $secret = config('services.easytax.external_secret') ?: env('EASYTAX_EXTERNAL_SECRET', \App\Services\EasyTaxToolBridge::DEFAULT_SECRET);
+        $secret = config('services.easytax.external_secret') ?: env('EASYTAX_EXTERNAL_SECRET', EasyTaxToolBridge::DEFAULT_SECRET);
         $expectedSig = hash_hmac('sha256', "media_id={$mediaId}&app_id={$appId}&expires={$expires}", $secret);
 
-        if (!hash_equals($expectedSig, $sig)) {
+        if (! hash_equals($expectedSig, $sig)) {
             return response()->json(['error' => 'Invalid signature'], 403);
         }
 
@@ -185,7 +187,7 @@ class ExternalIntakeController extends Controller
         }
 
         $path = $media->getPath();
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             return response()->json(['error' => 'File not found on disk'], 404);
         }
 

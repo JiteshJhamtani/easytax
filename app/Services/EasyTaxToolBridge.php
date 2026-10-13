@@ -53,7 +53,7 @@ class EasyTaxToolBridge
             $turnoverKeys = ['business_turnover', 'turnover', 'gross_turnover', 'gross_receipts', 'total_turnover', 'sales'];
             $turnover = 0.0;
             foreach ($turnoverKeys as $tk) {
-                if (!empty($formData[$tk])) {
+                if (! empty($formData[$tk])) {
                     $turnover = (float) preg_replace('/[^0-9.]/', '', (string) $formData[$tk]);
                     if ($turnover > 0) {
                         break;
@@ -65,7 +65,7 @@ class EasyTaxToolBridge
             $incomeKeys = ['business_income', 'business_profession_income', 'net_profit', 'profit', 'taxable_income', 'income', 'gross_total_income', 'total_income'];
             $income = 0.0;
             foreach ($incomeKeys as $ik) {
-                if (!empty($formData[$ik])) {
+                if (! empty($formData[$ik])) {
                     $income = (float) preg_replace('/[^0-9.]/', '', (string) $formData[$ik]);
                     if ($income > 0) {
                         break;
@@ -92,10 +92,11 @@ class EasyTaxToolBridge
                 $financialDoc = $mediaItems
                     ->filter(function ($m) {
                         $ext = strtolower(pathinfo($m->file_name ?? '', PATHINFO_EXTENSION));
+
                         return in_array($ext, ['pdf', 'jpg', 'jpeg', 'png', 'webp']);
                     })
                     ->sortByDesc(function ($m) {
-                        $name = strtolower(($m->name ?? '') . ' ' . ($m->file_name ?? ''));
+                        $name = strtolower(($m->name ?? '').' '.($m->file_name ?? ''));
                         if (in_array($m->collection_name, ['bank_statement', 'computation_sheet', 'form_16'])) {
                             return 100;
                         }
@@ -105,6 +106,7 @@ class EasyTaxToolBridge
                         if ($m->collection_name === 'client_documents') {
                             return 50;
                         }
+
                         return 10;
                     })
                     ->first();

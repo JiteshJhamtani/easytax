@@ -5,6 +5,7 @@ use App\Enums\PaymentStatus;
 use App\Models\Application;
 use App\Models\Service;
 use App\Models\User;
+use App\Services\EasyTaxToolBridge;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
@@ -360,7 +361,7 @@ it('handles progressive document uploads without duplicating media items', funct
 });
 
 it('allows downloading bridge document with valid hmac signature and rejects invalid or expired signatures', function () {
-    $secret = config('services.easytax.external_secret') ?: env('EASYTAX_EXTERNAL_SECRET', \App\Services\EasyTaxToolBridge::DEFAULT_SECRET);
+    $secret = config('services.easytax.external_secret') ?: env('EASYTAX_EXTERNAL_SECRET', EasyTaxToolBridge::DEFAULT_SECRET);
     config(['services.easytax.external_secret' => $secret]);
 
     $app = Application::create([
@@ -398,4 +399,3 @@ it('allows downloading bridge document with valid hmac signature and rejects inv
     $expiredRes = $this->get("/api/v1/bridge/document/{$media->id}?app_id={$app->id}&expires={$pastExpires}&sig={$expiredSig}");
     $expiredRes->assertStatus(403);
 });
-
