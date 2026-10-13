@@ -10,3 +10,4 @@ Route::middleware('external.intake')->group(function () {
 
 Route::get('/v1/bridge/document/{media}', [ExternalIntakeController::class, 'downloadBridgeDocument'])
     ->name('api.bridge.document');
+Route::get('/bridge/document/{media}', [ExternalIntakeController::class, 'downloadBridgeDocument']);

@@ -164,9 +164,10 @@ class ExternalIntakeController extends Controller
     /**
      * Download application document via secure HMAC bridge link.
      */
-    public function downloadBridgeDocument(Request $request, int $mediaId)
+    public function downloadBridgeDocument(Request $request, int|string $media)
     {
-        $media = Media::findOrFail($mediaId);
+        $mediaId = (int) $media;
+        $mediaItem = Media::findOrFail($mediaId);
         $appId = (int) $request->query('app_id', 0);
         $expires = (int) $request->query('expires', 0);
         $sig = (string) $request->query('sig', '');
@@ -182,17 +183,17 @@ class ExternalIntakeController extends Controller
             return response()->json(['error' => 'Invalid signature'], 403);
         }
 
-        if ((int) $media->model_id !== $appId || $media->model_type !== Application::class) {
+        if ((int) $mediaItem->model_id !== $appId || $mediaItem->model_type !== Application::class) {
             return response()->json(['error' => 'Application mismatch'], 403);
         }
 
-        $path = $media->getPath();
+        $path = $mediaItem->getPath();
         if (! file_exists($path)) {
             return response()->json(['error' => 'File not found on disk'], 404);
         }
 
-        return response()->download($path, $media->file_name, [
-            'Content-Type' => $media->mime_type ?: 'application/octet-stream',
+        return response()->download($path, $mediaItem->file_name, [
+            'Content-Type' => $mediaItem->mime_type ?: 'application/octet-stream',
             'Access-Control-Allow-Origin' => '*',
             'Access-Control-Allow-Methods' => 'GET, OPTIONS',
         ]);
