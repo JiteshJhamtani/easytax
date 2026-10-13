@@ -359,3 +359,43 @@ it('handles progressive document uploads without duplicating media items', funct
     expect($app->getMedia('client_documents')->count())->toBe(2);
 });
 
+it('allows downloading bridge document with valid hmac signature and rejects invalid or expired signatures', function () {
+    $secret = config('services.easytax.external_secret') ?: env('EASYTAX_EXTERNAL_SECRET', \App\Services\EasyTaxToolBridge::DEFAULT_SECRET);
+    config(['services.easytax.external_secret' => $secret]);
+
+    $app = Application::create([
+        'source' => 'WEBSITE_DIRECT',
+        'idempotency_key' => 'bridge_dl_test_999',
+        'service_id' => $this->service->id,
+        'customer_name' => 'Bridge Tester',
+        'customer_phone' => '9998887776',
+        'status' => ApplicationStatus::SUBMITTED,
+        'payment_status' => PaymentStatus::PAID,
+        'amount' => 500.00,
+        'commission_amount' => 0.00,
+        'parent_margin' => 0.00,
+    ]);
+
+    $media = $app->addMediaFromString('Dummy bank statement pdf content')
+        ->usingFileName('bank_statement.pdf')
+        ->toMediaCollection('client_documents');
+
+    $expires = time() + 3600;
+    $validSig = hash_hmac('sha256', "media_id={$media->id}&app_id={$app->id}&expires={$expires}", $secret);
+
+    // 1. Valid signature
+    $res = $this->get("/api/v1/bridge/document/{$media->id}?app_id={$app->id}&expires={$expires}&sig={$validSig}");
+    $res->assertStatus(200);
+    expect($res->headers->get('Content-Disposition'))->toContain('bank_statement.pdf');
+
+    // 2. Invalid signature
+    $invalidRes = $this->get("/api/v1/bridge/document/{$media->id}?app_id={$app->id}&expires={$expires}&sig=tampered_signature");
+    $invalidRes->assertStatus(403);
+
+    // 3. Expired signature
+    $pastExpires = time() - 3600;
+    $expiredSig = hash_hmac('sha256', "media_id={$media->id}&app_id={$app->id}&expires={$pastExpires}", $secret);
+    $expiredRes = $this->get("/api/v1/bridge/document/{$media->id}?app_id={$app->id}&expires={$pastExpires}&sig={$expiredSig}");
+    $expiredRes->assertStatus(403);
+});
+

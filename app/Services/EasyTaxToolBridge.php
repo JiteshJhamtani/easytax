@@ -49,8 +49,29 @@ class EasyTaxToolBridge
             $isPaid = in_array(strtoupper($paymentStatus), ['PAID', 'SUCCESS'], true)
                    || in_array(strtoupper($appStatus), ['COMPLETED', 'IN_PROGRESS', 'E_FILING', 'OTP_VERIFICATION'], true);
 
-            $turnover = (float) preg_replace('/[^0-9.]/', '', (string) ($formData['business_turnover'] ?? 0));
-            $income = (float) preg_replace('/[^0-9.]/', '', (string) ($formData['business_income'] ?? $formData['business_profession_income'] ?? 0));
+            // Check all common variations of turnover field in form_data
+            $turnoverKeys = ['business_turnover', 'turnover', 'gross_turnover', 'gross_receipts', 'total_turnover', 'sales'];
+            $turnover = 0.0;
+            foreach ($turnoverKeys as $tk) {
+                if (!empty($formData[$tk])) {
+                    $turnover = (float) preg_replace('/[^0-9.]/', '', (string) $formData[$tk]);
+                    if ($turnover > 0) {
+                        break;
+                    }
+                }
+            }
+
+            // Check all common variations of net profit / business income in form_data
+            $incomeKeys = ['business_income', 'business_profession_income', 'net_profit', 'profit', 'taxable_income', 'income', 'gross_total_income', 'total_income'];
+            $income = 0.0;
+            foreach ($incomeKeys as $ik) {
+                if (!empty($formData[$ik])) {
+                    $income = (float) preg_replace('/[^0-9.]/', '', (string) $formData[$ik]);
+                    if ($income > 0) {
+                        break;
+                    }
+                }
+            }
 
             $params['app_id'] = (string) $application->id;
             $params['client_name'] = trim((string) ($formData['applicant_name'] ?? ''));
@@ -64,6 +85,38 @@ class EasyTaxToolBridge
                 $params['net_income'] = $income;
             }
             $params['itr_paid'] = $isPaid ? '1' : '0';
+
+            // Find best financial/client document attached to the application (bank statement, computation, client docs)
+            if ($application->relationLoaded('media') || $application->media()->exists()) {
+                $mediaItems = $application->relationLoaded('media') ? $application->media : $application->media()->get();
+                $financialDoc = $mediaItems
+                    ->filter(function ($m) {
+                        $ext = strtolower(pathinfo($m->file_name ?? '', PATHINFO_EXTENSION));
+                        return in_array($ext, ['pdf', 'jpg', 'jpeg', 'png', 'webp']);
+                    })
+                    ->sortByDesc(function ($m) {
+                        $name = strtolower(($m->name ?? '') . ' ' . ($m->file_name ?? ''));
+                        if (in_array($m->collection_name, ['bank_statement', 'computation_sheet', 'form_16'])) {
+                            return 100;
+                        }
+                        if (str_contains($name, 'bank') || str_contains($name, 'statement') || str_contains($name, 'computation')) {
+                            return 90;
+                        }
+                        if ($m->collection_name === 'client_documents') {
+                            return 50;
+                        }
+                        return 10;
+                    })
+                    ->first();
+
+                if ($financialDoc) {
+                    $docExpires = time() + 7200;
+                    $docSig = hash_hmac('sha256', "media_id={$financialDoc->id}&app_id={$application->id}&expires={$docExpires}", $secret);
+                    $b2bBase = rtrim(config('app.url') ?: 'https://b2b.easytax.live', '/');
+                    $params['doc_url'] = "{$b2bBase}/api/v1/bridge/document/{$financialDoc->id}?app_id={$application->id}&expires={$docExpires}&sig={$docSig}";
+                    $params['doc_name'] = $financialDoc->file_name;
+                }
+            }
         } else {
             $params['itr_paid'] = '0';
         }

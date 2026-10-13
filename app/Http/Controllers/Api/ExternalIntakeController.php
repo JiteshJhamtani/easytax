@@ -158,4 +158,41 @@ class ExternalIntakeController extends Controller
             }
         }
     }
+
+    /**
+     * Download application document via secure HMAC bridge link.
+     */
+    public function downloadBridgeDocument(Request $request, int $mediaId)
+    {
+        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);
+        $appId = (int) $request->query('app_id', 0);
+        $expires = (int) $request->query('expires', 0);
+        $sig = (string) $request->query('sig', '');
+
+        if ($expires < time()) {
+            return response()->json(['error' => 'Link expired'], 403);
+        }
+
+        $secret = config('services.easytax.external_secret') ?: env('EASYTAX_EXTERNAL_SECRET', \App\Services\EasyTaxToolBridge::DEFAULT_SECRET);
+        $expectedSig = hash_hmac('sha256', "media_id={$mediaId}&app_id={$appId}&expires={$expires}", $secret);
+
+        if (!hash_equals($expectedSig, $sig)) {
+            return response()->json(['error' => 'Invalid signature'], 403);
+        }
+
+        if ((int) $media->model_id !== $appId || $media->model_type !== Application::class) {
+            return response()->json(['error' => 'Application mismatch'], 403);
+        }
+
+        $path = $media->getPath();
+        if (!file_exists($path)) {
+            return response()->json(['error' => 'File not found on disk'], 404);
+        }
+
+        return response()->download($path, $media->file_name, [
+            'Content-Type' => $media->mime_type ?: 'application/octet-stream',
+            'Access-Control-Allow-Origin' => '*',
+            'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+        ]);
+    }
 }

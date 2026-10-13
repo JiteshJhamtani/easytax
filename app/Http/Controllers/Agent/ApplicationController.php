@@ -206,24 +206,18 @@ class ApplicationController extends Controller
                 return '<span class="text-muted text-xs font-italic">Pending</span>';
             })
 
-            // 3. SMART BALANCE SHEET & DPR BUTTONS (Live AI Tools)
+            // 3. SMART BALANCE SHEET BUTTON (Live AI Tool)
             ->addColumn('balance_sheet', function ($a) {
                 if ($a->service->slug !== 'itr-filing') {
                     return '-';
                 }
 
                 $bsLiveUrl = EasyTaxToolBridge::buildSignedUrl('balance-sheet', $a);
-                $prLiveUrl = EasyTaxToolBridge::buildSignedUrl('project-report', $a);
 
                 return '
-                <div class="d-flex align-items-center gap-1">
-                    <a href="'.$bsLiveUrl.'" target="_blank" class="btn btn-sm btn-outline-success font-weight-bold px-2 py-1" style="white-space: nowrap;" title="Generate Balance Sheet on EasyTax.live">
-                        <i class="fas fa-file-invoice mr-1"></i> Balance Sheet
-                    </a>
-                    <a href="'.$prLiveUrl.'" target="_blank" class="btn btn-sm btn-outline-primary font-weight-bold px-2 py-1" style="white-space: nowrap;" title="Generate Project Report on EasyTax.live">
-                        <i class="fas fa-chart-line mr-1"></i> DPR
-                    </a>
-                </div>';
+                <a href="'.$bsLiveUrl.'" target="_blank" class="btn btn-sm btn-outline-success font-weight-bold px-2 py-1" style="white-space: nowrap;" title="Generate Balance Sheet on EasyTax.live">
+                    <i class="fas fa-file-invoice mr-1"></i> Balance Sheet
+                </a>';
             })
             ->addColumn('submitted_by', function ($a) use ($isSubAgent) {
                 if ($isSubAgent) {

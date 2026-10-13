@@ -7,3 +7,6 @@ Route::middleware('external.intake')->group(function () {
     Route::post('/v1/applications/external-intake', [ExternalIntakeController::class, 'store']);
     Route::post('/applications/external-intake', [ExternalIntakeController::class, 'store']);
 });
+
+Route::get('/v1/bridge/document/{media}', [ExternalIntakeController::class, 'downloadBridgeDocument'])
+    ->name('api.bridge.document');
