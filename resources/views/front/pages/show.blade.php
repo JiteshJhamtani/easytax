@@ -82,10 +82,6 @@
                         document.body.appendChild(form);
                         form.submit();
                     },
-
-
-                    }
-
                     modal: {
                         ondismiss: function() {
                             // User closed the Razorpay window without paying

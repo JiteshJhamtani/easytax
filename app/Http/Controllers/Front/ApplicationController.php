@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Front;
 use App\Enums\ApplicationStatus;
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
+use App\Models\AgentMarginLog;
 use App\Models\Application;
 use App\Models\PaymentLog;
 use App\Models\Service;
@@ -118,7 +119,8 @@ class ApplicationController extends Controller
                     ->first();
             } else {
                 // ITR TRUE DATABASE MAPPING
-                $itrType = $request->input('itr_year_1', 'Any');
+                $itrTypeRaw = $request->input('itr_year_1');
+                $itrType = is_string($itrTypeRaw) && $itrTypeRaw !== '' ? trim($itrTypeRaw) : 'Any';
 
                 $yearMultiplier = 0;
                 if ($request->filled('itr_year_1')) {
@@ -134,9 +136,14 @@ class ApplicationController extends Controller
                     $yearMultiplier = 1;
                 }
 
-                $turnover = $request->input('turnover', $request->input('business_turnover', 'Any'));
-                $itrBusiness = $request->input('has_business', 'Any');
-                $itrCapGains = $request->input('has_capital_gains', 'Any');
+                $turnoverRaw = $request->input('turnover', $request->input('business_turnover'));
+                $turnover = is_string($turnoverRaw) && $turnoverRaw !== '' ? trim($turnoverRaw) : 'Any';
+
+                $itrBusinessRaw = $request->input('has_business');
+                $itrBusiness = is_string($itrBusinessRaw) && $itrBusinessRaw !== '' ? trim($itrBusinessRaw) : 'Any';
+
+                $itrCapGainsRaw = $request->input('has_capital_gains');
+                $itrCapGains = is_string($itrCapGainsRaw) && $itrCapGainsRaw !== '' ? trim($itrCapGainsRaw) : 'Any';
 
                 $rule = ServicePricingRule::where('service_id', $service->id)
                     ->where(function ($q) use ($itrType) {
@@ -326,15 +333,17 @@ class ApplicationController extends Controller
         $receiptId = 'APP_'.$application->id.'_'.time();
         $razorpay = app(RazorpayService::class);
 
+        $orderNotes = array_filter([
+            'application_id' => (string) $application->id,
+            'agent_id' => (string) $agentId,
+            'sub_agent_id' => $subAgentId ? (string) $subAgentId : null,
+            'service_name' => (string) $service->name,
+        ], fn ($val) => $val !== null && $val !== '');
+
         $orderResponse = $razorpay->createOrder(
             $receiptId,
             (int) round($amountToPay * 100), // Amount in paise
-            [
-                'application_id' => $application->id,
-                'agent_id' => $agentId,
-                'sub_agent_id' => $subAgentId,
-                'service_name' => $service->name,
-            ]
+            $orderNotes
         );
 
         Log::info("Razorpay order creation response for application {$application->id}", $orderResponse);
@@ -418,6 +427,16 @@ class ApplicationController extends Controller
                 ->with('error', 'Payment amount verification failed. Contact support.');
         }
 
+        if (($payment['status'] ?? null) === 'refunded' || ($payment['refund_status'] ?? null) === 'full') {
+            Log::critical('Attempted to confirm refunded payment!', [
+                'application_id' => $application->id,
+                'payment_id' => $validated['razorpay_payment_id'],
+            ]);
+
+            return redirect()->route('payment.result', ['txn' => $application->payment_reference])
+                ->with('error', 'This payment has been refunded and cannot be processed.');
+        }
+
         // Orders created before the payment_capture flag was added may still authorize
         // without capturing — capture server-side so Razorpay does not auto-refund.
         if (($payment['status'] ?? null) !== 'captured') {
@@ -491,6 +510,11 @@ class ApplicationController extends Controller
                 ->with('success', 'Payment was successful and processed in the background.');
         }
 
+        if ($application->payment_status === PaymentStatus::REFUNDED) {
+            return redirect()->route('payment.result', ['txn' => $orderId])
+                ->with('error', 'Payment for this application has been refunded.');
+        }
+
         // 🟢 FALLBACK CHECK: If the frontend froze but the payment actually succeeded, check Razorpay directly
         $razorpay = app(RazorpayService::class);
         $paymentConfirmed = $razorpay->fetchOrderStatus($orderId) === 'paid';
@@ -503,6 +527,10 @@ class ApplicationController extends Controller
 
             foreach ($razorpay->fetchOrderPayments($orderId) as $orderPayment) {
                 if ($orderPayment['amount'] !== $expectedAmount) {
+                    continue;
+                }
+
+                if (($orderPayment['refund_status'] ?? null) === 'full' || ($orderPayment['status'] ?? null) === 'refunded') {
                     continue;
                 }
 
@@ -616,7 +644,9 @@ class ApplicationController extends Controller
 
         // A payment on the previous order may have succeeded after the browser gave
         // up (late webhook, slow UPI) — recover it instead of charging again.
+        // Never recover a payment if the application was marked REFUNDED.
         if ($application->payment_reference
+            && $application->payment_status !== PaymentStatus::REFUNDED
             && $razorpay->fetchOrderStatus($application->payment_reference) === 'paid') {
             $this->markApplicationPaid($application, 'Payment recovered from previous order during retry', 'payment_success_retry_check');
 
@@ -628,15 +658,17 @@ class ApplicationController extends Controller
             ? max(0, (float) $application->sub_agent_amount - (float) ($application->sub_agent_commission ?? 0))
             : max(0, (float) $application->amount - (float) $application->commission_amount);
         $receiptId = 'APP_'.$application->id.'_RETRY_'.time();
+        $retryNotes = array_filter([
+            'application_id' => (string) $application->id,
+            'agent_id' => (string) $application->agent_id,
+            'sub_agent_id' => $application->sub_agent_id ? (string) $application->sub_agent_id : null,
+            'retry' => true,
+        ], fn ($val) => $val !== null && $val !== '');
+
         $orderResponse = $razorpay->createOrder(
             $receiptId,
             (int) round($amountToPay * 100),
-            [
-                'application_id' => $application->id,
-                'agent_id' => $application->agent_id,
-                'sub_agent_id' => $application->sub_agent_id,
-                'retry' => true,
-            ]
+            $retryNotes
         );
 
         if (! $orderResponse['success']) {
@@ -762,6 +794,62 @@ class ApplicationController extends Controller
                         }
                     });
                 }
+            }
+        }
+
+        // Handle refund events (payment.refunded, refund.processed, refund.created)
+        if (in_array($event, ['payment.refunded', 'refund.processed', 'refund.created'], true)) {
+            $paymentId = $data['payload']['payment']['entity']['id'] ?? ($data['payload']['refund']['entity']['payment_id'] ?? null);
+            $orderId = $data['payload']['payment']['entity']['order_id'] ?? null;
+            $refundId = $data['payload']['refund']['entity']['id'] ?? null;
+
+            $application = null;
+            if ($orderId) {
+                $application = $this->findApplicationByOrderId($orderId);
+            }
+
+            if (! $application && $paymentId) {
+                $log = PaymentLog::where('transaction_id', $paymentId)->latest()->first();
+                if ($log) {
+                    $application = Application::find($log->application_id);
+                }
+            }
+
+            if ($application) {
+                DB::transaction(function () use ($application, $data, $event, $refundId, $paymentId) {
+                    $lockedApplication = Application::where('id', $application->id)->lockForUpdate()->first();
+
+                    $lockedApplication->update([
+                        'payment_status' => PaymentStatus::REFUNDED,
+                    ]);
+
+                    if (in_array($lockedApplication->parent_margin_status, ['ACCRUED', 'PENDING'], true)) {
+                        $lockedApplication->update(['parent_margin_status' => 'CANCELLED']);
+                    }
+
+                    // Void any unpaid accrued margins for parent / upline agents
+                    AgentMarginLog::where('application_id', $lockedApplication->id)
+                        ->where('status', 'ACCRUED')
+                        ->update([
+                            'status' => 'CANCELLED',
+                            'notes' => DB::raw("CONCAT(COALESCE(notes, ''), ' [Application payment refunded via Razorpay Webhook ({$event})]')"),
+                        ]);
+
+                    PaymentLog::create([
+                        'application_id' => $lockedApplication->id,
+                        'transaction_id' => $refundId ?? $paymentId,
+                        'event' => 'webhook_refunded',
+                        'status' => 'refunded',
+                        'payload' => $data,
+                        'response' => null,
+                    ]);
+
+                    ApplicationLogger::log($lockedApplication->id, 'payment_refunded_webhook');
+
+                    activity('application')
+                        ->performedOn($lockedApplication)
+                        ->log("Payment refunded via Razorpay Webhook ({$event})");
+                });
             }
         }
 

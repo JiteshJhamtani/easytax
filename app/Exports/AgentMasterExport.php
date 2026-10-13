@@ -191,18 +191,30 @@ class AgentMasterExport
             $nextMilestoneName = 'N/A (Sub-Agent)';
         }
 
+        $sanitize = static function ($val): string {
+            if (is_null($val)) {
+                return '';
+            }
+            $str = (string) $val;
+            if ($str !== '' && in_array($str[0], ['=', '+', '-', '@', "\t", "\r"])) {
+                return "'".$str;
+            }
+
+            return $str;
+        };
+
         return [
             $agent->id,
-            $agent->agent_code ?? '—',
-            $agent->name,
-            $agent->email,
-            $agent->phone ?? $agent->mobile_number ?? '—',
+            $sanitize($agent->agent_code ?? '—'),
+            $sanitize($agent->name),
+            $sanitize($agent->email),
+            $sanitize($agent->phone ?? $agent->mobile_number ?? '—'),
             $agent->parent_id ? 'Sub-Agent' : 'Primary Agent',
-            $agent->parentAgent ? "{$agent->parentAgent->name} ({$agent->parentAgent->agent_code})" : 'Direct Primary Agent',
+            $sanitize($agent->parentAgent ? "{$agent->parentAgent->name} ({$agent->parentAgent->agent_code})" : 'Direct Primary Agent'),
             $agent->is_active ? 'Active' : 'Suspended',
             $agent->sub_agents_count ?? 0,
             $agent->created_at ? $agent->created_at->format('Y-m-d H:i') : '—',
-            $this->sessionLabel ?? 'All Time',
+            $sanitize($this->sessionLabel ?? 'All Time'),
             $totalApps,
             $completedCount,
             $pendingCount,
@@ -216,10 +228,10 @@ class AgentMasterExport
             number_format($teamMarginEarned, 2, '.', ''),
             number_format($payoutsTotal, 2, '.', ''),
             number_format($netBalance, 2, '.', ''),
-            ! empty($unlockedGiftNames) ? implode('; ', $unlockedGiftNames) : 'None Yet',
+            $sanitize(! empty($unlockedGiftNames) ? implode('; ', $unlockedGiftNames) : 'None Yet'),
             count($unlockedGiftNames),
-            $nextMilestoneName,
-            $nextMilestoneTarget,
+            $sanitize($nextMilestoneName),
+            $sanitize($nextMilestoneTarget),
             $nextMilestoneNeeded,
         ];
     }

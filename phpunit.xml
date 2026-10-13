@@ -29,5 +29,8 @@
         <env name="PULSE_ENABLED" value="false" force="true"/>
         <env name="TELESCOPE_ENABLED" value="false" force="true"/>
         <env name="NIGHTWATCH_ENABLED" value="false" force="true"/>
+        <env name="RAZORPAY_KEY_ID" value="rzp_test_testing_key_id" force="true"/>
+        <env name="RAZORPAY_KEY_SECRET" value="testing_secret_key" force="true"/>
+        <env name="RAZORPAY_WEBHOOK_SECRET" value="testing_webhook_secret_key" force="true"/>
     </php>
 </phpunit>

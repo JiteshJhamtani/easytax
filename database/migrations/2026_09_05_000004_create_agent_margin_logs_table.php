@@ -8,22 +8,24 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('agent_margin_logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('parent_agent_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('sub_agent_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('application_id')->unique()->constrained('applications')->cascadeOnDelete();
-            $table->decimal('sub_agent_paid', 10, 2);
-            $table->decimal('company_retained', 10, 2);
-            $table->decimal('margin_amount', 10, 2);
-            $table->string('status', 20)->default('CONFIRMED');
-            $table->string('refund_reference')->nullable();
-            $table->text('notes')->nullable();
-            $table->timestamps();
+        if (! Schema::hasTable('agent_margin_logs')) {
+            Schema::create('agent_margin_logs', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('parent_agent_id')->constrained('users')->cascadeOnDelete();
+                $table->foreignId('sub_agent_id')->nullable()->constrained('users')->nullOnDelete();
+                $table->foreignId('application_id')->unique()->constrained('applications')->cascadeOnDelete();
+                $table->decimal('sub_agent_paid', 10, 2);
+                $table->decimal('company_retained', 10, 2);
+                $table->decimal('margin_amount', 10, 2);
+                $table->string('status', 20)->default('CONFIRMED');
+                $table->string('refund_reference')->nullable();
+                $table->text('notes')->nullable();
+                $table->timestamps();
 
-            $table->index(['parent_agent_id', 'status']);
-            $table->index(['sub_agent_id', 'status']);
-        });
+                $table->index(['parent_agent_id', 'status']);
+                $table->index(['sub_agent_id', 'status']);
+            });
+        }
     }
 
     public function down(): void

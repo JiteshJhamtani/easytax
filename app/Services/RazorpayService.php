@@ -66,6 +66,12 @@ class RazorpayService
      */
     public function verifySignature(string $orderId, string $paymentId, string $signature): bool
     {
+        if (empty($this->keySecret) || empty($orderId) || empty($paymentId) || empty($signature)) {
+            Log::warning('Razorpay signature verification missing key secret or required parameters');
+
+            return false;
+        }
+
         try {
             $attributes = [
                 'razorpay_order_id' => $orderId,
@@ -101,6 +107,8 @@ class RazorpayService
                 'amount' => $payment->amount,
                 'status' => $payment->status,
                 'method' => $payment->method,
+                'refund_status' => $payment->refund_status ?? null,
+                'amount_refunded' => (int) ($payment->amount_refunded ?? 0),
                 'email' => $payment->email ?? null,
                 'contact' => $payment->contact ?? null,
                 'created_at' => $payment->created_at,
@@ -163,7 +171,7 @@ class RazorpayService
     /**
      * Fetch all payments attempted against an order
      *
-     * @return array<int, array{id: string, status: string, amount: int}>
+     * @return array<int, array{id: string, status: string, amount: int, refund_status: ?string, amount_refunded: int}>
      */
     public function fetchOrderPayments(string $orderId): array
     {
@@ -191,12 +199,16 @@ class RazorpayService
                         'id' => (string) ($payment->id ?? ''),
                         'status' => (string) ($payment->status ?? ''),
                         'amount' => (int) ($payment->amount ?? 0),
+                        'refund_status' => $payment->refund_status ?? null,
+                        'amount_refunded' => (int) ($payment->amount_refunded ?? 0),
                     ];
                 } elseif (is_array($payment)) {
                     $result[] = [
                         'id' => (string) ($payment['id'] ?? ''),
                         'status' => (string) ($payment['status'] ?? ''),
                         'amount' => (int) ($payment['amount'] ?? 0),
+                        'refund_status' => $payment['refund_status'] ?? null,
+                        'amount_refunded' => (int) ($payment['amount_refunded'] ?? 0),
                     ];
                 }
             }
@@ -222,6 +234,16 @@ class RazorpayService
     {
         try {
             $webhookSecret = config('razorpay.webhook_secret');
+            if (empty($webhookSecret) || ! is_string($webhookSecret)) {
+                Log::warning('Razorpay webhook secret is not configured or empty');
+
+                return false;
+            }
+
+            if (empty($payload) || empty($signature)) {
+                return false;
+            }
+
             $expectedSignature = hash_hmac('sha256', $payload, $webhookSecret);
 
             return hash_equals($expectedSignature, $signature);
