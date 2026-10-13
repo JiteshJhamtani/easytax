@@ -12,6 +12,7 @@ use App\Services\SessionResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 class ExternalIntakeController extends Controller
@@ -105,6 +106,11 @@ class ExternalIntakeController extends Controller
      */
     protected function attachDocuments(Application $application, array $documents): void
     {
+        $privatePath = storage_path('app/private');
+        if (! File::isDirectory($privatePath)) {
+            File::makeDirectory($privatePath, 0755, true, true);
+        }
+
         foreach ($documents as $doc) {
             try {
                 $base64Data = $doc['file_base64'] ?? '';
@@ -118,16 +124,33 @@ class ExternalIntakeController extends Controller
 
                 $originalName = $doc['file_name'] ?? 'document.pdf';
                 $safeName = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $originalName);
+                $label = $doc['document_label'] ?? $originalName;
+
+                // De-duplication check: if a file with the same label/name is already attached
+                $existingDoc = $application->getMedia('client_documents')
+                    ->first(function ($media) use ($label, $safeName) {
+                        return ($media->getCustomProperty('label') === $label || $media->name === $label)
+                            || $media->file_name === $safeName;
+                    });
+
+                if ($existingDoc) {
+                    if ($existingDoc->file_name === $safeName && (int) $existingDoc->size === strlen($binary)) {
+                        continue; // Identical file already attached, skip duplicate
+                    }
+                    // Replaced or updated file: remove old version before attaching new one
+                    $existingDoc->delete();
+                }
+
                 $tempPath = tempnam(sys_get_temp_dir(), 'et_doc_').'_'.$safeName;
                 file_put_contents($tempPath, $binary);
-
-                $label = $doc['document_label'] ?? $originalName;
 
                 $application->addMedia($tempPath)
                     ->usingName($label)
                     ->usingFileName($safeName)
                     ->withCustomProperties(['label' => $label, 'document_label' => $label])
                     ->toMediaCollection('client_documents', 'private');
+
+                Log::info("Attached client document '{$label}' ({$safeName}) to Application #{$application->id}");
 
                 @unlink($tempPath);
             } catch (\Exception $e) {

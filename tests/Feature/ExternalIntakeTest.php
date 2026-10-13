@@ -289,3 +289,73 @@ it('triggers outbound webhook to Drupal on completion via team dashboard', funct
             && $request['status'] === 'COMPLETED';
     });
 });
+
+it('handles progressive document uploads without duplicating media items', function () {
+    $secret = config('services.easytax.external_secret');
+    $service = Service::firstOrCreate(
+        ['slug' => 'gst-registration'],
+        ['name' => 'GST Registration', 'price' => 999, 'active' => true]
+    );
+
+    $basePayload = [
+        'idempotency_key' => 'progressive_doc_test_123',
+        'service_slug' => 'gst-registration',
+        'service_name' => 'GST Registration',
+        'customer' => [
+            'name' => 'Progressive User',
+            'phone' => '9888877777',
+            'email' => 'user@progressive.com',
+        ],
+        'payment' => [
+            'reference' => 'PAY_PROG_123',
+            'amount' => 999.00,
+        ],
+    ];
+
+    // Initial sync on checkout payment (0 documents uploaded yet)
+    $res1 = $this->withHeaders(['X-EasyTax-Secret' => $secret])
+        ->postJson('/api/v1/applications/external-intake', array_merge($basePayload, ['documents' => []]));
+    $res1->assertStatus(201);
+    $appId = $res1->json('application_id');
+    $app = Application::find($appId);
+    expect($app->getMedia('client_documents')->count())->toBe(0);
+
+    // Second sync: user uploads PAN Card
+    $panBase64 = base64_encode('sample pan card content');
+    $res2 = $this->withHeaders(['X-EasyTax-Secret' => $secret])
+        ->postJson('/api/v1/applications/external-intake', array_merge($basePayload, [
+            'documents' => [
+                [
+                    'document_label' => 'PAN Card',
+                    'file_name' => 'pan.pdf',
+                    'file_base64' => $panBase64,
+                ],
+            ],
+        ]));
+    $res2->assertStatus(200);
+    $app->refresh();
+    expect($app->getMedia('client_documents')->count())->toBe(1);
+
+    // Third sync: user uploads Electricity Bill AND clicks Submit Filing (re-sends PAN Card + Bill)
+    $billBase64 = base64_encode('sample bill content');
+    $res3 = $this->withHeaders(['X-EasyTax-Secret' => $secret])
+        ->postJson('/api/v1/applications/external-intake', array_merge($basePayload, [
+            'documents' => [
+                [
+                    'document_label' => 'PAN Card',
+                    'file_name' => 'pan.pdf',
+                    'file_base64' => $panBase64,
+                ],
+                [
+                    'document_label' => 'Electricity Bill',
+                    'file_name' => 'bill.pdf',
+                    'file_base64' => $billBase64,
+                ],
+            ],
+        ]));
+    $res3->assertStatus(200);
+    $app->refresh();
+    // Exactly 2 documents attached, NO duplicates!
+    expect($app->getMedia('client_documents')->count())->toBe(2);
+});
+
