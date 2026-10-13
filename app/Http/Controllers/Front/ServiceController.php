@@ -9,6 +9,7 @@ use App\Models\Application;
 use App\Models\Gift;
 use App\Models\Service;
 use App\Models\SubAgentServicePricing;
+use App\Services\EasyTaxToolBridge;
 use App\Services\GiftPeriodResolver;
 use App\Services\SessionResolver;
 use App\Services\SubAgentPricingService;
@@ -36,10 +37,10 @@ class ServiceController extends Controller
     {
         $normalizedSlug = strtolower(trim($slug));
         if (in_array($normalizedSlug, ['balance-sheet', 'balance_sheet'], true)) {
-            return redirect()->away(\App\Services\EasyTaxToolBridge::buildSignedUrl('balance-sheet'));
+            return redirect()->away(EasyTaxToolBridge::buildSignedUrl('balance-sheet'));
         }
         if (in_array($normalizedSlug, ['project-report', 'project_report'], true)) {
-            return redirect()->away(\App\Services\EasyTaxToolBridge::buildSignedUrl('project-report'));
+            return redirect()->away(EasyTaxToolBridge::buildSignedUrl('project-report'));
         }
 
         $service = Service::where('slug', $slug)
