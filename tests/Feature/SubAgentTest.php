@@ -446,7 +446,7 @@ it('displays team member badge in admin applications data table', function () {
 
     $row = collect($response['data'])->firstWhere('id', $subApp->id);
     expect($row)->not->toBeNull();
-    expect($row['agent'])->toContain('Team: '.$this->subAgent->name);
+    expect(html_entity_decode($row['agent'], ENT_QUOTES))->toContain('Team: '.$this->subAgent->name);
 });
 
 it('allows parent agent and sub-agent to load the agent dashboard successfully without error', function () {

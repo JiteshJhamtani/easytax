@@ -128,3 +128,29 @@ test('profile page renders properly for admin, agent, and marketer users', funct
         ->assertSee('Account Profile &amp; Settings', false)
         ->assertSee($user->name);
 })->with(['ADMIN', 'AGENT', 'MARKETER']);
+
+test('profile page displays b2b partner certificate generator with customization options', function () {
+    $user = User::factory()->create([
+        'name' => 'Raj Narayan Kumar',
+        'role' => 'AGENT',
+        'agent_code' => 'AGT-RNK-01',
+        'is_active' => true,
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->get('/profile');
+
+    $response->assertOk()
+        ->assertSee('B2B Partner Certificate Generator')
+        ->assertSee('certCanvas')
+        ->assertSee('certPrefix')
+        ->assertSee('certSuffix')
+        ->assertSee('Raj Narayan Kumar')
+        ->assertSee('Rahul Sharma')
+        ->assertSee('b2b_partner_certificate_template.jpg')
+        ->assertSee('Download Certificate (PNG Image)')
+        ->assertSee('Download PDF')
+        ->assertDontSee('id="certName"', false)
+        ->assertDontSee('id="certDate"', false);
+});
